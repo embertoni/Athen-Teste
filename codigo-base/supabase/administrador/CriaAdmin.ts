@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 
 
 const pastaDoScript = path.dirname(path.resolve(process.argv[1]))
-config({ path: path.resolve(pastaDoScript, '../../.env') })
+config({ path: path.resolve(pastaDoScript, '../../.env.local') })
 
 const url = process.env.SUPABASE_TEST_URL
 const serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY
