@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { SidebarLeft } from "../components/sidebar/SidebarLeft";
+import { PageLayout } from "../components/layout/PageLayout";
 import "./ConfigPage.css";
 
 type NotificationKey = "courseUpdates" | "friendRequests" | "streakReminder";
@@ -15,10 +15,12 @@ type AccountForm = {
 
 type NotificationSettings = Record<NotificationKey, boolean>;
 
+// Sem dados de perfil de exemplo: os campos começam vazios até a conexão com o
+// banco preencher com os dados reais do usuário logado.
 const initialAccountForm: AccountForm = {
-  username: "athen.learner",
-  displayName: "Athen learner",
-  email: "usuario@exemplo.com",
+  username: "",
+  displayName: "",
+  email: "",
   currentPassword: "",
   newPassword: "",
   confirmPassword: "",
@@ -80,10 +82,8 @@ export default function ConfiguracoesPage() {
   }
 
   return (
-    <div className="configuracoes-layout">
-      <SidebarLeft />
-
-      <main className="configuracoes-page" aria-labelledby="configuracoes-title">
+    <PageLayout variant="bare" offset={false} className="configuracoes-layout">
+      <div className="configuracoes-page" aria-labelledby="configuracoes-title">
         <header className="configuracoes-header">
           <p className="configuracoes-eyebrow">Preferências da conta</p>
           <h1 id="configuracoes-title">Configurações</h1>
@@ -265,7 +265,7 @@ export default function ConfiguracoesPage() {
             {feedback && <p className="configuracoes-feedback" role="status">{feedback}</p>}
           </div>
         </form>
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   );
 }
