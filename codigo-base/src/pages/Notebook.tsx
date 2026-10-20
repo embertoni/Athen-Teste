@@ -273,21 +273,21 @@ export default function NotebookPage() {
 
   return (
     <PageLayout variant="bare">
-      <div className="mx-auto min-h-svh max-w-[1700px] px-6 pb-12 pt-8 min-[1440px]:px-10">
+      <div className="min-h-svh bg-canvas px-[56px] pb-[48px] pt-[42px] max-[760px]:px-[20px] max-[760px]:pt-[28px]">
           {/* Estante: pesquisa e cards em ordem alfabética. */}
           {!selectedNotebook && (
             <>
-              <header className="mx-auto max-w-[1180px] border-b border-line pb-6">
+              <header className="border-b border-line pb-6">
                 <p className="text-[10px] font-bold uppercase tracking-[1.4px] text-muted">PLATAFORMA / <span className="text-gold">CADERNOS</span></p>
                 <h1 className="mt-[10px] font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">Minha estante</h1>
                 <p className="mt-[9px] text-[14px] text-muted">Escolha um caderno para abrir suas anotações. Os cadernos são organizados em ordem alfabética.</p>
               </header>
 
-              {loading && <p className="mx-auto mt-10 max-w-[1180px] text-center text-sm text-muted">Carregando seus cadernos...</p>}
+              {loading && <p className="mt-10 text-sm text-muted">Carregando seus cadernos...</p>}
               {error && <p className="mt-8 rounded-lg border border-[#c2455a]/40 bg-[#3a1522] px-4 py-3 text-sm text-[#f2b4bd]">{error}</p>}
-              {!loading && !error && notebooks.length === 0 && <div className="mx-auto mt-10 max-w-[1180px] rounded-xl border border-dashed border-violet-mid/35 bg-surface/70 px-6 py-16 text-center"><p className="text-4xl">📖</p><h2 className="mt-3 font-display text-xl text-ink">Sua estante está vazia</h2><p className="mt-2 text-sm text-muted">Crie um notebook dentro de um curso para ele aparecer aqui.</p></div>}
+              {!loading && !error && notebooks.length === 0 && <div className="mt-10 rounded-xl border border-dashed border-violet-mid/35 bg-surface/70 px-6 py-16 text-center"><p className="text-4xl">📖</p><h2 className="mt-3 font-display text-xl text-ink">Sua estante está vazia</h2><p className="mt-2 text-sm text-muted">Crie um notebook dentro de um curso para ele aparecer aqui.</p></div>}
 
-              {!loading && notebooks.length > 0 && <div className="mx-auto mt-8 max-w-[1180px]"><label htmlFor="notebook-search" className="sr-only">Pesquisar notebooks</label><input id="notebook-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por caderno ou curso..." className="mb-7 w-full rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-gold focus:ring-2 focus:ring-gold/25" /><div className="grid grid-cols-1 gap-7 min-[900px]:grid-cols-2">{notebooksVisiveis.map((item) => <NotebookCard key={item.notebook.id} item={item} onOpen={() => void abrirNotebook(item.notebook.id)} />)}</div>{notebooksVisiveis.length === 0 && <p className="rounded-lg border border-dashed border-line px-5 py-10 text-center text-sm text-muted">Nenhum notebook encontrado.</p>}</div>}
+              {!loading && notebooks.length > 0 && <div className="mt-8"><label htmlFor="notebook-search" className="sr-only">Pesquisar notebooks</label><input id="notebook-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por caderno ou curso..." className="mb-7 w-full rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-gold focus:ring-2 focus:ring-gold/25" /><div className="grid grid-cols-1 gap-7 min-[900px]:grid-cols-2">{notebooksVisiveis.map((item) => <NotebookCard key={item.notebook.id} item={item} onOpen={() => void abrirNotebook(item.notebook.id)} />)}</div>{notebooksVisiveis.length === 0 && <p className="rounded-lg border border-dashed border-line px-5 py-10 text-center text-sm text-muted">Nenhum notebook encontrado.</p>}</div>}
             </>
           )}
 
