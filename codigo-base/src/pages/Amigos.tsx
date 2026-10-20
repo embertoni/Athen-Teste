@@ -1,5 +1,6 @@
 import { PageLayout } from "../components/layout/PageLayout";
 import { DatabaseNotConnected } from "../components/layout/DatabaseNotConnected";
+import "./Amigos.css";
 
 // ---------------------------------------------------------------------------
 // Página Amigos
@@ -12,18 +13,22 @@ import { DatabaseNotConnected } from "../components/layout/DatabaseNotConnected"
 // ---------------------------------------------------------------------------
 export default function Amigos() {
   return (
-    <PageLayout>
-      <header>
-        <p className="text-[10px] font-bold uppercase tracking-[1.4px] text-muted">
-          PLATAFORMA / <span className="text-gold">AMIGOS</span>
-        </p>
-        <h1 className="mt-[10px] font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">
-          Amigos
-        </h1>
-        <p className="mt-[9px] text-[14px] text-muted">Encontre pessoas e acompanhe sua rede de estudos.</p>
-      </header>
+    <PageLayout variant="bare">
+      <div className="amigos">
+        <main className="amigos__main">
+          <div className="amigos__brilho" />
 
-      <DatabaseNotConnected recurso="seus amigos" className="mt-8" />
+          <header className="amigos__cabecalho">
+            <div>
+              <p className="amigos__caminho">PLATAFORMA / <span>AMIGOS</span></p>
+              <h1 className="amigos__titulo">Amigos</h1>
+              <p className="amigos__subtitulo">Encontre pessoas e acompanhe sua rede de estudos.</p>
+            </div>
+          </header>
+
+          <DatabaseNotConnected recurso="seus amigos" className="mt-[24px]" />
+        </main>
+      </div>
     </PageLayout>
   );
 }
