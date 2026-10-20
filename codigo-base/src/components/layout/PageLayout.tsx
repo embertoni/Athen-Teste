@@ -56,12 +56,19 @@ export function PageLayout({
 }: PageLayoutProps) {
   const bare = variant === "bare";
 
+  // "bare": a própria página traz fundo, altura e espaçamento pelo seu CSS, então
+  // o layout só reserva o espaço da sidebar. "contained": o layout fornece fundo,
+  // tipografia e o container utilitário padrão das páginas em Tailwind.
+  const rootClassName = bare
+    ? `relative min-h-svh ${className ?? ""}`.trim()
+    : `relative min-h-svh bg-[#141322] font-body text-[#f4eeff] ${className ?? ""}`.trim();
+
   return (
-    <div className={`relative min-h-svh bg-[#141322] font-body text-[#f4eeff] ${className ?? ""}`.trim()}>
+    <div className={rootClassName}>
       <SidebarLeft />
 
       <main
-        className={`flex min-h-svh flex-col ${mainClassName ?? ""}`.trim()}
+        className={`${bare ? "min-h-svh" : "flex min-h-svh flex-col"} ${mainClassName ?? ""}`.trim()}
         style={{ paddingLeft: SIDEBAR_LEFT_WIDTH, ...mainStyle }}
       >
         {bare ? (
