@@ -15,7 +15,8 @@
   min-height: 100svh;
   margin-left: 230px;
   box-sizing: border-box;
-  padding: 58px 30px 40px;
+  /* Mesmo recuo das demais páginas (px-[56px] pt-[42px] pb-[48px]). */
+  padding: 42px 56px 48px;
 }
 
 .configuracoes-layout::before {
@@ -38,7 +39,7 @@
   margin-bottom: 30px;
 }
 
-.configuracoes-eyebrow,
+/* Eyebrow dos cards mantém o tom violeta; o da página segue o padrão "muted". */
 .configuracoes-card__eyebrow {
   margin: 0 0 7px;
   color: #a486d5;
@@ -48,21 +49,37 @@
   text-transform: uppercase;
 }
 
+/* Cabeçalho da página no mesmo padrão de Catálogo/Salas:
+   eyebrow pequeno (muted) + título Gabriela 46px + subtítulo muted. */
+.configuracoes-eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
 .configuracoes-header h1 {
   margin: 0;
-  color: #f4eeff;
-  font-family: var(--heading);
-  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 46px;
+  line-height: 1.05;
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.8px;
 }
 
 .configuracoes-intro {
   max-width: 650px;
-  margin: 10px 0 0;
-  color: #c9b8e8;
-  font-size: 1rem;
+  margin: 9px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
   line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .configuracoes-header h1 { font-size: 36px; }
 }
 
 .configuracoes-content {
