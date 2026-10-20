@@ -30,6 +30,15 @@ type PageLayoutProps = {
   /** Estilo inline extra opcional para o <main> (ex.: fundo dinâmico). */
   mainStyle?: CSSProperties;
   /**
+   * Por padrão (true) o layout reserva {@link SIDEBAR_LEFT_WIDTH}px à esquerda.
+   * Passe false quando a própria página precisar controlar esse deslocamento
+   * pelo CSS — por exemplo, páginas com comportamento responsivo próprio da
+   * sidebar (ConfigPage transforma a sidebar em barra superior no mobile). A
+   * sidebar continua sendo renderizada pelo layout; só o offset fica com a
+   * página.
+   */
+  offset?: boolean;
+  /**
    * Conteúdo renderizado fora do fluxo do <main> (overlays, modais, painéis
    * laterais como a SidebarRight). Fica dentro da raiz do layout, mas não sofre
    * o padding do conteúdo principal.
@@ -52,6 +61,7 @@ export function PageLayout({
   className,
   mainClassName,
   mainStyle,
+  offset = true,
   overlay,
 }: PageLayoutProps) {
   const bare = variant === "bare";
@@ -69,7 +79,7 @@ export function PageLayout({
 
       <main
         className={`${bare ? "min-h-svh" : "flex min-h-svh flex-col"} ${mainClassName ?? ""}`.trim()}
-        style={{ paddingLeft: SIDEBAR_LEFT_WIDTH, ...mainStyle }}
+        style={{ paddingLeft: offset ? SIDEBAR_LEFT_WIDTH : undefined, ...mainStyle }}
       >
         {bare ? (
           children
