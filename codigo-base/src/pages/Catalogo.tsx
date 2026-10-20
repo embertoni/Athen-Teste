@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { PageLayout } from "../components/layout/PageLayout";
 import { DatabaseNotConnected } from "../components/layout/DatabaseNotConnected";
-import "./Cursos.css";
+import "./Catalogo.css";
 
 // ---------------------------------------------------------------------------
 // Ícones (só os que esta página usa)
@@ -33,7 +33,7 @@ function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Página
+// Página Catálogo (antiga "Cursos")
 //
 // O conteúdo de exemplo (cursos, módulos, avaliações e cards pré-prontos) foi
 // removido: enquanto a integração com o banco não é implementada, a listagem
@@ -41,29 +41,29 @@ function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
 // A busca, o filtro e o botão de criar continuam na interface para preservar o
 // layout e serão ligados às consultas do Supabase quando a conexão existir.
 // ---------------------------------------------------------------------------
-export default function Cursos() {
+export default function Catalogo() {
   const [busca, setBusca] = useState("");
 
   return (
     <PageLayout variant="bare">
-      <div className="cursos">
-        <main className="cursos__main">
-          <div className="cursos__brilho" />
+      <div className="catalogo">
+        <main className="catalogo__main">
+          <div className="catalogo__brilho" />
 
-          <header className="cursos__cabecalho">
+          <header className="catalogo__cabecalho">
             <div>
-              <p className="cursos__caminho">PLATAFORMA / <span>CURSOS</span></p>
-              <h1 className="cursos__titulo">Cursos</h1>
-              <p className="cursos__subtitulo">Aprenda em comunidade, compartilhe conquistas.</p>
+              <p className="catalogo__caminho">PLATAFORMA / <span>CATÁLOGO</span></p>
+              <h1 className="catalogo__titulo">Catálogo</h1>
+              <p className="catalogo__subtitulo">Explore os cursos da comunidade e comece a aprender.</p>
             </div>
-            <button className="cursos__botao-primario" type="button" disabled>
+            <button className="catalogo__botao-primario" type="button" disabled>
               <Icone nome="plus" tamanho={19} />
               Criar curso
             </button>
           </header>
 
-          <section className="cursos__ferramentas" aria-label="Busca e filtros">
-            <label className="cursos__busca">
+          <section className="catalogo__ferramentas" aria-label="Busca e filtros">
+            <label className="catalogo__busca">
               <Icone nome="search" tamanho={21} />
               <input
                 type="search"
@@ -72,7 +72,7 @@ export default function Cursos() {
                 onChange={(evento) => setBusca(evento.target.value)}
               />
             </label>
-            <label className="cursos__filtro">
+            <label className="catalogo__filtro">
               <Icone nome="filter" />
               <span className="sr-only">Filtrar por categoria</span>
               <select disabled>
@@ -81,8 +81,8 @@ export default function Cursos() {
             </label>
           </section>
 
-          <p className="cursos__contador">
-            Seus cursos <span>0</span>
+          <p className="catalogo__contador">
+            Cursos disponíveis <span>0</span>
           </p>
 
           <DatabaseNotConnected recurso="os cursos" className="mt-[24px]" />
