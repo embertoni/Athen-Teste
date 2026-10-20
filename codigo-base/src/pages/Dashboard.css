@@ -12,6 +12,14 @@
   content: "";
   background: linear-gradient(90deg, #0e14209e 0%, #0e14204d 42%, #0e142014 76%, transparent 100%);
 }
+/* Agora o deslocamento da SidebarLeft e a altura vêm do PageLayout; o conteúdo
+   do dashboard preenche essa área e distribui cabeçalho, trilha e rodapé. */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
 .dashboard--state {
   display: flex;
   align-items: center;
