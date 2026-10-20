@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { SidebarLeft } from "../components/sidebar/SidebarLeft";
+import { PageLayout } from "../components/layout/PageLayout";
 import { anotacoesRepository, cursoRepository, notebookRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
@@ -272,10 +272,8 @@ export default function NotebookPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[#141322] font-body text-[#f4eeff]">
-      <SidebarLeft />
-      <main className="min-h-svh pl-[230px]">
-        <div className="mx-auto min-h-svh max-w-[1700px] px-6 pb-12 pt-8 min-[1440px]:px-10">
+    <PageLayout variant="bare">
+      <div className="mx-auto min-h-svh max-w-[1700px] px-6 pb-12 pt-8 min-[1440px]:px-10">
           {/* Estante: pesquisa e cards em ordem alfabética. */}
           {!selectedNotebook && (
             <>
@@ -308,7 +306,6 @@ export default function NotebookPage() {
             </section>
           </div>}
         </div>
-      </main>
-    </div>
+    </PageLayout>
   );
 }
