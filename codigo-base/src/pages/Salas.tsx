@@ -33,7 +33,7 @@ function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Página
+// Página Salas
 //
 // O conteúdo de exemplo (salas, módulos, ranking, avaliações e avisos) foi
 // removido: enquanto a integração com o banco não é implementada, a listagem
