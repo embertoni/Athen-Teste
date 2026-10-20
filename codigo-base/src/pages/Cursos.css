@@ -21,8 +21,9 @@
 :where(.cursos) :where(h1, h2, h3) { font-weight: 400; }
 :where(.cursos) :where(button, input) { font: inherit; color: inherit; }
 
+/* O deslocamento da SidebarLeft agora é responsabilidade do PageLayout. */
 .cursos__main {
-  @apply relative isolate ml-[230px] min-h-screen min-w-0 flex-1 px-[56px] pt-[42px] pb-[48px];
+  @apply relative isolate min-h-screen min-w-0 flex-1 px-[56px] pt-[42px] pb-[48px];
 }
 
 .cursos__brilho {
