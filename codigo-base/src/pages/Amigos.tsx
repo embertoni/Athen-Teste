@@ -2,7 +2,7 @@ import { PageLayout } from "../components/layout/PageLayout";
 import { DatabaseNotConnected } from "../components/layout/DatabaseNotConnected";
 
 // ---------------------------------------------------------------------------
-// Página
+// Página Amigos
 //
 // O conteúdo de exemplo (diretório de usuários fictícios, catálogo de medalhas,
 // pedidos de amizade e o modal de perfil) foi removido: enquanto a integração
@@ -14,8 +14,13 @@ export default function Amigos() {
   return (
     <PageLayout>
       <header>
-        <h1 className="font-display text-3xl text-[#f4eeff] min-[1280px]:text-4xl">Amigos</h1>
-        <p className="mt-2 text-sm text-[#b8aacb]">Sua lista de amigos</p>
+        <p className="text-[10px] font-bold uppercase tracking-[1.4px] text-muted">
+          PLATAFORMA / <span className="text-gold">AMIGOS</span>
+        </p>
+        <h1 className="mt-[10px] font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">
+          Amigos
+        </h1>
+        <p className="mt-[9px] text-[14px] text-muted">Encontre pessoas e acompanhe sua rede de estudos.</p>
       </header>
 
       <DatabaseNotConnected recurso="seus amigos" className="mt-8" />
