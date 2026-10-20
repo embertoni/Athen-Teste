@@ -9,7 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { SidebarLeft, PROFILE_UPDATED_EVENT } from "../../components/sidebar/SidebarLeft";
+import { PROFILE_UPDATED_EVENT } from "../../components/sidebar/SidebarLeft";
+import { PageLayout } from "../../components/layout/PageLayout";
 import {
   amizadeRepository,
   aulaRepository,
@@ -253,7 +254,8 @@ function SectionTitle({ eyebrow, title, action }: { eyebrow: string; title: stri
 /**
  * Layout da página: sidebar à esquerda + conteúdo.
  * Quando o Profile é renderizado dentro do Dashboard (prop onOpenCourse),
- * o Dashboard já tem a sua própria sidebar, então não duplicamos aqui.
+ * o Dashboard já tem a sua própria sidebar, então não duplicamos aqui — o
+ * conteúdo é renderizado sem a casca. No modo normal, usa o PageLayout padrão.
  */
 function PageShell({
   children,
@@ -265,12 +267,9 @@ function PageShell({
   if (!withSidebar) return <>{children}</>;
 
   return (
-    <div className="min-h-svh bg-canvas">
-      <SidebarLeft />
-      <div className="ml-57.5 min-w-0">
-        {children}
-      </div>
-    </div>
+    <PageLayout variant="bare" className="bg-canvas">
+      {children}
+    </PageLayout>
   );
 }
 
@@ -604,9 +603,9 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
   if (loading) {
     return (
       <PageShell withSidebar={withSidebar}>
-        <main className="grid min-h-svh min-w-0 flex-1 place-items-center bg-canvas font-body text-muted">
+        <div className="grid min-h-svh min-w-0 flex-1 place-items-center bg-canvas font-body text-muted">
           Carregando seu perfil...
-        </main>
+        </div>
       </PageShell>
     );
   }
@@ -614,7 +613,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
   if (!authUser || !profile) {
     return (
       <PageShell withSidebar={withSidebar}>
-        <main className="grid min-h-svh min-w-0 flex-1 place-items-center bg-canvas px-5 text-center font-body text-ink">
+        <div className="grid min-h-svh min-w-0 flex-1 place-items-center bg-canvas px-5 text-center font-body text-ink">
           <div>
             <p className="text-muted">{errorMessage || "Você precisa entrar para ver seu perfil."}</p>
             <Link
@@ -624,7 +623,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
               Ir para o login
             </Link>
           </div>
-        </main>
+        </div>
       </PageShell>
     );
   }
@@ -633,7 +632,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
 
   return (
     <PageShell withSidebar={withSidebar}>
-      <main className="min-w-0 flex-1 bg-canvas pb-20 font-body text-ink">
+      <div className="min-w-0 flex-1 bg-canvas pb-20 font-body text-ink">
         <section className="border-b border-line">
           <form onSubmit={(event) => void handleSave(event)}>
             {/* Banner */}
@@ -1190,7 +1189,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
             </div>
           </section>
         </div>
-      </main>
+      </div>
     </PageShell>
   );
 }
