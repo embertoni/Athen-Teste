@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SidebarLeft } from "../components/sidebar/SidebarLeft";
+import { PageLayout } from "../components/layout/PageLayout";
 import { SidebarRight } from "../components/sidebar/SidebarRight";
 import { aulaRepository, concluiRepository, cursoRepository, moduloRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
@@ -321,17 +321,26 @@ export default function Dashboard({ courseId }: DashboardProps) {
   }
 
   return (
-    <div className="tela">
-      <SidebarLeft />
-
+    <PageLayout
+      variant="bare"
+      className="tela"
+      overlay={
+        // A aba da própria sidebar abre e fecha o painel, por isso onFechar alterna o estado.
+        <SidebarRight
+          aberta={lousaAberta}
+          onFechar={() => setLousaAberta((aberta) => !aberta)}
+          cor={activeTheme.primary}
+        />
+      }
+    >
       {loading ? (
-        <main className="dashboard dashboard--state">Carregando sua trilha...</main>
+        <div className="dashboard dashboard--state">Carregando sua trilha...</div>
       ) : errorMessage || !course || !activeModule ? (
-        <main className="dashboard dashboard--state">
+        <div className="dashboard dashboard--state">
           <p>{errorMessage || "Nenhum curso ou módulo disponível no momento."}</p>
-        </main>
+        </div>
       ) : (
-        <main className="dashboard" style={{ background: activeTheme.background, color: "#f4eeff" }}>
+        <div className="dashboard" style={{ background: activeTheme.background, color: "#f4eeff" }}>
 
           <header className="dashboard-header">
             <label className="dashboard-course-select">
@@ -473,15 +482,8 @@ export default function Dashboard({ courseId }: DashboardProps) {
               <button className="module-carousel__arrow" type="button" onClick={() => moveCarousel(1)} aria-label="Próximo módulo">›</button>
             </div>
           </footer>
-        </main>
+        </div>
       )}
-
-      {/* A aba da própria sidebar abre e fecha o painel, por isso onFechar alterna o estado. */}
-      <SidebarRight
-        aberta={lousaAberta}
-        onFechar={() => setLousaAberta((aberta) => !aberta)}
-        cor={activeTheme.primary}
-      />
-    </div>
+    </PageLayout>
   );
 }
