@@ -1,0 +1,134 @@
+@reference "../index.css";
+
+/* ==========================================================================
+   Página Catálogo — usa os tokens globais de design (index.css):
+   canvas · surface · ink · muted · line · gold · violet(-mid/-pale)
+   Mesmo esqueleto visual das demais páginas internas da plataforma.
+   ========================================================================== */
+
+/* ---------- Base ---------- */
+.catalogo {
+  @apply flex min-h-svh w-full overflow-hidden bg-canvas font-body text-ink;
+  /* O :root do projeto define line-height: 150%; aqui usamos o padrão. */
+  line-height: normal;
+}
+
+.catalogo,
+.catalogo *,
+.catalogo *::before,
+.catalogo *::after {
+  box-sizing: border-box;
+}
+
+:where(.catalogo) :where(h1, h2, h3, p) { margin: 0; }
+:where(.catalogo) :where(h1, h2, h3) { font-weight: 400; }
+:where(.catalogo) :where(button, input, select) { font: inherit; color: inherit; }
+
+/* O deslocamento da SidebarLeft é responsabilidade do PageLayout. */
+.catalogo__main {
+  @apply relative isolate min-h-svh min-w-0 flex-1 px-[56px] pt-[42px] pb-[48px];
+}
+
+.catalogo__brilho {
+  @apply pointer-events-none fixed top-[-200px] right-[-120px] h-[560px] w-[700px];
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(164, 134, 213, 0.18), rgba(14, 8, 32, 0) 68%);
+}
+
+/* ---------- Cabeçalho (padrão compartilhado entre as páginas) ---------- */
+.catalogo__cabecalho { @apply mb-[32px] flex items-end justify-between gap-[16px]; }
+.catalogo__caminho {
+  @apply mb-[10px] text-[10px] tracking-[1.4px] text-muted;
+  font-weight: 700;
+}
+.catalogo__caminho span { @apply text-gold; }
+.catalogo__titulo { @apply font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink; }
+.catalogo__subtitulo { @apply mt-[9px] text-[14px] text-muted; }
+
+/* ---------- Botão primário (gold, texto violeta) ---------- */
+.catalogo__botao-primario {
+  @apply inline-flex h-[48px] cursor-pointer items-center justify-center gap-[9px] bg-gold px-[20px] text-[13px] text-violet;
+  font-weight: 700;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 9px 30px color-mix(in srgb, var(--color-gold) 16%, transparent);
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.catalogo__botao-primario:hover:not(:disabled) {
+  @apply bg-gold-light;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--color-gold) 24%, transparent);
+}
+.catalogo__botao-primario:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ---------- Busca e filtro ---------- */
+.catalogo__ferramentas { @apply mb-[26px] flex gap-[12px]; }
+
+.catalogo__busca {
+  @apply flex h-[52px] flex-1 items-center gap-[13px] bg-surface px-[18px] text-muted;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+.catalogo__busca:focus-within {
+  @apply text-gold;
+  border-color: color-mix(in srgb, var(--color-gold) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 7%, transparent);
+}
+.catalogo__busca input {
+  @apply min-w-0 flex-1 bg-transparent text-[13px] text-ink;
+  border: 0;
+  outline: 0;
+}
+.catalogo__busca input::placeholder { @apply text-muted; }
+
+.catalogo__filtro {
+  @apply flex min-w-[112px] cursor-pointer items-center justify-center gap-[9px] bg-surface px-[12px] text-[13px] text-muted;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.catalogo__filtro:hover {
+  border-color: color-mix(in srgb, var(--color-violet-mid) 40%, transparent);
+}
+.catalogo__filtro select {
+  @apply min-w-0 cursor-pointer bg-transparent text-[12px] text-muted;
+  border: 0;
+  outline: 0;
+}
+.catalogo__filtro select:disabled { cursor: not-allowed; }
+.catalogo__filtro select option {
+  color: var(--color-ink);
+  background: var(--color-surface);
+}
+
+/* ---------- Contador ---------- */
+.catalogo__contador {
+  @apply mb-[16px] text-[12px] tracking-[0.8px] text-muted uppercase;
+  font-weight: 600;
+}
+.catalogo__contador span { @apply ml-[6px] text-gold; }
+
+/* ---------- Acessibilidade ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 760px) {
+  .catalogo__main { @apply px-[20px] pt-[28px]; }
+  .catalogo__cabecalho { @apply flex-col items-start gap-[14px]; }
+  .catalogo__titulo { @apply text-[36px]; }
+  .catalogo__ferramentas { @apply flex-wrap; }
+  .catalogo__busca { @apply basis-full; }
+  .catalogo__filtro { @apply min-h-[44px] flex-1; }
+}
