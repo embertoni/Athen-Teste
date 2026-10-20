@@ -27,8 +27,9 @@
 :where(.ligas) :where(h1, h2, h3) { font-weight: 400; }
 :where(.ligas) :where(button) { font: inherit; color: inherit; }
 
+/* O deslocamento da SidebarLeft agora é responsabilidade do PageLayout. */
 .ligas__main {
-  @apply relative isolate ml-[230px] min-h-0 min-w-0 flex-1 overflow-y-auto px-[56px] pt-[42px] pb-[48px];
+  @apply relative isolate min-h-0 min-w-0 flex-1 overflow-y-auto px-[56px] pt-[42px] pb-[48px];
 }
 
 /* A área principal tem a própria rolagem, sem depender de html/body/#root.
