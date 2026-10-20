@@ -71,7 +71,7 @@ export function PageLayout({
   // tipografia e o container utilitário padrão das páginas em Tailwind.
   const rootClassName = bare
     ? `relative min-h-svh ${className ?? ""}`.trim()
-    : `relative min-h-svh bg-[#141322] font-body text-[#f4eeff] ${className ?? ""}`.trim();
+    : `relative min-h-svh bg-canvas font-body text-ink ${className ?? ""}`.trim();
 
   return (
     <div className={rootClassName}>
