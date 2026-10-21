@@ -686,7 +686,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
               )}
             </div>
 
-            <div className="relative mx-auto max-w-6xl px-5 pb-9 md:px-8 md:pb-12">
+            <div className="relative mx-auto max-w-6xl px-[24px] pb-9 md:px-[56px] md:pb-12">
               <div className="-mt-16 flex flex-col gap-6 md:-mt-20 md:flex-row md:items-end">
                 {/* Foto */}
                 <div className="relative w-fit shrink-0">
@@ -887,7 +887,7 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
           </form>
         </section>
 
-        <div className="mx-auto max-w-6xl px-5 pt-8 md:px-8 md:pt-10">
+        <div className="mx-auto max-w-6xl px-[24px] pt-8 md:px-[56px] md:pt-10">
           {errorMessage && (
             <p className="mb-6 rounded-2xl border border-red-300/30 bg-red-300/10 px-4 py-3 font-ui text-sm text-red-200">
               {errorMessage}
