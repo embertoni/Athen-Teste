@@ -8,10 +8,8 @@ import "./Ranking.css";
 
 type RankingGlobal = Database["public"]["Views"]["global_ranking"]["Row"];
 
-// Enquanto a integração com o banco não é finalizada, a página mostra o aviso
-// padrão de "banco não conectado". Quando a conexão existir, basta trocar esta
-// constante para true: a página já busca e renderiza o ranking global real.
-const BANCO_CONECTADO = false;
+// Integração ativa: a página busca e renderiza o ranking global real.
+const BANCO_CONECTADO = true;
 
 const formatarXp = (xp: number) => `${xp.toLocaleString("pt-BR")} XP`;
 
