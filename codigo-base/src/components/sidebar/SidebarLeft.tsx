@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { usuarioRepository } from '../../data/repositories';
 import { supabase } from '../../lib/supabase';
 
 // Rotas usadas pela sidebar. Ajuste aqui se no seu router forem diferentes.
 const PROFILE_ROUTE = '/profile';
+const LOGIN_ROUTE = '/login-page';
 const DASHBOARD_ROUTE = '/dashboard';
 const SALAS_ROUTE = '/salas';
 const RANKING_ROUTE = '/ranking';
@@ -111,12 +112,53 @@ function useUserProfile() {
 }
 
 export function SidebarLeft() {
+    const navigate = useNavigate();
     const userSrc = useUserProfile();
     const perfil = userSrc.profile;
     const picture = perfil?.avatar_url ?? null;
-    const banner = perfil?.banner_url ?? null;
     const temStreakAtiva = Boolean(perfil && perfil.streak_count > 0 && streakAtiva(perfil.last_study_date));
     const streakValor = temStreakAtiva ? perfil?.streak_count ?? 0 : 0;
+
+    // Menu (popover) do botão de perfil: "Ver perfil" e "Sair da conta".
+    const [menuAberto, setMenuAberto] = useState(false);
+    const perfilRef = useRef<HTMLDivElement>(null);
+
+    // Fecha o menu ao clicar fora ou pressionar Esc.
+    useEffect(() => {
+        if (!menuAberto) return;
+
+        function aoClicarFora(evento: MouseEvent) {
+            if (!(evento.target instanceof Node)) return;
+            if (perfilRef.current?.contains(evento.target)) return;
+            setMenuAberto(false);
+        }
+        function aoTeclar(evento: KeyboardEvent) {
+            if (evento.key === "Escape") setMenuAberto(false);
+        }
+
+        document.addEventListener("mousedown", aoClicarFora);
+        document.addEventListener("keydown", aoTeclar);
+        return () => {
+            document.removeEventListener("mousedown", aoClicarFora);
+            document.removeEventListener("keydown", aoTeclar);
+        };
+    }, [menuAberto]);
+
+    function verPerfil() {
+        setMenuAberto(false);
+        navigate(PROFILE_ROUTE);
+    }
+
+    async function sairDaConta() {
+        setMenuAberto(false);
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("Erro ao sair da conta:", error);
+        } finally {
+            navigate(LOGIN_ROUTE);
+        }
+    }
 
     return (
         // corpo inteiro da sidebar — fundo e bordas seguem os tokens da plataforma
@@ -179,51 +221,74 @@ export function SidebarLeft() {
                 })}
             </nav>
 
-            {/* Botão de perfil no rodapé: banner ao fundo da parte superior,
-                avatar menor, nome/usuário e a streak com ícone de fogo. */}
-            <Link
-                to={PROFILE_ROUTE}
-                aria-label="Ir para o perfil"
-                title="Meu perfil"
-                className="group mx-3 mb-4 mt-auto block overflow-hidden rounded-[16px] border border-line bg-surface outline-none transition-colors hover:border-violet-mid focus-visible:ring-2 focus-visible:ring-gold"
-            >
-                {/* Parte superior: banner de fundo + avatar + streak */}
-                <div className="relative h-[64px]">
-                    {banner
-                        ? <img src={banner} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
-                        : <div className="absolute inset-0 bg-gradient-to-br from-violet via-violet-mid/60 to-surface" />
-                    }
-                    <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
+            {/* Botão de perfil no rodapé: avatar, nome/usuário e streak na mesma
+                linha. Clicar abre um menu com "Ver perfil" e "Sair da conta". */}
+            <div ref={perfilRef} className="relative mx-3 mb-4 mt-auto">
+                {/* Menu popover acima do botão */}
+                {menuAberto && (
+                    <div
+                        role="menu"
+                        aria-label="Opções de conta"
+                        className="absolute bottom-[calc(100%+8px)] left-0 right-0 overflow-hidden rounded-[12px] border border-line bg-surface shadow-xl shadow-black/40"
+                    >
+                        <button
+                            type="button"
+                            role="menuitem"
+                            onClick={verPerfil}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[14px] text-ink transition-colors hover:bg-violet/40"
+                        >
+                            <span aria-hidden="true">👤</span>
+                            Ver perfil
+                        </button>
+                        <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => void sairDaConta()}
+                            className="flex w-full items-center gap-2 border-t border-line px-3 py-2.5 text-left text-[14px] text-[#e8909e] transition-colors hover:bg-[#c2455a]/20"
+                        >
+                            <span aria-hidden="true">↩</span>
+                            Sair da conta
+                        </button>
+                    </div>
+                )}
 
-                    {/* Streak no canto superior direito */}
+                <button
+                    type="button"
+                    onClick={() => setMenuAberto((aberto) => !aberto)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuAberto}
+                    aria-label="Abrir opções de conta"
+                    className="flex w-full items-center gap-3 rounded-[16px] border border-line bg-surface px-3 py-2.5 text-left outline-none transition-colors hover:border-violet-mid focus-visible:ring-2 focus-visible:ring-gold"
+                >
+                    {/* Avatar na mesma linha dos nomes */}
+                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-[12px] border border-line bg-[#1a0f35]">
+                        {picture
+                            ? <img src={picture} alt="Foto de perfil" className="h-full w-full object-cover" />
+                            : <span className="flex h-full w-full items-center justify-center text-[22px]">🙈</span>
+                        }
+                    </div>
+
+                    {/* Nome e usuário */}
+                    <div className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-bold leading-tight text-ink">
+                            {perfil?.display_name ?? (userSrc.carregando ? "..." : "Estudante")}
+                        </span>
+                        <span className="block truncate text-[12px] leading-tight text-violet-pale">
+                            {perfil?.username ? `@${perfil.username}` : ""}
+                        </span>
+                    </div>
+
+                    {/* Streak à direita dos nomes */}
                     <span
-                        className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold ${temStreakAtiva ? "bg-[#1a0f35]/70 text-gold" : "bg-[#1a0f35]/70 text-muted"}`}
+                        className={`inline-flex shrink-0 items-center gap-1 text-[13px] font-bold ${temStreakAtiva ? "text-gold" : "text-muted"}`}
                         title={temStreakAtiva ? `Streak de ${streakValor} dia(s)` : "Sem streak ativa"}
                         aria-label={temStreakAtiva ? `Streak ativa de ${streakValor} dias` : "Sem streak ativa"}
                     >
                         <span aria-hidden="true" className={temStreakAtiva ? "" : "grayscale opacity-60"}>🔥</span>
                         {streakValor}
                     </span>
-
-                    {/* Avatar menor, sobreposto na base do banner */}
-                    <div className="absolute -bottom-5 left-3 h-12 w-12 overflow-hidden rounded-[14px] border-2 border-surface bg-[#1a0f35]">
-                        {picture
-                            ? <img src={picture} alt="Foto de perfil" className="h-full w-full object-cover" />
-                            : <span className="flex h-full w-full items-center justify-center text-[24px]">🙈</span>
-                        }
-                    </div>
-                </div>
-
-                {/* Parte inferior: nome e usuário */}
-                <div className="min-w-0 px-3 pb-3 pl-[72px] pt-2">
-                    <span className="block truncate text-[15px] font-bold leading-tight text-ink">
-                        {perfil?.display_name ?? (userSrc.carregando ? "..." : "Estudante")}
-                    </span>
-                    <span className="block truncate text-[12px] leading-tight text-violet-pale">
-                        {perfil?.username ? `@${perfil.username}` : ""}
-                    </span>
-                </div>
-            </Link>
+                </button>
+            </div>
         </aside>
     )
 }
