@@ -49,6 +49,14 @@ function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
 
 const DEFAULT_COURSE_ICON = "📚";
 
+// Mesmo curso → mesma cor e símbolo (o banco não guarda isso), igual ao upstream.
+const SIMBOLOS = ["✦", "A", "</>", "π", "⚛", "◈"];
+function hashTexto(texto: string) {
+  let hash = 0;
+  for (const caractere of texto) hash = (hash * 31 + caractere.charCodeAt(0)) >>> 0;
+  return hash;
+}
+
 // Busca sem diferenciar maiúsculas e acentos.
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const mensagemDoErro = (erro: unknown) => (erro instanceof Error ? erro.message : "Algo deu errado. Tente novamente.");
@@ -233,163 +241,182 @@ function CursoModal({ curso, educador, nota, avaliacoes, onFechar, onAtualizar }
     }
   }
 
+  // Símbolo do ícone, estável por curso (mesma lógica do upstream).
+  const inicial = curso.title.trim().match(/[\p{L}\p{N}]/u)?.[0]?.toUpperCase();
+  const simbolo = inicial ?? SIMBOLOS[hashTexto(curso.id) % SIMBOLOS.length];
+
   return (
-    <div className="catalogo__modal-camada" role="presentation" onMouseDown={(evento) => { if (evento.target === evento.currentTarget) onFechar(); }}>
+    <div className="catalogo__modal-camada" role="presentation">
+      <div className="catalogo__modal-fundo" onClick={onFechar} />
+
       <section className="catalogo__modal" role="dialog" aria-modal="true" aria-labelledby="catalogo-modal-titulo">
-        <div className="catalogo__modal-banner">
-          <span className="catalogo__modal-categoria">{(curso.category || "Geral").toUpperCase()}</span>
-          <button className="catalogo__modal-fechar" type="button" onClick={onFechar} aria-label="Fechar">
-            <Icone nome="close" tamanho={22} />
-          </button>
-        </div>
+        <div className="catalogo__modal-rolagem">
+          <div className="catalogo__modal-banner">
+            <span className="catalogo__modal-categoria">{(curso.category || "Geral").toUpperCase()}</span>
+            <div className="catalogo__modal-forma catalogo__modal-forma--a" />
+            <div className="catalogo__modal-forma catalogo__modal-forma--b" />
+            <div className="catalogo__modal-brilho">✦</div>
+            <button className="catalogo__modal-fechar" type="button" onClick={onFechar} aria-label="Fechar informações do curso">
+              <Icone nome="close" tamanho={22} />
+            </button>
+          </div>
 
-        <div className="catalogo__modal-corpo">
-          <div className="catalogo__identidade">
-            <div className="catalogo__modal-icone">{DEFAULT_COURSE_ICON}</div>
-            <div className="catalogo__identidade-texto">
-              <p className="catalogo__rotulo">CURSO DE APRENDIZAGEM</p>
-              <h2 className="catalogo__modal-titulo" id="catalogo-modal-titulo">{curso.title}</h2>
-              <p className="catalogo__modal-slug">{curso.slug}</p>
-            </div>
-            <div className="catalogo__meta">
-              <div><span>Categoria:</span><strong>{curso.category || "—"}</strong></div>
-              <div><span>Educador:</span><strong>{educador}</strong></div>
+          <div className="catalogo__modal-corpo">
+            <div className="catalogo__identidade">
+              <div className="catalogo__modal-icone">{simbolo}</div>
               <div>
-                <span>Tags:</span>
-                {curso.tags.length > 0 ? curso.tags.map((tag) => <span className="catalogo__tag" key={tag}>{tag}</span>) : <strong>—</strong>}
+                <p className="catalogo__rotulo">CURSO DE APRENDIZAGEM</p>
+                <h2 className="catalogo__modal-titulo" id="catalogo-modal-titulo">{curso.title}</h2>
+                <p className="catalogo__modal-slug">{curso.slug}</p>
+              </div>
+              <div className="catalogo__meta">
+                <div><span>Categoria:</span><strong>{curso.category || "Geral"}</strong></div>
+                <div><span>Educador:</span><strong>{educador}</strong></div>
+                <div>
+                  <span>Tags:</span>
+                  {curso.tags.length > 0 ? curso.tags.map((tag) => <span className="catalogo__tag" key={tag}>{tag}</span>) : <strong>—</strong>}
+                </div>
               </div>
             </div>
-          </div>
 
-          <article className="catalogo__sobre">
-            <p className="catalogo__rotulo">SOBRE ESTE CURSO</p>
-            <p className="catalogo__sobre-texto">{curso.description || "Este curso ainda não tem uma descrição."}</p>
-          </article>
-
-          <div className="catalogo__colunas">
-            {/* Trilha de aprendizagem */}
-            <section className="catalogo__painel">
-              <div className="catalogo__painel-cabecalho">
-                <h3 className="catalogo__painel-titulo">Trilha de aprendizagem</h3>
-                <span className="catalogo__painel-resumo">{carregando ? "..." : `${modulos.length} módulos · ${totalAulas} aulas`}</span>
+            <article className="catalogo__sobre">
+              <div>
+                <p className="catalogo__rotulo">SOBRE ESTE CURSO</p>
+                <h3 className="catalogo__sobre-titulo">Descrição completa</h3>
               </div>
+              <p className="catalogo__sobre-texto">{curso.description || "Este curso ainda não tem uma descrição."}</p>
+            </article>
 
-              {carregando ? (
-                <p className="catalogo__estado">Carregando conteúdo...</p>
-              ) : modulos.length === 0 ? (
-                <p className="catalogo__estado">Este curso ainda não tem módulos.</p>
-              ) : (
-                <div className="catalogo__acordeao">
-                  {modulos.map((modulo, indice) => (
-                    <div className={`catalogo__modulo${moduloAberto === indice ? " catalogo__modulo--aberto" : ""}`} key={modulo.id}>
-                      <button className="catalogo__modulo-botao" type="button" aria-expanded={moduloAberto === indice} onClick={() => setModuloAberto(moduloAberto === indice ? -1 : indice)}>
-                        <span className="catalogo__modulo-numero">{modulo.icon || String(indice + 1).padStart(2, "0")}</span>
-                        <span className="catalogo__modulo-info">
-                          <strong>{modulo.title}</strong>
-                          {modulo.description && <small>{modulo.description}</small>}
-                        </span>
-                        <Icone nome="chevron" tamanho={18} />
-                      </button>
-                      {moduloAberto === indice && (
-                        <div className="catalogo__aulas">
-                          {modulo.aulas.length === 0 && <p className="catalogo__painel-vazio">Nenhuma aula neste módulo.</p>}
-                          {modulo.aulas.map((aula) => (
-                            <div className={`catalogo__aula${aula.concluida ? " catalogo__aula--concluida" : ""}`} key={aula.id}>
-                              <span className="catalogo__aula-play"><Icone nome={aula.concluida ? "check" : "play"} tamanho={12} /></span>
-                              {aula.title}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+            <div className="catalogo__colunas">
+              {/* Trilha de aprendizagem */}
+              <section className="catalogo__painel catalogo__modulos">
+                <div className="catalogo__painel-cabecalho">
+                  <div>
+                    <p className="catalogo__rotulo">CONTEÚDO DO CURSO</p>
+                    <h3 className="catalogo__painel-titulo">Trilha de aprendizagem</h3>
+                  </div>
+                  <span className="catalogo__painel-resumo">{carregando ? "..." : `${modulos.length} módulos · ${totalAulas} aulas`}</span>
                 </div>
-              )}
-            </section>
 
-            {/* Avaliações, avaliação própria, progresso e desempenho */}
-            <aside className="catalogo__painel catalogo__lateral">
-              <p className="catalogo__rotulo">AVALIAÇÕES</p>
-              {avaliacoes > 0 ? (
-                <>
-                  <div className="catalogo__nota-resumo"><strong>{nota.toFixed(1)}</strong> <span>★</span></div>
-                  <p className="catalogo__painel-vazio">{descreverNota(nota)} · {avaliacoes} {avaliacoes === 1 ? "avaliação" : "avaliações"}</p>
-                </>
-              ) : (
-                <p className="catalogo__painel-vazio">Este curso ainda não foi avaliado.</p>
-              )}
+                {carregando ? (
+                  <p className="catalogo__vazio-modulos">Carregando conteúdo...</p>
+                ) : modulos.length === 0 ? (
+                  <p className="catalogo__vazio-modulos">Este curso ainda não tem módulos.</p>
+                ) : (
+                  <div className="catalogo__acordeao">
+                    {modulos.map((modulo, indice) => (
+                      <div className={`catalogo__modulo${moduloAberto === indice ? " catalogo__modulo--aberto" : ""}`} key={modulo.id}>
+                        <button className="catalogo__modulo-botao" type="button" aria-expanded={moduloAberto === indice} onClick={() => setModuloAberto(moduloAberto === indice ? -1 : indice)}>
+                          <span className="catalogo__modulo-numero">{String(indice + 1).padStart(2, "0")}</span>
+                          <span>
+                            <strong>{modulo.title}</strong>
+                            {modulo.description && <small>{modulo.description}</small>}
+                          </span>
+                          <Icone nome="chevron" tamanho={19} />
+                        </button>
+                        {moduloAberto === indice && (
+                          <div className="catalogo__aulas">
+                            {modulo.aulas.length === 0 && <p className="catalogo__vazio-modulos">Nenhuma aula neste módulo.</p>}
+                            {modulo.aulas.map((aula) => (
+                              <div className={`catalogo__aula${aula.concluida ? " catalogo__aula--concluida" : ""}`} key={aula.id}>
+                                <span className="catalogo__aula-play"><Icone nome={aula.concluida ? "check" : "play"} tamanho={13} /></span>
+                                <span>{aula.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
 
-              <div className="catalogo__bloco">
-                <p className="catalogo__rotulo">SUA AVALIAÇÃO</p>
-                {matriculado ? (
+              {/* Avaliações, avaliação própria, progresso e desempenho */}
+              <aside className="catalogo__painel catalogo__lateral">
+                <p className="catalogo__rotulo">AVALIAÇÕES</p>
+                {avaliacoes > 0 ? (
                   <>
-                    <h4 className="catalogo__bloco-titulo">{minhaAvaliacao ? "Você avaliou este curso" : "Que nota você dá?"}</h4>
-                    <EstrelasNota valor={notaEscolhida} desabilitado={salvandoNota || minhaAvaliacao === undefined} onEscolher={setNotaEscolhida} />
-                    <textarea
-                      className="catalogo__comentario"
-                      rows={3}
-                      maxLength={500}
-                      placeholder="Comentário (opcional)"
-                      value={comentario}
-                      disabled={salvandoNota || minhaAvaliacao === undefined}
-                      onChange={(evento) => setComentario(evento.target.value)}
-                    />
-                    <div className="catalogo__avaliacao-acoes">
-                      <button
-                        className="catalogo__botao-primario catalogo__botao-avaliar"
-                        type="button"
-                        disabled={salvandoNota || notaEscolhida < 1 || (minhaAvaliacao?.rating === notaEscolhida && minhaAvaliacao.comment === comentario.trim())}
-                        onClick={() => void salvarAvaliacao()}
-                      >
-                        {salvandoNota ? "Salvando..." : minhaAvaliacao ? "Atualizar" : "Enviar"}
-                      </button>
-                      {minhaAvaliacao && (
-                        <button className="catalogo__link-remover" type="button" disabled={salvandoNota} onClick={() => void removerAvaliacao()}>Remover</button>
-                      )}
-                    </div>
-                    {mensagemNota && <p className="catalogo__painel-vazio" role="status">{mensagemNota}</p>}
+                    <div className="catalogo__nota-resumo"><strong className="catalogo__nota-numero">{nota.toFixed(1)}</strong><span className="catalogo__nota-estrela">★</span></div>
+                    <p className="catalogo__nota-legenda">{descreverNota(nota)} · {avaliacoes} {avaliacoes === 1 ? "avaliação" : "avaliações"}</p>
+                    <div className="catalogo__nota-barra"><span style={{ width: `${(nota / 5) * 100}%` }} /></div>
                   </>
                 ) : (
-                  <p className="catalogo__painel-vazio">Matricule-se no curso para poder avaliá-lo.</p>
+                  <p className="catalogo__nota-legenda">Este curso ainda não foi avaliado.</p>
                 )}
-              </div>
 
-              {matriculado && (
-                <div className="catalogo__bloco">
-                  <p className="catalogo__rotulo">SEU PROGRESSO</p>
-                  <div className="catalogo__taxa-resumo"><strong>{progresso}%</strong><span>{aulasConcluidas} de {totalAulas} aulas</span></div>
-                  <div className="catalogo__taxa-barra" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progresso}><span style={{ width: `${progresso}%` }} /></div>
+                <div className="catalogo__taxa-acerto">
+                  <p className="catalogo__rotulo">SUA AVALIAÇÃO</p>
+                  {matriculado ? (
+                    <>
+                      <h3 className="catalogo__taxa-titulo">{minhaAvaliacao ? "Você avaliou este curso" : "Que nota você dá?"}</h3>
+                      <EstrelasNota valor={notaEscolhida} desabilitado={salvandoNota || minhaAvaliacao === undefined} onEscolher={setNotaEscolhida} />
+                      <textarea
+                        className="catalogo__comentario"
+                        rows={3}
+                        maxLength={500}
+                        placeholder="Comentário (opcional)"
+                        value={comentario}
+                        disabled={salvandoNota || minhaAvaliacao === undefined}
+                        onChange={(evento) => setComentario(evento.target.value)}
+                      />
+                      <div className="catalogo__avaliacao-acoes">
+                        <button
+                          className="catalogo__botao-primario catalogo__botao-avaliar"
+                          type="button"
+                          disabled={salvandoNota || notaEscolhida < 1 || (minhaAvaliacao?.rating === notaEscolhida && minhaAvaliacao.comment === comentario.trim())}
+                          onClick={() => void salvarAvaliacao()}
+                        >
+                          {salvandoNota ? "Salvando..." : minhaAvaliacao ? "Atualizar" : "Enviar avaliação"}
+                        </button>
+                        {minhaAvaliacao && (
+                          <button className="catalogo__link-remover" type="button" disabled={salvandoNota} onClick={() => void removerAvaliacao()}>Remover</button>
+                        )}
+                      </div>
+                      {mensagemNota && <p className="catalogo__taxa-legenda" role="status">{mensagemNota}</p>}
+                    </>
+                  ) : (
+                    <p className="catalogo__taxa-legenda">Matricule-se no curso para poder avaliá-lo.</p>
+                  )}
                 </div>
-              )}
 
-              <div className="catalogo__bloco">
-                <p className="catalogo__rotulo">SEU DESEMPENHO</p>
-                {desempenho ? (
-                  <>
-                    <div className="catalogo__taxa-resumo"><strong>{desempenho.pac}%</strong><span>das respostas corretas</span></div>
-                    <div className="catalogo__taxa-barra" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={desempenho.pac}><span style={{ width: `${desempenho.pac}%` }} /></div>
-                    <p className="catalogo__painel-vazio">Com base em {desempenho.respostas} {desempenho.respostas === 1 ? "resposta" : "respostas"}</p>
-                  </>
-                ) : (
-                  <p className="catalogo__painel-vazio">{desempenho === undefined ? "Calculando..." : "Você ainda não respondeu atividades deste curso."}</p>
+                {matriculado && (
+                  <div className="catalogo__taxa-acerto">
+                    <p className="catalogo__rotulo">SEU PROGRESSO</p>
+                    <h3 className="catalogo__taxa-titulo">Aulas concluídas</h3>
+                    <div className="catalogo__taxa-resumo"><strong>{progresso}%</strong><span>{aulasConcluidas} de {totalAulas} aulas</span></div>
+                    <div className="catalogo__taxa-barra" role="progressbar" aria-label="Progresso no curso" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progresso}><span style={{ width: `${progresso}%` }} /></div>
+                  </div>
                 )}
-              </div>
-            </aside>
-          </div>
 
-          {erro && <p className="catalogo__estado catalogo__estado--erro">{erro}</p>}
+                <div className="catalogo__taxa-acerto">
+                  <p className="catalogo__rotulo">SEU DESEMPENHO</p>
+                  <h3 className="catalogo__taxa-titulo">Sua taxa de acerto atual</h3>
+                  {desempenho ? (
+                    <>
+                      <div className="catalogo__taxa-resumo"><strong>{desempenho.pac}%</strong><span>das respostas corretas</span></div>
+                      <div className="catalogo__taxa-barra" role="progressbar" aria-label="Taxa de acerto atual" aria-valuemin={0} aria-valuemax={100} aria-valuenow={desempenho.pac}><span style={{ width: `${desempenho.pac}%` }} /></div>
+                      <p className="catalogo__taxa-legenda">Com base em {desempenho.respostas} {desempenho.respostas === 1 ? "resposta" : "respostas"} neste curso</p>
+                    </>
+                  ) : (
+                    <p className="catalogo__taxa-legenda">{desempenho === undefined ? "Calculando..." : "Você ainda não respondeu atividades deste curso."}</p>
+                  )}
+                </div>
+              </aside>
+            </div>
+
+            {erro && <p className="catalogo__erro-inline" role="alert">{erro}</p>}
+          </div>
         </div>
 
         <footer className="catalogo__modal-rodape">
-          <p className="catalogo__rodape-info">
-            <Icone nome="clock" tamanho={16} />
+          <p>
+            <Icone nome="clock" tamanho={17} />
             <strong>{totalAulas} {totalAulas === 1 ? "aula" : "aulas"}</strong> em {modulos.length} {modulos.length === 1 ? "módulo" : "módulos"}
           </p>
           <div className="catalogo__modal-acoes">
             <button className="catalogo__botao-secundario" type="button" onClick={onFechar}>Fechar</button>
-            <button className="catalogo__botao-primario" type="button" onClick={() => void entrar()} disabled={entrando}>
-              {entrando ? "Abrindo..." : matriculado ? "Continuar curso" : "Matricular-se"}
-              <Icone nome="arrow" tamanho={18} />
+            <button className="catalogo__botao-primario catalogo__botao-entrar" type="button" onClick={() => void entrar()} disabled={entrando}>
+              {entrando ? "Abrindo..." : matriculado ? "Continuar curso" : "Matricular-se"} <Icone nome="arrow" tamanho={18} />
             </button>
           </div>
         </footer>
