@@ -237,6 +237,27 @@ export default function Dashboard({ courseId }: DashboardProps) {
     : [];
 
 
+  // A trilha rola na horizontal. Converte o scroll vertical do mouse (deltaY) em
+  // rolagem horizontal, para que a roda do mouse também mova o caminho. Usamos um
+  // listener não passivo para poder chamar preventDefault e evitar rolar a página.
+  useEffect(() => {
+    const element = trailRef.current;
+    if (!element) return;
+
+    function handleWheel(event: WheelEvent) {
+      if (!element) return;
+      // Ignora gestos horizontais nativos (trackpad); trata só o eixo vertical.
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const maxScroll = element.scrollWidth - element.clientWidth;
+      if (maxScroll <= 0) return;
+      event.preventDefault();
+      element.scrollLeft += event.deltaY;
+    }
+
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => element.removeEventListener("wheel", handleWheel);
+  }, []);
+
   // Centraliza o nó ativo após a troca de aula ou módulo.
   useEffect(() => {
     const element = trailRef.current;
