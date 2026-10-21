@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "../components/layout/PageLayout";
-import { aulaRepository, avaliacaoRepository, cursoRepository, matriculaRepository, moduloRepository, usuarioRepository } from "../data/repositories";
+import {
+  aulaRepository,
+  avaliacaoRepository,
+  concluiRepository,
+  cursoRepository,
+  matriculaRepository,
+  moduloRepository,
+  tentativaRepository,
+  usuarioRepository,
+} from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
 import "./Catalogo.css";
@@ -9,12 +18,14 @@ import "./Catalogo.css";
 type Curso = Database["public"]["Tables"]["courses"]["Row"];
 type Modulo = Database["public"]["Tables"]["modules"]["Row"];
 type Aula = Database["public"]["Tables"]["lessons"]["Row"];
-type ModuloComAulas = Modulo & { aulas: Aula[] };
+type StatusMatricula = Database["public"]["Enums"]["enrollment_status"];
+type AulaView = Aula & { concluida: boolean };
+type ModuloComAulas = Modulo & { aulas: AulaView[] };
 
 // ---------------------------------------------------------------------------
 // Ícones (só os que esta página usa)
 // ---------------------------------------------------------------------------
-type NomeIcone = "search" | "filter" | "plus" | "close" | "arrow" | "play";
+type NomeIcone = "search" | "filter" | "plus" | "close" | "arrow" | "play" | "chevron" | "check" | "clock";
 
 const caminhos: Record<NomeIcone, ReactNode> = {
   search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>,
@@ -23,6 +34,9 @@ const caminhos: Record<NomeIcone, ReactNode> = {
   close: <path d="m6 6 12 12M18 6 6 18" />,
   arrow: <path d="M5 12h14M14 7l5 5-5 5" />,
   play: <path d="m9 7 8 5-8 5Z" />,
+  chevron: <path d="m8 10 4 4 4-4" />,
+  check: <path d="m5 12 4 4L19 6" />,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
 };
 
 function Icone({ nome, tamanho = 20 }: { nome: NomeIcone; tamanho?: number }) {
@@ -37,22 +51,75 @@ const DEFAULT_COURSE_ICON = "📚";
 
 // Busca sem diferenciar maiúsculas e acentos.
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const mensagemDoErro = (erro: unknown) => (erro instanceof Error ? erro.message : "Algo deu errado. Tente novamente.");
+const descreverNota = (nota: number) => (nota >= 4.5 ? "Excelente" : nota >= 4 ? "Muito boa" : nota >= 3 ? "Boa" : "Regular");
+
+// Seletor de estrelas (1 a 5) para a avaliação do próprio usuário.
+function EstrelasNota({ valor, desabilitado, onEscolher }: { valor: number; desabilitado: boolean; onEscolher: (nota: number) => void }) {
+  const [previa, setPrevia] = useState(0);
+  const mostrado = previa || valor;
+  return (
+    <div className="catalogo__estrelas" role="radiogroup" aria-label="Sua nota para o curso" onMouseLeave={() => setPrevia(0)}>
+      {[1, 2, 3, 4, 5].map((nota) => (
+        <button
+          key={nota}
+          type="button"
+          role="radio"
+          aria-checked={valor === nota}
+          aria-label={`${nota} de 5`}
+          disabled={desabilitado}
+          className={`catalogo__estrela${nota <= mostrado ? " catalogo__estrela--ativa" : ""}`}
+          onMouseEnter={() => setPrevia(nota)}
+          onClick={() => onEscolher(nota)}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
-// Modal de detalhes do curso: módulos, aulas e ação de matrícula.
+// Modal de detalhes do curso (estilo upstream, só com dados reais do banco):
+// trilha de módulos/aulas, avaliação média, avaliação do próprio usuário,
+// progresso e desempenho. Só campos que existem no banco são exibidos.
 // ---------------------------------------------------------------------------
-function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void }) {
+type CursoModalProps = {
+  curso: Curso;
+  educador: string;
+  nota: number;
+  avaliacoes: number;
+  onFechar: () => void;
+  onAtualizar: () => void;
+};
+
+function CursoModal({ curso, educador, nota, avaliacoes, onFechar, onAtualizar }: CursoModalProps) {
   const navigate = useNavigate();
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modulos, setModulos] = useState<ModuloComAulas[]>([]);
+  const [statusMatricula, setStatusMatricula] = useState<StatusMatricula | null>(null);
+  const [moduloAberto, setModuloAberto] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [matriculado, setMatriculado] = useState(false);
-  const [acaoCarregando, setAcaoCarregando] = useState(false);
+  const [entrando, setEntrando] = useState(false);
 
+  // Avaliação do próprio usuário (undefined = carregando, null = ainda não avaliou).
+  const [minhaAvaliacao, setMinhaAvaliacao] = useState<{ rating: number; comment: string } | null | undefined>(undefined);
+  const [notaEscolhida, setNotaEscolhida] = useState(0);
+  const [comentario, setComentario] = useState("");
+  const [salvandoNota, setSalvandoNota] = useState(false);
+  const [mensagemNota, setMensagemNota] = useState("");
+  // Desempenho (undefined = carregando, null = sem tentativas finalizadas).
+  const [desempenho, setDesempenho] = useState<{ pac: number; respostas: number } | null | undefined>(undefined);
+
+  const matriculado = statusMatricula === "active" || statusMatricula === "completed";
+  const totalAulas = modulos.reduce((soma, modulo) => soma + modulo.aulas.length, 0);
+  const aulasConcluidas = modulos.reduce((soma, modulo) => soma + modulo.aulas.filter((aula) => aula.concluida).length, 0);
+  const progresso = totalAulas > 0 ? Math.round((aulasConcluidas / totalAulas) * 100) : 0;
+
+  // Esc + trava de rolagem.
   useEffect(() => {
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") onFechar();
-    }
+    function aoTeclar(evento: KeyboardEvent) { if (evento.key === "Escape") onFechar(); }
     const overflowAnterior = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", aoTeclar);
@@ -62,6 +129,7 @@ function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void })
     };
   }, [onFechar]);
 
+  // Carrega módulos/aulas (com conclusões), matrícula, avaliação própria e desempenho.
   useEffect(() => {
     let cancelado = false;
 
@@ -69,22 +137,40 @@ function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void })
       setCarregando(true);
       setErro("");
       try {
-        const [listaModulos, { data: userData }] = await Promise.all([
+        const { data: userData } = await supabase.auth.getUser();
+        const idUsuario = userData.user?.id ?? null;
+
+        const [listaModulos, matricula, conclusoes, minha, tentativas] = await Promise.all([
           moduloRepository.listarPorCurso(curso.id),
-          supabase.auth.getUser(),
+          idUsuario ? matriculaRepository.obter(curso.id, idUsuario) : Promise.resolve(null),
+          idUsuario ? concluiRepository.listarPorContexto("course") : Promise.resolve([]),
+          idUsuario ? avaliacaoRepository.obter(curso.id, idUsuario) : Promise.resolve(null),
+          idUsuario ? tentativaRepository.listarPorUsuario(idUsuario) : Promise.resolve([]),
         ]);
+
+        const idsConcluidas = new Set(conclusoes.map((c) => c.lesson_id));
         const comAulas = await Promise.all(
-          listaModulos.map(async (modulo) => ({ ...modulo, aulas: await aulaRepository.listarPorModulo(modulo.id) })),
+          listaModulos.map(async (modulo) => ({
+            ...modulo,
+            aulas: (await aulaRepository.listarPorModulo(modulo.id)).map((aula) => ({ ...aula, concluida: idsConcluidas.has(aula.id) })),
+          })),
         );
 
-        const idUsuario = userData.user?.id;
-        const matricula = idUsuario ? await matriculaRepository.obter(curso.id, idUsuario) : null;
+        // Desempenho: só tentativas de curso (sem sala) já finalizadas.
+        const doCurso = tentativas.filter((t) => t.course_id === curso.id && t.room_id === null && t.finished_at !== null);
+        const acertos = doCurso.reduce((s, t) => s + t.correct_count, 0);
+        const respostas = doCurso.reduce((s, t) => s + t.total_count, 0);
 
         if (cancelado) return;
+        setUsuarioId(idUsuario);
         setModulos(comAulas);
-        setMatriculado(Boolean(matricula));
+        setStatusMatricula(matricula?.status ?? null);
+        setMinhaAvaliacao(minha ? { rating: minha.rating, comment: minha.comment ?? "" } : null);
+        setNotaEscolhida(minha?.rating ?? 0);
+        setComentario(minha?.comment ?? "");
+        setDesempenho(respostas > 0 ? { pac: Math.round((acertos / respostas) * 100), respostas } : null);
       } catch (error) {
-        if (!cancelado) setErro(error instanceof Error ? error.message : "Não foi possível carregar o curso.");
+        if (!cancelado) setErro(mensagemDoErro(error));
       } finally {
         if (!cancelado) setCarregando(false);
       }
@@ -94,23 +180,56 @@ function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void })
     return () => { cancelado = true; };
   }, [curso.id]);
 
-  const totalAulas = modulos.reduce((soma, modulo) => soma + modulo.aulas.length, 0);
-
-  async function matricularOuAbrir() {
-    if (matriculado) {
-      navigate(`/dashboard?curso=${curso.id}`);
-      return;
-    }
-    setAcaoCarregando(true);
+  // Matricula (se preciso) e abre a trilha no Dashboard.
+  async function entrar() {
+    setEntrando(true);
     setErro("");
     try {
-      await matriculaRepository.matricular(curso.id);
-      setMatriculado(true);
+      if (statusMatricula === null) {
+        await matriculaRepository.matricular(curso.id);
+      } else if (statusMatricula === "dropped" && usuarioId) {
+        await matriculaRepository.atualizarStatus(curso.id, usuarioId, "active");
+      }
+      onAtualizar();
       navigate(`/dashboard?curso=${curso.id}`);
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível matricular no curso.");
+      setErro(`Não foi possível entrar no curso: ${mensagemDoErro(error)}`);
+      setEntrando(false);
+    }
+  }
+
+  async function salvarAvaliacao() {
+    if (!usuarioId || notaEscolhida < 1) return;
+    setSalvandoNota(true);
+    setMensagemNota("");
+    try {
+      const texto = comentario.trim();
+      await avaliacaoRepository.salvar({ user_id: usuarioId, course_id: curso.id, rating: notaEscolhida, comment: texto || null });
+      setMinhaAvaliacao({ rating: notaEscolhida, comment: texto });
+      setMensagemNota(minhaAvaliacao ? "Avaliação atualizada." : "Obrigado pela avaliação!");
+      onAtualizar();
+    } catch (error) {
+      setMensagemNota(`Não foi possível salvar: ${mensagemDoErro(error)}`);
     } finally {
-      setAcaoCarregando(false);
+      setSalvandoNota(false);
+    }
+  }
+
+  async function removerAvaliacao() {
+    if (!usuarioId) return;
+    setSalvandoNota(true);
+    setMensagemNota("");
+    try {
+      await avaliacaoRepository.deletar(curso.id, usuarioId);
+      setMinhaAvaliacao(null);
+      setNotaEscolhida(0);
+      setComentario("");
+      setMensagemNota("Avaliação removida.");
+      onAtualizar();
+    } catch (error) {
+      setMensagemNota(`Não foi possível remover: ${mensagemDoErro(error)}`);
+    } finally {
+      setSalvandoNota(false);
     }
   }
 
@@ -127,61 +246,152 @@ function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void })
         <div className="catalogo__modal-corpo">
           <div className="catalogo__identidade">
             <div className="catalogo__modal-icone">{DEFAULT_COURSE_ICON}</div>
-            <div>
-              <p className="catalogo__rotulo">CURSO</p>
+            <div className="catalogo__identidade-texto">
+              <p className="catalogo__rotulo">CURSO DE APRENDIZAGEM</p>
               <h2 className="catalogo__modal-titulo" id="catalogo-modal-titulo">{curso.title}</h2>
               <p className="catalogo__modal-slug">{curso.slug}</p>
             </div>
+            <div className="catalogo__meta">
+              <div><span>Categoria:</span><strong>{curso.category || "—"}</strong></div>
+              <div><span>Educador:</span><strong>{educador}</strong></div>
+              <div>
+                <span>Tags:</span>
+                {curso.tags.length > 0 ? curso.tags.map((tag) => <span className="catalogo__tag" key={tag}>{tag}</span>) : <strong>—</strong>}
+              </div>
+            </div>
           </div>
 
-          {curso.description && <p className="catalogo__sobre-texto">{curso.description}</p>}
+          <article className="catalogo__sobre">
+            <p className="catalogo__rotulo">SOBRE ESTE CURSO</p>
+            <p className="catalogo__sobre-texto">{curso.description || "Este curso ainda não tem uma descrição."}</p>
+          </article>
 
-          <div className="catalogo__painel">
-            <div className="catalogo__painel-cabecalho">
-              <h3 className="catalogo__painel-titulo">Conteúdo do curso</h3>
-              <span className="catalogo__painel-resumo">
-                {carregando ? "..." : `${modulos.length} módulos · ${totalAulas} aulas`}
-              </span>
-            </div>
-
-            {carregando ? (
-              <p className="catalogo__estado">Carregando conteúdo...</p>
-            ) : modulos.length === 0 ? (
-              <p className="catalogo__estado">Este curso ainda não tem módulos.</p>
-            ) : (
-              <div className="catalogo__modulos">
-                {modulos.map((modulo) => (
-                  <div className="catalogo__modulo" key={modulo.id}>
-                    <div className="catalogo__modulo-cabecalho">
-                      <span className="catalogo__modulo-icone">{modulo.icon || "📘"}</span>
-                      <strong>{modulo.title}</strong>
-                      <small>{modulo.aulas.length} aula(s)</small>
-                    </div>
-                    {modulo.aulas.length > 0 && (
-                      <ul className="catalogo__aulas">
-                        {modulo.aulas.map((aula) => (
-                          <li className="catalogo__aula" key={aula.id}>
-                            <span className="catalogo__aula-play"><Icone nome="play" tamanho={12} /></span>
-                            {aula.title}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+          <div className="catalogo__colunas">
+            {/* Trilha de aprendizagem */}
+            <section className="catalogo__painel">
+              <div className="catalogo__painel-cabecalho">
+                <h3 className="catalogo__painel-titulo">Trilha de aprendizagem</h3>
+                <span className="catalogo__painel-resumo">{carregando ? "..." : `${modulos.length} módulos · ${totalAulas} aulas`}</span>
               </div>
-            )}
+
+              {carregando ? (
+                <p className="catalogo__estado">Carregando conteúdo...</p>
+              ) : modulos.length === 0 ? (
+                <p className="catalogo__estado">Este curso ainda não tem módulos.</p>
+              ) : (
+                <div className="catalogo__acordeao">
+                  {modulos.map((modulo, indice) => (
+                    <div className={`catalogo__modulo${moduloAberto === indice ? " catalogo__modulo--aberto" : ""}`} key={modulo.id}>
+                      <button className="catalogo__modulo-botao" type="button" aria-expanded={moduloAberto === indice} onClick={() => setModuloAberto(moduloAberto === indice ? -1 : indice)}>
+                        <span className="catalogo__modulo-numero">{modulo.icon || String(indice + 1).padStart(2, "0")}</span>
+                        <span className="catalogo__modulo-info">
+                          <strong>{modulo.title}</strong>
+                          {modulo.description && <small>{modulo.description}</small>}
+                        </span>
+                        <Icone nome="chevron" tamanho={18} />
+                      </button>
+                      {moduloAberto === indice && (
+                        <div className="catalogo__aulas">
+                          {modulo.aulas.length === 0 && <p className="catalogo__painel-vazio">Nenhuma aula neste módulo.</p>}
+                          {modulo.aulas.map((aula) => (
+                            <div className={`catalogo__aula${aula.concluida ? " catalogo__aula--concluida" : ""}`} key={aula.id}>
+                              <span className="catalogo__aula-play"><Icone nome={aula.concluida ? "check" : "play"} tamanho={12} /></span>
+                              {aula.title}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Avaliações, avaliação própria, progresso e desempenho */}
+            <aside className="catalogo__painel catalogo__lateral">
+              <p className="catalogo__rotulo">AVALIAÇÕES</p>
+              {avaliacoes > 0 ? (
+                <>
+                  <div className="catalogo__nota-resumo"><strong>{nota.toFixed(1)}</strong> <span>★</span></div>
+                  <p className="catalogo__painel-vazio">{descreverNota(nota)} · {avaliacoes} {avaliacoes === 1 ? "avaliação" : "avaliações"}</p>
+                </>
+              ) : (
+                <p className="catalogo__painel-vazio">Este curso ainda não foi avaliado.</p>
+              )}
+
+              <div className="catalogo__bloco">
+                <p className="catalogo__rotulo">SUA AVALIAÇÃO</p>
+                {matriculado ? (
+                  <>
+                    <h4 className="catalogo__bloco-titulo">{minhaAvaliacao ? "Você avaliou este curso" : "Que nota você dá?"}</h4>
+                    <EstrelasNota valor={notaEscolhida} desabilitado={salvandoNota || minhaAvaliacao === undefined} onEscolher={setNotaEscolhida} />
+                    <textarea
+                      className="catalogo__comentario"
+                      rows={3}
+                      maxLength={500}
+                      placeholder="Comentário (opcional)"
+                      value={comentario}
+                      disabled={salvandoNota || minhaAvaliacao === undefined}
+                      onChange={(evento) => setComentario(evento.target.value)}
+                    />
+                    <div className="catalogo__avaliacao-acoes">
+                      <button
+                        className="catalogo__botao-primario catalogo__botao-avaliar"
+                        type="button"
+                        disabled={salvandoNota || notaEscolhida < 1 || (minhaAvaliacao?.rating === notaEscolhida && minhaAvaliacao.comment === comentario.trim())}
+                        onClick={() => void salvarAvaliacao()}
+                      >
+                        {salvandoNota ? "Salvando..." : minhaAvaliacao ? "Atualizar" : "Enviar"}
+                      </button>
+                      {minhaAvaliacao && (
+                        <button className="catalogo__link-remover" type="button" disabled={salvandoNota} onClick={() => void removerAvaliacao()}>Remover</button>
+                      )}
+                    </div>
+                    {mensagemNota && <p className="catalogo__painel-vazio" role="status">{mensagemNota}</p>}
+                  </>
+                ) : (
+                  <p className="catalogo__painel-vazio">Matricule-se no curso para poder avaliá-lo.</p>
+                )}
+              </div>
+
+              {matriculado && (
+                <div className="catalogo__bloco">
+                  <p className="catalogo__rotulo">SEU PROGRESSO</p>
+                  <div className="catalogo__taxa-resumo"><strong>{progresso}%</strong><span>{aulasConcluidas} de {totalAulas} aulas</span></div>
+                  <div className="catalogo__taxa-barra" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progresso}><span style={{ width: `${progresso}%` }} /></div>
+                </div>
+              )}
+
+              <div className="catalogo__bloco">
+                <p className="catalogo__rotulo">SEU DESEMPENHO</p>
+                {desempenho ? (
+                  <>
+                    <div className="catalogo__taxa-resumo"><strong>{desempenho.pac}%</strong><span>das respostas corretas</span></div>
+                    <div className="catalogo__taxa-barra" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={desempenho.pac}><span style={{ width: `${desempenho.pac}%` }} /></div>
+                    <p className="catalogo__painel-vazio">Com base em {desempenho.respostas} {desempenho.respostas === 1 ? "resposta" : "respostas"}</p>
+                  </>
+                ) : (
+                  <p className="catalogo__painel-vazio">{desempenho === undefined ? "Calculando..." : "Você ainda não respondeu atividades deste curso."}</p>
+                )}
+              </div>
+            </aside>
           </div>
 
           {erro && <p className="catalogo__estado catalogo__estado--erro">{erro}</p>}
         </div>
 
         <footer className="catalogo__modal-rodape">
-          <button className="catalogo__botao-secundario" type="button" onClick={onFechar}>Fechar</button>
-          <button className="catalogo__botao-primario" type="button" onClick={() => void matricularOuAbrir()} disabled={acaoCarregando}>
-            {acaoCarregando ? "..." : matriculado ? "Continuar curso" : "Matricular-se"}
-            <Icone nome="arrow" tamanho={18} />
-          </button>
+          <p className="catalogo__rodape-info">
+            <Icone nome="clock" tamanho={16} />
+            <strong>{totalAulas} {totalAulas === 1 ? "aula" : "aulas"}</strong> em {modulos.length} {modulos.length === 1 ? "módulo" : "módulos"}
+          </p>
+          <div className="catalogo__modal-acoes">
+            <button className="catalogo__botao-secundario" type="button" onClick={onFechar}>Fechar</button>
+            <button className="catalogo__botao-primario" type="button" onClick={() => void entrar()} disabled={entrando}>
+              {entrando ? "Abrindo..." : matriculado ? "Continuar curso" : "Matricular-se"}
+              <Icone nome="arrow" tamanho={18} />
+            </button>
+          </div>
         </footer>
       </section>
     </div>
@@ -214,7 +424,8 @@ export default function Catalogo() {
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [cursoAberto, setCursoAberto] = useState<Curso | null>(null);
+  const [cursoAberto, setCursoAberto] = useState<CursoComMeta | null>(null);
+  const [recarregarToken, setRecarregarToken] = useState(0);
 
   useEffect(() => {
     let cancelado = false;
@@ -252,7 +463,11 @@ export default function Catalogo() {
           }),
         );
 
-        if (!cancelado) setItens(comMeta);
+        if (!cancelado) {
+          setItens(comMeta);
+          // Mantém o modal aberto sincronizado com os dados recém-carregados.
+          setCursoAberto((atual) => (atual ? comMeta.find((item) => item.curso.id === atual.curso.id) ?? atual : null));
+        }
       } catch (error) {
         if (!cancelado) setErro(error instanceof Error ? error.message : "Não foi possível carregar os cursos.");
       } finally {
@@ -262,7 +477,7 @@ export default function Catalogo() {
 
     void carregar();
     return () => { cancelado = true; };
-  }, []);
+  }, [recarregarToken]);
 
   const categorias = useMemo(
     () => [...new Set(itens.map((item) => item.curso.category).filter((c): c is string => Boolean(c)))].sort(),
@@ -339,7 +554,7 @@ export default function Catalogo() {
                     key={curso.id}
                     type="button"
                     className={`catalogo__card catalogo__card--${item.tom}`}
-                    onClick={() => setCursoAberto(curso)}
+                    onClick={() => setCursoAberto(item)}
                   >
                     <div className={`catalogo__card-banner catalogo__card-banner--${item.tom}`}>
                       {curso.cover_url && <img src={curso.cover_url} alt="" className="catalogo__card-img" />}
@@ -374,7 +589,16 @@ export default function Catalogo() {
         </main>
       </div>
 
-      {cursoAberto && <CursoModal curso={cursoAberto} onFechar={() => setCursoAberto(null)} />}
+      {cursoAberto && (
+        <CursoModal
+          curso={cursoAberto.curso}
+          educador={cursoAberto.educador}
+          nota={cursoAberto.nota}
+          avaliacoes={cursoAberto.avaliacoes}
+          onFechar={() => setCursoAberto(null)}
+          onAtualizar={() => setRecarregarToken((t) => t + 1)}
+        />
+      )}
     </PageLayout>
   );
 }
