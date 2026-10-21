@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 const PROFILE_ROUTE = '/profile';
 const DASHBOARD_ROUTE = '/dashboard';
 const SALAS_ROUTE = '/salas';
-const LIGA_ROUTE = '/ligas';
+const RANKING_ROUTE = '/ranking';
 const AMIGOS_ROUTE = '/amigos';
 const NOTEBOOK_ROUTE = '/caderno';
 const CONFIG_ROUTE = '/configuracoes';
@@ -31,7 +31,7 @@ const itens: SidebarItem[] = [
     { text: "Início", to: DASHBOARD_ROUTE },
     { text: "Catálogo", to: CATALOGO_ROUTE },
     { text: "Salas", to: SALAS_ROUTE },
-    { text: "Ligas", to: LIGA_ROUTE },
+    { text: "Ranking", to: RANKING_ROUTE },
     { text: "Amigos", to: AMIGOS_ROUTE },
     { text: "Cadernos", to: NOTEBOOK_ROUTE },
     { text: "Configuração", to: CONFIG_ROUTE },
