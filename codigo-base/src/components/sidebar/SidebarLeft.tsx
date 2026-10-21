@@ -25,6 +25,21 @@ type PerfilUser = {
     display_name: string | null;
     username: string | null;
     avatar_url: string | null;
+    banner_url: string | null;
+    streak_count: number;
+    last_study_date: string | null;
+}
+
+/** Data local no formato YYYY-MM-DD (mesmo formato de profiles.last_study_date). */
+function diaLocal(offsetDias = 0) {
+    const data = new Date();
+    data.setDate(data.getDate() + offsetDias);
+    return data.toLocaleDateString("sv-SE");
+}
+
+/** A sequência só continua viva se a última aula foi hoje ou ontem. */
+function streakAtiva(lastStudyDate: string | null) {
+    return lastStudyDate === diaLocal() || lastStudyDate === diaLocal(-1);
 }
 
 const itens: SidebarItem[] = [
@@ -59,6 +74,9 @@ function useUserProfile() {
                               display_name: atual.display_name,
                               username: atual.username,
                               avatar_url: atual.avatar_url,
+                              banner_url: atual.banner_url,
+                              streak_count: atual.streak_count,
+                              last_study_date: atual.last_study_date,
                           }
                         : null,
                 );
@@ -93,12 +111,15 @@ function useUserProfile() {
 }
 
 export function SidebarLeft() {
-    // objeto com informacoes do usuario
     const userSrc = useUserProfile();
-    const picture: string | null = userSrc.profile?.avatar_url ?? null;
+    const perfil = userSrc.profile;
+    const picture = perfil?.avatar_url ?? null;
+    const banner = perfil?.banner_url ?? null;
+    const temStreakAtiva = Boolean(perfil && perfil.streak_count > 0 && streakAtiva(perfil.last_study_date));
+    const streakValor = temStreakAtiva ? perfil?.streak_count ?? 0 : 0;
 
     return (
-        // corpo inteiro da sidebar
+        // corpo inteiro da sidebar — fundo e bordas seguem os tokens da plataforma
         <aside className="
             sidebarL
             fixed
@@ -109,58 +130,29 @@ export function SidebarLeft() {
             box-border
             flex
             flex-col
-            gap-6
             border-r
-            border-[#b5b5eb2a]
-            bg-[#0e1420]
-            text-[#e6e6f0]"
+            border-line
+            bg-canvas
+            font-body
+            text-ink"
         >
-            {/* titulo no topo */}
-            <section className="
-                border-[#b5b5eb2a]
-                border-b"
-            >
+            {/* Cabeçalho: ícone do app + nome "athen" (fonte display, minúsculo) */}
+            <section className="border-b border-line px-4 py-5">
                 <Link
                     to={DASHBOARD_ROUTE}
-                    className="block no-underline hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-3 no-underline transition-opacity hover:opacity-90"
                     aria-label="Ir para o Dashboard"
                 >
-                    <h2 className="
-                        m-0
-                        text-[32px]
-                        tracking-[5px]
-                        text-center
-                        py-5"
-                        >
-                        ATHEN
-                    </h2>
+                    <img src="/Athen.png" alt="" aria-hidden="true" className="h-10 w-10 shrink-0 rounded-[10px] object-cover" />
+                    <span className="font-display text-[28px] lowercase leading-none tracking-[2px] text-gold">athen</span>
                 </Link>
             </section>
 
-            {/* parte interna da sidebar */}
-            <nav className="
-                flex
-                flex-col
-                gap-1
-                pb-4
-                px-4"
-            >
-                {/* itens do menu */}
+            {/* Navegação principal */}
+            <nav className="flex flex-col gap-1 px-4 pt-4 pb-4">
                 {itens.map((item) => {
-                    // Classes base compartilhadas entre NavLink e a (Links inativos)
-                    const baseItemClass = `
-                        flex
-                        items-center
-                        gap-[12px]
-                        w-full
-                        px-[12px]
-                        py-[12px]
-                        border-0
-                        rounded-[8px]
-                        text-left
-                        cursor-pointer
-                        transition-colors
-                    `;
+                    const baseItemClass =
+                        "flex items-center gap-[12px] w-full px-[12px] py-[10px] border-0 rounded-[10px] text-left text-[16px] cursor-pointer transition-colors";
 
                     return item.to ? (
                         <NavLink
@@ -168,90 +160,68 @@ export function SidebarLeft() {
                             key={item.text}
                             className={({ isActive }) =>
                                 `${baseItemClass} ${isActive
-                                    ? 'bg-[#22223a] text-white'
-                                    : 'bg-transparent text-[#a0a0b8] hover:bg-[#22223a] hover:text-white'
+                                    ? 'bg-violet/40 font-bold text-ink'
+                                    : 'bg-transparent text-muted hover:bg-surface hover:text-ink'
                                 }`
                             }
                         >
-                            <span className="text-[20px]">{item.text}</span>
+                            <span>{item.text}</span>
                         </NavLink>
                     ) : (
                         <a
                             href="#"
                             key={item.text}
-                            className={`
-                                ${baseItemClass}
-                                bg-transparent
-                                text-[#a0a0b8]
-                                hover:bg-[#22223a]
-                                hover:text-white
-                            `}
+                            className={`${baseItemClass} bg-transparent text-muted hover:bg-surface hover:text-ink`}
                         >
-                            <span className="text-[20px]">{item.text}</span>
+                            <span>{item.text}</span>
                         </a>
                     );
                 })}
             </nav>
 
-            {/* Link para o perfil e avatar do usuário */}
+            {/* Botão de perfil no rodapé: banner ao fundo da parte superior,
+                avatar menor, nome/usuário e a streak com ícone de fogo. */}
             <Link
                 to={PROFILE_ROUTE}
                 aria-label="Ir para o perfil"
                 title="Meu perfil"
-                className="block outline-none mt-auto mx-2.5"
+                className="group mx-3 mb-4 mt-auto block overflow-hidden rounded-[16px] border border-line bg-surface outline-none transition-colors hover:border-violet-mid focus-visible:ring-2 focus-visible:ring-gold"
             >
-                <div className="
-                    flex
-                    mb-3.75
-                    items-center
-                    justify-start
-                    gap-2
-                    p-1"
-                >
-                    {/* Foto do usuario */}
-                    <div className="
-                        flex
-                        w-17.5
-                        h-17.5
-                        shrink-0
-                        items-center
-                        overflow-hidden
-                        rounded-[22px]
-                        border
-                        border-violet"
-                    style={{
-                        boxShadow: "0 0px 30px rgba(84, 49, 140, 0.6)"
-                    }}
+                {/* Parte superior: banner de fundo + avatar + streak */}
+                <div className="relative h-[64px]">
+                    {banner
+                        ? <img src={banner} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+                        : <div className="absolute inset-0 bg-gradient-to-br from-violet via-violet-mid/60 to-surface" />
+                    }
+                    <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
+
+                    {/* Streak no canto superior direito */}
+                    <span
+                        className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold ${temStreakAtiva ? "bg-[#1a0f35]/70 text-gold" : "bg-[#1a0f35]/70 text-muted"}`}
+                        title={temStreakAtiva ? `Streak de ${streakValor} dia(s)` : "Sem streak ativa"}
+                        aria-label={temStreakAtiva ? `Streak ativa de ${streakValor} dias` : "Sem streak ativa"}
                     >
+                        <span aria-hidden="true" className={temStreakAtiva ? "" : "grayscale opacity-60"}>🔥</span>
+                        {streakValor}
+                    </span>
+
+                    {/* Avatar menor, sobreposto na base do banner */}
+                    <div className="absolute -bottom-5 left-3 h-12 w-12 overflow-hidden rounded-[14px] border-2 border-surface bg-[#1a0f35]">
                         {picture
-                            ?   <img
-                                    src={picture}
-                                    alt="Foto de perfil"
-                                    className="w-full h-full object-cover"
-                                />
-                            :   <span className="
-                                    flex
-                                    w-full
-                                    h-full
-                                    text-[44px]
-                                    items-center
-                                    justify-center"
-                                >
-                                    🙈
-                                </span>
+                            ? <img src={picture} alt="Foto de perfil" className="h-full w-full object-cover" />
+                            : <span className="flex h-full w-full items-center justify-center text-[24px]">🙈</span>
                         }
                     </div>
+                </div>
 
-                    {/* Nome display e do usuario */}
-                    <div className="min-w-0 flex flex-col gap-1.75">
-                        <span className="block truncate text-[22px] leading-none text-gold">
-                            {userSrc.profile?.display_name ?? (userSrc.carregando ? "..." : "Estudante")}
-                        </span>
-
-                        <span className="block truncate text-[13px] leading-none text-purple-400">
-                            {userSrc.profile?.username ? `@${userSrc.profile.username}` : ""}
-                        </span>
-                    </div>
+                {/* Parte inferior: nome e usuário */}
+                <div className="min-w-0 px-3 pb-3 pl-[72px] pt-2">
+                    <span className="block truncate text-[15px] font-bold leading-tight text-ink">
+                        {perfil?.display_name ?? (userSrc.carregando ? "..." : "Estudante")}
+                    </span>
+                    <span className="block truncate text-[12px] leading-tight text-violet-pale">
+                        {perfil?.username ? `@${perfil.username}` : ""}
+                    </span>
                 </div>
             </Link>
         </aside>
