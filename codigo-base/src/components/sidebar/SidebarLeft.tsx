@@ -11,6 +11,7 @@ const SALAS_ROUTE = '/salas';
 const RANKING_ROUTE = '/ranking';
 const AMIGOS_ROUTE = '/amigos';
 const NOTEBOOK_ROUTE = '/caderno';
+const NOTIFICACOES_ROUTE = '/notificacoes';
 const CONFIG_ROUTE = '/configuracoes';
 const CATALOGO_ROUTE = '/catalogo';
 
@@ -50,6 +51,7 @@ const itens: SidebarItem[] = [
     { text: "Ranking", to: RANKING_ROUTE },
     { text: "Amigos", to: AMIGOS_ROUTE },
     { text: "Cadernos", to: NOTEBOOK_ROUTE },
+    { text: "Notificações", to: NOTIFICACOES_ROUTE },
     { text: "Configuração", to: CONFIG_ROUTE },
 ];
 
