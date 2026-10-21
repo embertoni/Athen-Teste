@@ -82,17 +82,20 @@ export default function ConfiguracoesPage() {
   }
 
   return (
-    <PageLayout variant="bare" offset={false} className="configuracoes-layout">
-      <div className="configuracoes-page" aria-labelledby="configuracoes-title">
-        <header className="configuracoes-header">
-          <p className="configuracoes-eyebrow">Preferências da conta</p>
-          <h1 id="configuracoes-title">Configurações</h1>
-          <p className="configuracoes-intro">
-            Gerencie seus dados de acesso e escolha quais avisos deseja receber no Athen.
-          </p>
-        </header>
+    <PageLayout variant="bare">
+      <div className="configuracoes">
+        <div className="configuracoes__main" aria-labelledby="configuracoes-title">
+          <div className="configuracoes__brilho" />
 
-        <form className="configuracoes-content" onSubmit={handleSubmit}>
+          <header className="configuracoes__cabecalho">
+            <p className="configuracoes__caminho">PLATAFORMA / <span>CONFIGURAÇÕES</span></p>
+            <h1 className="configuracoes__titulo" id="configuracoes-title">Configurações</h1>
+            <p className="configuracoes__subtitulo">
+              Gerencie seus dados de acesso e escolha quais avisos deseja receber no Athen.
+            </p>
+          </header>
+
+          <form className="configuracoes-content" onSubmit={handleSubmit}>
           <section className="configuracoes-card" aria-labelledby="conta-title">
             <div className="configuracoes-card__heading">
               <div>
@@ -264,7 +267,8 @@ export default function ConfiguracoesPage() {
             </button>
             {feedback && <p className="configuracoes-feedback" role="status">{feedback}</p>}
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </PageLayout>
   );
