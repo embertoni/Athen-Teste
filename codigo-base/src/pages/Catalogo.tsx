@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "../components/layout/PageLayout";
-import { aulaRepository, cursoRepository, matriculaRepository, moduloRepository } from "../data/repositories";
+import { aulaRepository, avaliacaoRepository, cursoRepository, matriculaRepository, moduloRepository, usuarioRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
 import "./Catalogo.css";
@@ -188,11 +188,28 @@ function CursoModal({ curso, onFechar }: { curso: Curso; onFechar: () => void })
   );
 }
 
+// Paleta de "tons" dos cards (puramente decorativa, atribuída por índice —
+// não representa nenhum dado do banco).
+const TONS = ["coral", "azul", "violeta", "menta", "rosa", "laranja"] as const;
+type Tom = (typeof TONS)[number];
+
+// Curso + metadados reais calculados para o card (contagens, educador, nota).
+type CursoComMeta = {
+  curso: Curso;
+  tom: Tom;
+  modulos: number;
+  aulas: number;
+  educador: string;
+  nota: number;
+  avaliacoes: number;
+  matriculado: boolean;
+};
+
 // ---------------------------------------------------------------------------
 // Página
 // ---------------------------------------------------------------------------
 export default function Catalogo() {
-  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [itens, setItens] = useState<CursoComMeta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
@@ -206,8 +223,36 @@ export default function Catalogo() {
       setCarregando(true);
       setErro("");
       try {
+        const { data: userData } = await supabase.auth.getUser();
+        const meuId = userData.user?.id ?? null;
         const lista = await cursoRepository.listarPublicados();
-        if (!cancelado) setCursos(lista);
+
+        // Para cada curso, calcula os metadados reais exibidos no card.
+        const comMeta = await Promise.all(
+          lista.map(async (curso, indice): Promise<CursoComMeta> => {
+            const [modulos, educador, media, matricula] = await Promise.all([
+              moduloRepository.listarPorCurso(curso.id),
+              usuarioRepository.obterPorId(curso.creator_id),
+              avaliacaoRepository.obterMediaPorCurso(curso.id),
+              meuId ? matriculaRepository.obter(curso.id, meuId) : Promise.resolve(null),
+            ]);
+            const aulasPorModulo = await Promise.all(modulos.map((m) => aulaRepository.listarPorModulo(m.id)));
+            const aulas = aulasPorModulo.reduce((soma, lista) => soma + lista.length, 0);
+
+            return {
+              curso,
+              tom: TONS[indice % TONS.length],
+              modulos: modulos.length,
+              aulas,
+              educador: educador?.display_name || "Educador",
+              nota: media.media,
+              avaliacoes: media.total,
+              matriculado: Boolean(matricula),
+            };
+          }),
+        );
+
+        if (!cancelado) setItens(comMeta);
       } catch (error) {
         if (!cancelado) setErro(error instanceof Error ? error.message : "Não foi possível carregar os cursos.");
       } finally {
@@ -220,18 +265,18 @@ export default function Catalogo() {
   }, []);
 
   const categorias = useMemo(
-    () => [...new Set(cursos.map((curso) => curso.category).filter((c): c is string => Boolean(c)))].sort(),
-    [cursos],
+    () => [...new Set(itens.map((item) => item.curso.category).filter((c): c is string => Boolean(c)))].sort(),
+    [itens],
   );
 
   const termo = normalizar(busca.trim());
-  const cursosFiltrados = useMemo(
-    () => cursos.filter(
-      (curso) =>
+  const itensFiltrados = useMemo(
+    () => itens.filter(
+      ({ curso }) =>
         (!termo || normalizar(curso.title).includes(termo) || normalizar(curso.category ?? "").includes(termo))
         && (!categoria || curso.category === categoria),
     ),
-    [cursos, termo, categoria],
+    [itens, termo, categoria],
   );
 
   return (
@@ -274,39 +319,56 @@ export default function Catalogo() {
           </section>
 
           <p className="catalogo__contador">
-            Cursos disponíveis <span>{carregando ? "..." : cursosFiltrados.length}</span>
+            Cursos disponíveis <span>{carregando ? "..." : itensFiltrados.length}</span>
           </p>
 
           {carregando ? (
             <p className="catalogo__estado">Carregando cursos...</p>
           ) : erro ? (
             <p className="catalogo__estado catalogo__estado--erro">{erro}</p>
-          ) : cursos.length === 0 ? (
+          ) : itens.length === 0 ? (
             <p className="catalogo__estado">Nenhum curso publicado ainda.</p>
-          ) : cursosFiltrados.length === 0 ? (
+          ) : itensFiltrados.length === 0 ? (
             <p className="catalogo__estado">Nenhum curso encontrado para a busca.</p>
           ) : (
             <section className="catalogo__grade">
-              {cursosFiltrados.map((curso) => (
-                <button
-                  key={curso.id}
-                  type="button"
-                  className="catalogo__card"
-                  onClick={() => setCursoAberto(curso)}
-                >
-                  <div className="catalogo__card-banner">
-                    {curso.cover_url
-                      ? <img src={curso.cover_url} alt="" className="catalogo__card-img" />
-                      : <span className="catalogo__card-icone" aria-hidden="true">{DEFAULT_COURSE_ICON}</span>}
-                    {curso.category && <span className="catalogo__card-tag">{curso.category}</span>}
-                  </div>
-                  <div className="catalogo__card-corpo">
-                    <h2 className="catalogo__card-titulo">{curso.title}</h2>
-                    {curso.description && <p className="catalogo__card-desc">{curso.description}</p>}
-                    <span className="catalogo__card-mais">Ver curso <Icone nome="arrow" tamanho={16} /></span>
-                  </div>
-                </button>
-              ))}
+              {itensFiltrados.map((item) => {
+                const { curso } = item;
+                return (
+                  <button
+                    key={curso.id}
+                    type="button"
+                    className={`catalogo__card catalogo__card--${item.tom}`}
+                    onClick={() => setCursoAberto(curso)}
+                  >
+                    <div className={`catalogo__card-banner catalogo__card-banner--${item.tom}`}>
+                      {curso.cover_url && <img src={curso.cover_url} alt="" className="catalogo__card-img" />}
+                      {curso.category && <span className="catalogo__card-tag">{curso.category}</span>}
+                      <span className="catalogo__card-aulas" title="Aulas do curso">
+                        <Icone nome="play" tamanho={13} /> {item.aulas}
+                      </span>
+                    </div>
+                    <div className={`catalogo__card-icone catalogo__card-icone--${item.tom}`} aria-hidden="true">{DEFAULT_COURSE_ICON}</div>
+                    <div className="catalogo__card-corpo">
+                      <h2 className="catalogo__card-titulo">{curso.title}</h2>
+                      <p className="catalogo__card-educador">Educador: <strong>{item.educador}</strong></p>
+
+                      <div className="catalogo__card-dados">
+                        <p><strong>Conteúdo:</strong> {item.modulos} {item.modulos === 1 ? "módulo" : "módulos"} · {item.aulas} {item.aulas === 1 ? "aula" : "aulas"}</p>
+                        <p className="catalogo__card-selos">
+                          {item.matriculado && <span className="catalogo__selo catalogo__selo--ativo">Matriculado</span>}
+                          {item.avaliacoes > 0
+                            ? <span className="catalogo__selo"><strong>{item.nota.toFixed(1)}</strong> ★ ({item.avaliacoes})</span>
+                            : <span className="catalogo__selo">Sem avaliações</span>}
+                        </p>
+                      </div>
+
+                      {curso.description && <p className="catalogo__card-desc">{curso.description}</p>}
+                      <span className="catalogo__card-mais">Ver curso <Icone nome="arrow" tamanho={16} /></span>
+                    </div>
+                  </button>
+                );
+              })}
             </section>
           )}
         </main>
