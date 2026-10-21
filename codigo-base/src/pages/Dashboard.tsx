@@ -288,6 +288,20 @@ export default function Dashboard({ courseId }: DashboardProps) {
     ...courses.filter((availableCourse) => availableCourse.id !== selectedCourseId),
   ], [courses, selectedCourseId]);
 
+  // Uma aula só libera quando a aula anterior da trilha foi concluída. Fica
+  // bloqueada quando ela não está concluída e a anterior também não estava.
+  const lockedIndexes = useMemo(() => {
+    const locked = new Set<number>();
+    let previousDone = true;
+    trail.forEach((item, index) => {
+      if (item.type !== "lesson") return;
+      const done = completedLessonIds.has(item.aula.id);
+      if (!done && !previousDone) locked.add(index);
+      previousDone = done;
+    });
+    return locked;
+  }, [trail, completedLessonIds]);
+
 
   // A trilha rola na horizontal. Converte o scroll vertical do mouse (deltaY) em
   // rolagem horizontal, para que a roda do mouse também mova o caminho. Usamos um
@@ -370,15 +384,12 @@ export default function Dashboard({ courseId }: DashboardProps) {
   }
 
   // 1º clique seleciona a aula; 2º clique (na aula já selecionada) abre o pop-up
-  // com o conteúdo e as questões. A aula só libera quando a anterior foi concluída.
+  // com o conteúdo e as questões. Aulas bloqueadas não abrem.
   function handleTrailItemClick(index: number, item: TrailItem) {
     if (dragState.current.moved) return;
 
     if (item.type === "lesson" && index === activeIndex) {
-      const previousLesson = [...trail.slice(0, index)].reverse().find((trailItem) => trailItem.type === "lesson");
-      const previousLessonCompleted = !previousLesson || completedLessonIds.has(previousLesson.aula.id);
-      if (!previousLessonCompleted && !completedLessonIds.has(item.aula.id)) return;
-
+      if (lockedIndexes.has(index)) return;
       setOpenLesson({ aula: item.aula, module: item.module });
       return;
     }
@@ -596,27 +607,33 @@ export default function Dashboard({ courseId }: DashboardProps) {
                 const isActive = index === activeIndex;
                 const isPast = index <= pathEndIndex;
                 const completed = item.type === "lesson" && completedLessonIds.has(item.aula.id);
+                const locked = lockedIndexes.has(index);
+                const lit = isActive || isPast || completed;
                 const theme = item.module.theme;
                 const position = positions[index];
 
                 return (
                   <button
                     key={item.type === "module" ? item.module.id : item.aula.id}
-                    className={`trail-node trail-node--${item.type} ${isActive ? "trail-node--active" : ""}`}
+                    className={`trail-node trail-node--${item.type} ${isActive ? "trail-node--active" : ""} ${locked ? "trail-node--locked" : ""}`}
                     data-trail-index={index}
                     style={{ left: position.x - getTrailNodeOffset(item.type), top: position.y - getTrailNodeOffset(item.type) }}
                     onClick={() => handleTrailItemClick(index, item)}
-                    aria-label={item.type === "module" ? `Módulo ${item.module.title}` : `Aula ${item.aula.title}`}
+                    aria-label={
+                      item.type === "module"
+                        ? `Módulo ${item.module.title}`
+                        : `Aula ${item.aula.title}${locked ? " (bloqueada)" : completed ? " (concluída)" : ""}`
+                    }
                   >
                     <span
                       className="trail-node__face"
                       style={{
-                        background: isActive || isPast || completed ? `linear-gradient(145deg, ${theme.primary}, ${theme.primary}aa)` : "#30244d",
-                        borderColor: isActive || isPast || completed ? theme.primary : theme.muted,
+                        background: lit && !locked ? `linear-gradient(145deg, ${theme.primary}, ${theme.primary}aa)` : "#30244d",
+                        borderColor: lit && !locked ? theme.primary : theme.muted,
                         boxShadow: isActive ? `0 0 28px ${theme.primary}99` : undefined,
                       }}
                     >
-                      {item.type === "module" ? DEFAULT_MODULE_ICON : completed ? "✓" : isActive ? "▶" : "○"}
+                      {item.type === "module" ? DEFAULT_MODULE_ICON : completed ? "✓" : locked ? "🔒" : isActive ? "▶" : "○"}
                     </span>
                   </button>
                 );

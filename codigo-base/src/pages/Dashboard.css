@@ -39,6 +39,10 @@
 .trail__path path { transition: stroke 0.7s ease;}
 .trail-node { position: absolute; z-index: 1; display: block; padding: 0; background: transparent; border: 0; cursor: pointer; transition: transform 0.2s ease; }
 .trail-node:hover { transform: scale(1.1); }
+/* Nós bloqueados: aparência apagada e sem destaque de interação. */
+.trail-node--locked { opacity: 0.55; cursor: not-allowed; }
+.trail-node--locked:hover { transform: none; }
+.trail-node--locked .trail-node__face { filter: grayscale(0.5); }
 .trail-node--active { z-index: 3; animation: trail-node-pulse 1.8s ease-in-out infinite; }
 .trail-node--active:hover { animation-play-state: paused; }
 .trail-node:active { transform: scale(0.95); }
