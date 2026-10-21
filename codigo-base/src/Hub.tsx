@@ -12,6 +12,7 @@ import ConfigPage from './pages/ConfigPage'
 import Amigos from './pages/Amigos';
 import NotebookPage from './pages/Notebook';
 import Catalogo from './pages/Catalogo';
+import Notificacoes from './pages/Notificacoes';
 
 export default function Hub() {
   return (
@@ -28,6 +29,7 @@ export default function Hub() {
         <Route path="/configuracoes" element={<ConfigPage />} />
         <Route path="/amigos" element={<Amigos />} />
         <Route path="/caderno" element={<NotebookPage />} />
+        <Route path="/notificacoes" element={<Notificacoes />} />
         <Route path="/catalogo" element={<Catalogo/>}/>
       </Routes>
     </BrowserRouter>
