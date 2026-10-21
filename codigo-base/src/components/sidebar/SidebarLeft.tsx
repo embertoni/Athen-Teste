@@ -53,62 +53,94 @@ const itens: SidebarItem[] = [
     { text: "Configuração", to: CONFIG_ROUTE },
 ];
 
+// ---------------------------------------------------------------------------
+// Cache do perfil em nível de módulo.
+//
+// A SidebarLeft é renderizada dentro de cada página, então ela remonta a cada
+// troca de rota. Para não buscar o perfil toda vez, guardamos o resultado aqui
+// e o compartilhamos entre todas as instâncias: a busca acontece uma única vez
+// (no primeiro mount) e só é refeita quando a sessão muda ou o Profile salva
+// alterações (PROFILE_UPDATED_EVENT). Ao remontar, a sidebar lê direto o cache.
+// ---------------------------------------------------------------------------
+type EstadoPerfil = { profile: PerfilUser | null; carregando: boolean };
+
+let perfilCache: EstadoPerfil = { profile: null, carregando: true };
+let buscaEmAndamento: Promise<void> | null = null;
+let listenersGlobaisRegistrados = false;
+const assinantes = new Set<(estado: EstadoPerfil) => void>();
+
+function notificarAssinantes() {
+    for (const assinante of assinantes) assinante(perfilCache);
+}
+
+async function buscarPerfil() {
+    try {
+        const atual = await usuarioRepository.obterAtual();
+        perfilCache = {
+            profile: atual
+                ? {
+                      display_name: atual.display_name,
+                      username: atual.username,
+                      avatar_url: atual.avatar_url,
+                      banner_url: atual.banner_url,
+                      streak_count: atual.streak_count,
+                      last_study_date: atual.last_study_date,
+                  }
+                : null,
+            carregando: false,
+        };
+    } catch (error) {
+        console.error("Erro ao buscar perfil:", error);
+        perfilCache = { profile: null, carregando: false };
+    } finally {
+        notificarAssinantes();
+    }
+}
+
+// Dispara a busca só uma vez enquanto nenhuma estiver em andamento.
+function garantirBuscaPerfil() {
+    if (buscaEmAndamento) return;
+    buscaEmAndamento = buscarPerfil().finally(() => { buscaEmAndamento = null; });
+}
+
+// Invalida o cache e refaz a busca (login/logout e após salvar o perfil).
+function recarregarPerfil() {
+    perfilCache = { ...perfilCache, carregando: true };
+    notificarAssinantes();
+    buscaEmAndamento = null;
+    garantirBuscaPerfil();
+}
+
+// Listeners globais registrados uma única vez, independentes do ciclo de vida
+// dos componentes, para o cache reagir a login/logout e a edições do perfil.
+function registrarListenersGlobais() {
+    if (listenersGlobaisRegistrados) return;
+    listenersGlobaisRegistrados = true;
+
+    supabase.auth.onAuthStateChange(() => {
+        setTimeout(() => recarregarPerfil(), 0);
+    });
+    window.addEventListener(PROFILE_UPDATED_EVENT, () => recarregarPerfil());
+}
+
 /**
- * Perfil do usuário logado (tabela "profiles").
- * Recarrega quando a sessão muda (login/logout) e quando o Profile salva alterações.
+ * Perfil do usuário logado (tabela "profiles"), lido de um cache compartilhado.
+ * A busca ocorre uma única vez; remontagens da sidebar reaproveitam o cache.
  */
 function useUserProfile() {
-    const [profile, setProfile] = useState<PerfilUser | null>(null);
-    const [carregando, setCarregando] = useState(true);
+    const [estado, setEstado] = useState<EstadoPerfil>(perfilCache);
 
     useEffect(() => {
-        let cancelado = false;
+        registrarListenersGlobais();
+        // Assina antes de disparar a busca: qualquer atualização do cache chega
+        // por notificarAssinantes (de forma assíncrona), sem setState síncrono.
+        assinantes.add(setEstado);
+        garantirBuscaPerfil();
 
-        async function carregarPerfil() {
-            try {
-                const atual = await usuarioRepository.obterAtual();
-                if (cancelado) return;
-
-                setProfile(
-                    atual
-                        ? {
-                              display_name: atual.display_name,
-                              username: atual.username,
-                              avatar_url: atual.avatar_url,
-                              banner_url: atual.banner_url,
-                              streak_count: atual.streak_count,
-                              last_study_date: atual.last_study_date,
-                          }
-                        : null,
-                );
-            } catch (error) {
-                console.error("Erro ao buscar perfil:", error);
-                if (!cancelado) setProfile(null);
-            } finally {
-                if (!cancelado) setCarregando(false);
-            }
-        }
-
-        void carregarPerfil();
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange(() => {
-            // adiado para não chamar o Supabase dentro do callback de auth
-            setTimeout(() => { void carregarPerfil(); }, 0);
-        });
-
-        const aoAtualizarPerfil = () => { void carregarPerfil(); };
-        window.addEventListener(PROFILE_UPDATED_EVENT, aoAtualizarPerfil);
-
-        return () => {
-            cancelado = true;
-            subscription.unsubscribe();
-            window.removeEventListener(PROFILE_UPDATED_EVENT, aoAtualizarPerfil);
-        };
+        return () => { assinantes.delete(setEstado); };
     }, []);
 
-    return { profile, carregando };
+    return estado;
 }
 
 export function SidebarLeft() {
@@ -116,6 +148,7 @@ export function SidebarLeft() {
     const userSrc = useUserProfile();
     const perfil = userSrc.profile;
     const picture = perfil?.avatar_url ?? null;
+    const banner = perfil?.banner_url ?? null;
     const temStreakAtiva = Boolean(perfil && perfil.streak_count > 0 && streakAtiva(perfil.last_study_date));
     const streakValor = temStreakAtiva ? perfil?.streak_count ?? 0 : 0;
 
@@ -258,35 +291,55 @@ export function SidebarLeft() {
                     aria-haspopup="menu"
                     aria-expanded={menuAberto}
                     aria-label="Abrir opções de conta"
-                    className="flex w-full items-center gap-3 rounded-[16px] border border-line bg-surface px-3 py-2.5 text-left outline-none transition-colors hover:border-violet-mid focus-visible:ring-2 focus-visible:ring-gold"
+                    className="flex w-full flex-col overflow-hidden rounded-[16px] border border-line bg-surface text-left outline-none transition-colors hover:border-violet-mid focus-visible:ring-2 focus-visible:ring-gold"
                 >
-                    {/* Avatar na mesma linha dos nomes */}
-                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-[12px] border border-line bg-[#1a0f35]">
-                        {picture
-                            ? <img src={picture} alt="Foto de perfil" className="h-full w-full object-cover" />
-                            : <span className="flex h-full w-full items-center justify-center text-[22px]">🙈</span>
+                    {/* Banner no topo do botão */}
+                    <div className="h-[52px] w-full shrink-0">
+                        {banner
+                            ? <img src={banner} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+                            : <div className="h-full w-full bg-gradient-to-r from-violet via-violet-mid/60 to-violet" />
                         }
                     </div>
 
-                    {/* Nome e usuário */}
-                    <div className="min-w-0 flex-1">
-                        <span className="block truncate text-[15px] font-bold leading-tight text-ink">
-                            {perfil?.display_name ?? (userSrc.carregando ? "..." : "Estudante")}
-                        </span>
-                        <span className="block truncate text-[12px] leading-tight text-violet-pale">
-                            {perfil?.username ? `@${perfil.username}` : ""}
-                        </span>
-                    </div>
+                    {/* Linha: avatar + nomes + streak (mesmas posições de antes) */}
+                    <div className="flex w-full items-center gap-3 px-3 py-2.5">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-line bg-[#1a0f35]">
+                            {userSrc.carregando
+                                ? <span aria-hidden="true" className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-violet-mid/40 border-t-violet-pale" />
+                                : picture
+                                    ? <img src={picture} alt="Foto de perfil" className="h-full w-full object-cover" />
+                                    : <span className="flex h-full w-full items-center justify-center text-[22px]">🙈</span>
+                            }
+                        </div>
 
-                    {/* Streak à direita dos nomes */}
-                    <span
-                        className={`inline-flex shrink-0 items-center gap-1 text-[13px] font-bold ${temStreakAtiva ? "text-gold" : "text-muted"}`}
-                        title={temStreakAtiva ? `Streak de ${streakValor} dia(s)` : "Sem streak ativa"}
-                        aria-label={temStreakAtiva ? `Streak ativa de ${streakValor} dias` : "Sem streak ativa"}
-                    >
-                        <span aria-hidden="true" className={temStreakAtiva ? "" : "grayscale opacity-60"}>🔥</span>
-                        {streakValor}
-                    </span>
+                        {/* Nome e usuário */}
+                        <div className="min-w-0 flex-1">
+                            {userSrc.carregando ? (
+                                <span className="block h-[15px] w-2/3 animate-pulse rounded bg-violet-mid/30" />
+                            ) : (
+                                <>
+                                    <span className="block truncate text-[15px] font-bold leading-tight text-ink">
+                                        {perfil?.display_name ?? "Estudante"}
+                                    </span>
+                                    <span className="block truncate text-[12px] leading-tight text-violet-pale">
+                                        {perfil?.username ? `@${perfil.username}` : ""}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Streak à direita dos nomes */}
+                        {!userSrc.carregando && (
+                            <span
+                                className={`inline-flex shrink-0 items-center gap-1 text-[13px] font-bold ${temStreakAtiva ? "text-gold" : "text-muted"}`}
+                                title={temStreakAtiva ? `Streak de ${streakValor} dia(s)` : "Sem streak ativa"}
+                                aria-label={temStreakAtiva ? `Streak ativa de ${streakValor} dias` : "Sem streak ativa"}
+                            >
+                                <span aria-hidden="true" className={temStreakAtiva ? "" : "grayscale opacity-60"}>🔥</span>
+                                {streakValor}
+                            </span>
+                        )}
+                    </div>
                 </button>
             </div>
         </aside>
