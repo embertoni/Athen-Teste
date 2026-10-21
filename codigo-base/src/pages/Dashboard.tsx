@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PageLayout } from "../components/layout/PageLayout";
 import { SidebarRight } from "../components/sidebar/SidebarRight";
 import { CursoNotebook } from "../components/notebook/CursoNotebook";
+import { LessonModal } from "../components/lesson/LessonModal";
 import { aulaRepository, concluiRepository, cursoRepository, moduloRepository, salaRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
@@ -122,6 +123,8 @@ export default function Dashboard({ courseId }: DashboardProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  // Aula aberta no pop-up (conteúdo + questões + conclusão real).
+  const [openLesson, setOpenLesson] = useState<{ aula: Aula; module: DashboardModule } | null>(null);
   const trailRef = useRef<HTMLDivElement>(null);
   const dragState = useRef({ dragging: false, startX: 0, scrollLeft: 0, moved: false });
 
@@ -358,37 +361,38 @@ export default function Dashboard({ courseId }: DashboardProps) {
     handleCourseChange(sala.course_id);
   }
 
-  // ---------------------------------------------------------------------------
-  // CONCLUSÃO VISUAL TEMPORÁRIA — remover quando existir a tela de aula.
-  //
-  // Conclusão local temporária (nada é gravado em "completions"): 1º clique seleciona,
-  // 2º clique alterna a conclusão, e só vale se a aula anterior já estiver concluída.
-  // No banco novo a conclusão real é gravada pelo servidor em
-  // tentativaRepository.finalizar(), não pelo cliente.
-  // ---------------------------------------------------------------------------
+  // Recarrega do servidor as aulas concluídas (contexto de curso) do usuário.
+  async function reloadCompletedLessonIds() {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+    const conclusions = await concluiRepository.listarPorContexto("course");
+    setCompletedLessonIds(new Set(conclusions.map((conclusion) => conclusion.lesson_id)));
+  }
+
+  // 1º clique seleciona a aula; 2º clique (na aula já selecionada) abre o pop-up
+  // com o conteúdo e as questões. A aula só libera quando a anterior foi concluída.
   function handleTrailItemClick(index: number, item: TrailItem) {
     if (dragState.current.moved) return;
 
     if (item.type === "lesson" && index === activeIndex) {
-      setCompletedLessonIds((currentIds) => {
-        const nextIds = new Set(currentIds);
+      const previousLesson = [...trail.slice(0, index)].reverse().find((trailItem) => trailItem.type === "lesson");
+      const previousLessonCompleted = !previousLesson || completedLessonIds.has(previousLesson.aula.id);
+      if (!previousLessonCompleted && !completedLessonIds.has(item.aula.id)) return;
 
-        if (nextIds.has(item.aula.id)) {
-          nextIds.delete(item.aula.id);
-          return nextIds;
-        }
-
-        const previousLesson = [...trail.slice(0, index)].reverse().find((trailItem) => trailItem.type === "lesson");
-        const previousLessonCompleted = !previousLesson || nextIds.has(previousLesson.aula.id);
-        if (!previousLessonCompleted) return currentIds;
-
-        nextIds.add(item.aula.id);
-        return nextIds;
-      });
+      setOpenLesson({ aula: item.aula, module: item.module });
       return;
     }
 
     setActiveIndex(index);
+  }
+
+  // O servidor já gravou a conclusão: aqui só recarregamos as conclusões reais.
+  async function handleLessonCompleted() {
+    try {
+      await reloadCompletedLessonIds();
+    } catch {
+      // Silencioso: a conclusão foi gravada; a trilha atualiza no próximo carregamento.
+    }
   }
 
   // Move o carrossel para o módulo anterior ou para o próximo módulo.
@@ -661,6 +665,19 @@ export default function Dashboard({ courseId }: DashboardProps) {
             </div>
           </footer>
         </div>
+      )}
+
+      {course && openLesson && (
+        <LessonModal
+          key={openLesson.aula.id}
+          aula={openLesson.aula}
+          moduloTitulo={openLesson.module.title}
+          cursoId={course.id}
+          cor={openLesson.module.theme.primary}
+          jaConcluida={completedLessonIds.has(openLesson.aula.id)}
+          onFechar={() => setOpenLesson(null)}
+          onConcluida={() => void handleLessonCompleted()}
+        />
       )}
     </PageLayout>
   );
