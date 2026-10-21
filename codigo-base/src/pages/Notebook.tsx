@@ -279,7 +279,7 @@ export default function NotebookPage() {
             <>
               <header className="border-b border-line pb-6">
                 <p className="text-[10px] font-bold uppercase tracking-[1.4px] text-muted">PLATAFORMA / <span className="text-gold">CADERNOS</span></p>
-                <h1 className="mt-[10px] font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">Minha estante</h1>
+                <h1 className="mt-[10px] font-display text-[46px] font-normal leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">Minha estante</h1>
                 <p className="mt-[9px] text-[14px] text-muted">Escolha um caderno para abrir suas anotações. Os cadernos são organizados em ordem alfabética.</p>
               </header>
 
