@@ -3,7 +3,7 @@ import { PageLayout } from "../components/layout/PageLayout";
 import { SidebarRight } from "../components/sidebar/SidebarRight";
 import { CursoNotebook } from "../components/notebook/CursoNotebook";
 import { LessonModal } from "../components/lesson/LessonModal";
-import { aulaRepository, concluiRepository, cursoRepository, moduloRepository, salaRepository } from "../data/repositories";
+import { aulaRepository, concluiRepository, cursoRepository, matriculaRepository, moduloRepository, salaRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
 import "./Dashboard.css";
@@ -138,12 +138,30 @@ export default function Dashboard({ courseId }: DashboardProps) {
 
       try {
         const requestedCourseId = getRequestedCourseId(courseId);
-        const courses = await cursoRepository.listar();
-        const initialCourse = requestedCourseId
-          ? courses.find((item) => item.id === requestedCourseId)
-          : courses.find((item) => item.status === "published");
+        const { data: userData } = await supabase.auth.getUser();
+        const idUsuario = userData.user?.id;
+        if (!idUsuario) throw new Error("Faça login para ver sua trilha.");
 
-        if (!initialCourse) throw new Error(requestedCourseId ? "Curso não encontrado." : "Nenhum curso publicado disponível.");
+        // Só os cursos em que o usuário está matriculado (exclui abandonados).
+        const matriculas = (await matriculaRepository.listarPorUsuario(idUsuario))
+          .filter((matricula) => matricula.status !== "dropped");
+        const cursosMatriculados = (await Promise.all(
+          matriculas.map((matricula) => cursoRepository.obterPorId(matricula.course_id)),
+        )).filter((curso): curso is Curso => curso !== null);
+
+        // Se veio com ?curso=... e esse curso não está na lista (ex.: logo após
+        // matricular pelo Catálogo), busca-o e inclui para abrir direto.
+        let courses = cursosMatriculados;
+        if (requestedCourseId && !courses.some((curso) => curso.id === requestedCourseId)) {
+          const extra = await cursoRepository.obterPorId(requestedCourseId);
+          if (extra) courses = [extra, ...courses];
+        }
+
+        const initialCourse = requestedCourseId
+          ? courses.find((item) => item.id === requestedCourseId) ?? courses[0]
+          : courses[0];
+
+        if (!initialCourse) throw new Error("Você ainda não está matriculado em nenhum curso. Escolha um no Catálogo.");
 
         if (cancelled) return;
         setCourses(courses);
