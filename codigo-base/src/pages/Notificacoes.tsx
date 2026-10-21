@@ -9,10 +9,8 @@ import "./Notificacoes.css";
 type Notificacao = Database["public"]["Tables"]["notifications"]["Row"];
 type TipoNotificacao = Database["public"]["Enums"]["notification_type"];
 
-// Enquanto a integração com o banco não é finalizada, a página mostra o aviso
-// padrão de "banco não conectado". Trocar para true ativa a caixa de entrada
-// real: a listagem, o marcar como lida e o marcar todas já estão prontos.
-const BANCO_CONECTADO = false;
+// Integração ativa: caixa de entrada real (listar, marcar como lida, marcar todas).
+const BANCO_CONECTADO = true;
 
 // Ícone, rótulo e destino por tipo de notificação (enum do servidor).
 const ICONE_TIPO: Record<TipoNotificacao, string> = {
