@@ -132,3 +132,90 @@
   .catalogo__busca { @apply basis-full; }
   .catalogo__filtro { @apply min-h-[44px] flex-1; }
 }
+
+/* ---------- Estados (carregando / erro / vazio) ---------- */
+.catalogo__estado {
+  @apply mt-[16px] rounded-xl border border-dashed border-line bg-surface/70 px-6 py-10 text-center text-sm text-muted;
+}
+.catalogo__estado--erro { @apply border-red-300/40 text-red-200; }
+
+/* ---------- Botão secundário ---------- */
+.catalogo__botao-secundario {
+  @apply inline-flex h-[44px] cursor-pointer items-center justify-center rounded-[12px] border border-line bg-surface px-[18px] text-[13px] font-bold text-violet-pale;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.catalogo__botao-secundario:hover { border-color: color-mix(in srgb, var(--color-violet-mid) 50%, transparent); @apply text-ink; }
+
+/* ---------- Grade e cards ---------- */
+.catalogo__grade { @apply mt-[8px] grid grid-cols-1 gap-[18px] min-[760px]:grid-cols-2 min-[1200px]:grid-cols-3; }
+
+.catalogo__card {
+  @apply flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-line bg-surface text-left;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.catalogo__card:hover {
+  border-color: color-mix(in srgb, var(--color-violet-mid) 45%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 38px rgba(6, 2, 18, 0.3);
+}
+.catalogo__card:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+
+.catalogo__card-banner {
+  @apply relative flex h-[120px] items-center justify-center overflow-hidden;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-violet) 70%, transparent), var(--color-surface));
+}
+.catalogo__card-img { @apply h-full w-full object-cover; }
+.catalogo__card-icone { @apply text-[44px]; }
+.catalogo__card-tag {
+  @apply absolute left-[12px] top-[12px] rounded-full bg-[#0e0820]/55 px-[9px] py-[4px] text-[10px] font-bold text-violet-pale;
+}
+.catalogo__card-corpo { @apply flex flex-1 flex-col gap-[6px] p-[16px]; }
+.catalogo__card-titulo { @apply font-display text-[18px] leading-tight text-ink; }
+.catalogo__card-desc { @apply line-clamp-2 text-[12px] leading-[1.5] text-muted; }
+.catalogo__card-mais { @apply mt-auto flex items-center gap-[6px] pt-[8px] text-[12px] font-bold text-gold; }
+
+/* ---------- Modal ---------- */
+.catalogo__modal-camada { @apply fixed inset-0 z-30 grid place-items-center p-[24px]; background: rgba(8, 3, 20, 0.72); backdrop-filter: blur(6px); }
+.catalogo__modal {
+  @apply relative flex max-h-[min(860px,calc(100vh-48px))] w-full max-w-[720px] flex-col overflow-hidden rounded-[20px] border border-line bg-surface;
+  box-shadow: 0 30px 100px rgba(2, 0, 10, 0.68);
+}
+.catalogo__modal-banner {
+  @apply relative flex h-[120px] flex-none items-center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-violet) 75%, transparent), var(--color-surface));
+}
+.catalogo__modal-categoria {
+  @apply absolute left-[24px] top-[22px] rounded-full bg-[#0e0820]/45 px-[11px] py-[6px] text-[10px] font-bold tracking-[1.2px] text-violet-pale;
+}
+.catalogo__modal-fechar {
+  @apply absolute right-[16px] top-[16px] grid size-[40px] cursor-pointer place-items-center rounded-[12px] border border-line bg-[#0e0820]/45 text-ink;
+  transition: background-color 0.2s ease;
+}
+.catalogo__modal-fechar:hover { background: rgba(14, 8, 32, 0.7); }
+
+.catalogo__modal-corpo { @apply min-h-0 flex-1 overflow-y-auto px-[24px] pb-[20px]; }
+.catalogo__identidade { @apply -mt-[28px] mb-[14px] flex items-end gap-[14px]; }
+.catalogo__modal-icone {
+  @apply grid size-[64px] flex-none place-items-center rounded-[16px] border-4 border-surface bg-[#1a0f35] text-[28px];
+}
+.catalogo__rotulo { @apply text-[9px] font-bold tracking-[1.4px] text-gold; }
+.catalogo__modal-titulo { @apply font-display text-[24px] leading-tight text-ink; }
+.catalogo__modal-slug { @apply text-[11px] text-muted; }
+.catalogo__sobre-texto { @apply mb-[16px] text-[13px] leading-[1.6] text-muted; }
+
+.catalogo__painel { @apply rounded-[14px] border border-line bg-[#0e0820]/40 p-[16px]; }
+.catalogo__painel-cabecalho { @apply mb-[12px] flex items-center justify-between; }
+.catalogo__painel-titulo { @apply font-display text-[16px] text-ink; }
+.catalogo__painel-resumo { @apply text-[11px] text-muted; }
+.catalogo__modulos { @apply flex flex-col gap-[8px]; }
+.catalogo__modulo { @apply rounded-[11px] border border-line bg-surface p-[12px]; }
+.catalogo__modulo-cabecalho { @apply flex items-center gap-[10px] text-[13px] font-bold text-ink; }
+.catalogo__modulo-cabecalho small { @apply ml-auto text-[11px] font-normal text-muted; }
+.catalogo__modulo-icone { @apply text-[18px]; }
+.catalogo__aulas { @apply mt-[8px] flex list-none flex-col gap-[4px] p-0 pl-[30px]; }
+.catalogo__aula { @apply flex items-center gap-[7px] text-[12px] text-muted; }
+.catalogo__aula-play { @apply grid size-[18px] place-items-center rounded-[6px] bg-gold/10 text-gold; }
+
+.catalogo__modal-rodape {
+  @apply flex flex-none items-center justify-end gap-[10px] border-t border-line bg-[#0e0820]/50 px-[24px] py-[14px];
+}
