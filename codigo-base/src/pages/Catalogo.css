@@ -219,3 +219,44 @@
 .catalogo__modal-rodape {
   @apply flex flex-none items-center justify-end gap-[10px] border-t border-line bg-[#0e0820]/50 px-[24px] py-[14px];
 }
+
+/* ---------- Card (visual inspirado no upstream, com dados reais) ---------- */
+.catalogo__card { position: relative; }
+
+.catalogo__card-banner {
+  @apply relative flex h-[96px] items-center overflow-hidden;
+}
+.catalogo__card-banner--coral   { background: linear-gradient(125deg, #6f315a, #a94857); }
+.catalogo__card-banner--azul    { background: linear-gradient(125deg, #234a79, #2d77a3); }
+.catalogo__card-banner--violeta { background: linear-gradient(125deg, #432276, #7641a0); }
+.catalogo__card-banner--menta   { background: linear-gradient(125deg, #24615f, #378b79); }
+.catalogo__card-banner--rosa    { background: linear-gradient(125deg, #703353, #b94870); }
+.catalogo__card-banner--laranja { background: linear-gradient(125deg, #854e2d, #c77639); }
+
+.catalogo__card-aulas {
+  @apply absolute right-[12px] top-[12px] inline-flex items-center gap-[4px] rounded-full bg-[#0e0820]/55 px-[9px] py-[4px] text-[11px] font-bold text-violet-pale;
+}
+
+/* Ícone do curso sobreposto na base do banner. */
+.catalogo__card-icone {
+  @apply absolute left-[16px] top-[66px] z-10 grid size-[52px] place-items-center rounded-[15px] border-4 border-surface text-[22px] text-ink;
+}
+.catalogo__card-icone--coral   { background: #e15f69; }
+.catalogo__card-icone--azul    { background: #3a89c5; }
+.catalogo__card-icone--violeta { background: #9a61d0; }
+.catalogo__card-icone--menta   { background: #41a989; }
+.catalogo__card-icone--rosa    { background: #d95785; }
+.catalogo__card-icone--laranja { background: #db8545; }
+
+.catalogo__card-corpo { @apply flex flex-1 flex-col gap-[5px] px-[16px] pb-[16px] pt-[30px]; }
+.catalogo__card-educador { @apply text-[12px] text-muted; }
+.catalogo__card-educador strong { @apply text-violet-pale; }
+.catalogo__card-dados { @apply mt-[6px] flex flex-col gap-[6px] border-t border-line pt-[10px]; }
+.catalogo__card-dados p { @apply text-[12px] text-muted; }
+.catalogo__card-dados strong { @apply text-violet-pale; }
+.catalogo__card-selos { @apply flex flex-wrap items-center gap-[6px]; }
+.catalogo__selo {
+  @apply inline-flex items-center gap-[4px] rounded-full border border-line bg-[#0e0820]/40 px-[8px] py-[3px] text-[11px] text-muted;
+}
+.catalogo__selo strong { @apply text-gold; }
+.catalogo__selo--ativo { border-color: color-mix(in srgb, var(--color-gold) 40%, transparent); @apply text-gold; }
