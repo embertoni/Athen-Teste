@@ -109,3 +109,102 @@
   .salas__busca { @apply basis-full; }
   .salas__filtro { @apply min-h-[44px] flex-1; }
 }
+
+/* ---------- Entrar por código / criar sala ---------- */
+.salas__entrar { @apply mb-[16px] flex gap-[12px]; }
+.salas__entrar-campo { @apply h-[48px] flex-1; }
+
+.salas__form-criar {
+  @apply mb-[16px] flex flex-col gap-[10px] rounded-[16px] border border-line bg-surface p-[18px];
+}
+.salas__form-criar h2 { @apply font-display text-[18px] text-ink; }
+.salas__form-criar input,
+.salas__form-criar select {
+  @apply h-[44px] rounded-[10px] border border-line bg-canvas px-[12px] text-[13px] text-ink;
+  outline: 0;
+}
+.salas__form-criar input:focus,
+.salas__form-criar select:focus {
+  border-color: color-mix(in srgb, var(--color-gold) 52%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 8%, transparent);
+}
+.salas__form-acoes { @apply flex gap-[10px]; }
+
+.salas__acao-msg { @apply mb-[16px] text-[13px] text-violet-pale; }
+
+.salas__botao-secundario {
+  @apply inline-flex h-[44px] cursor-pointer items-center justify-center rounded-[12px] border border-line bg-surface px-[18px] text-[13px] font-bold text-violet-pale;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.salas__botao-secundario:hover { border-color: color-mix(in srgb, var(--color-violet-mid) 50%, transparent); @apply text-ink; }
+
+/* ---------- Estados ---------- */
+.salas__estado {
+  @apply mt-[8px] rounded-xl border border-dashed border-line bg-surface/70 px-6 py-10 text-center text-sm text-muted;
+}
+.salas__estado--erro { @apply border-red-300/40 text-red-200; }
+
+/* ---------- Grade e cards ---------- */
+.salas__grade { @apply grid grid-cols-1 gap-[18px] min-[760px]:grid-cols-2 min-[1200px]:grid-cols-3; }
+.salas__card {
+  @apply flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-line bg-surface text-left;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.salas__card:hover {
+  border-color: color-mix(in srgb, var(--color-violet-mid) 45%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 38px rgba(6, 2, 18, 0.3);
+}
+.salas__card:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+.salas__card-banner {
+  @apply relative flex h-[94px] items-center justify-center overflow-hidden;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-violet) 70%, transparent), var(--color-surface));
+}
+.salas__card-icone { @apply text-[36px]; }
+.salas__card-tag {
+  @apply absolute left-[12px] top-[12px] rounded-full bg-[#0e0820]/55 px-[9px] py-[4px] text-[10px] font-bold text-violet-pale;
+}
+.salas__card-corpo { @apply flex flex-1 flex-col gap-[4px] p-[16px]; }
+.salas__card-titulo { @apply font-display text-[18px] leading-tight text-ink; }
+.salas__card-slug { @apply text-[12px] text-muted; }
+.salas__card-curso { @apply text-[12px] text-violet-pale; }
+.salas__card-mais { @apply mt-auto flex items-center gap-[6px] pt-[8px] text-[12px] font-bold text-gold; }
+
+.salas__membros {
+  @apply ml-auto flex h-[26px] flex-none items-center gap-[5px] rounded-full bg-[#0e0820]/50 px-[10px] text-[12px] font-bold text-violet-pale;
+}
+
+/* ---------- Modal ---------- */
+.salas__modal-camada { @apply fixed inset-0 z-30 grid place-items-center p-[24px]; background: rgba(8, 3, 20, 0.72); backdrop-filter: blur(6px); }
+.salas__modal {
+  @apply relative flex max-h-[min(860px,calc(100vh-48px))] w-full max-w-[680px] flex-col overflow-hidden rounded-[20px] border border-line bg-surface;
+  box-shadow: 0 30px 100px rgba(2, 0, 10, 0.68);
+}
+.salas__modal-banner {
+  @apply relative flex h-[110px] flex-none items-center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-violet) 75%, transparent), var(--color-surface));
+}
+.salas__modal-categoria { @apply absolute left-[24px] top-[22px] rounded-full bg-[#0e0820]/45 px-[11px] py-[6px] text-[10px] font-bold tracking-[1.2px] text-violet-pale; }
+.salas__modal-fechar {
+  @apply absolute right-[16px] top-[16px] grid size-[40px] cursor-pointer place-items-center rounded-[12px] border border-line bg-[#0e0820]/45 text-ink;
+  transition: background-color 0.2s ease;
+}
+.salas__modal-fechar:hover { background: rgba(14, 8, 32, 0.7); }
+.salas__modal-corpo { @apply min-h-0 flex-1 overflow-y-auto px-[24px] pb-[20px]; }
+.salas__identidade { @apply -mt-[24px] mb-[14px] flex items-end gap-[14px]; }
+.salas__modal-icone { @apply grid size-[60px] flex-none place-items-center rounded-[16px] border-4 border-surface bg-[#1a0f35] text-[26px]; }
+.salas__rotulo { @apply text-[9px] font-bold tracking-[1.4px] text-gold; }
+.salas__modal-titulo { @apply font-display text-[22px] leading-tight text-ink; }
+.salas__modal-slug { @apply text-[11px] text-muted; }
+.salas__modal-slug strong { @apply text-violet-pale; }
+
+.salas__painel { @apply mb-[12px] rounded-[14px] border border-line bg-[#0e0820]/40 p-[16px]; }
+.salas__painel-titulo { @apply mb-[10px] font-display text-[15px] text-ink; }
+.salas__painel-vazio { @apply text-[12px] text-muted; }
+.salas__lista-painel { @apply flex list-none flex-col gap-[8px] p-0; }
+.salas__item-painel { @apply rounded-[10px] border border-line bg-surface p-[11px]; }
+.salas__item-painel strong { @apply block text-[13px] text-ink; }
+.salas__item-painel p { @apply mt-[3px] text-[12px] leading-[1.4] text-muted; }
+.salas__item-painel small { @apply mt-[5px] block text-[11px] font-bold text-gold; }
+
+.salas__modal-rodape { @apply flex flex-none items-center justify-end gap-[10px] border-t border-line bg-[#0e0820]/50 px-[24px] py-[14px]; }
