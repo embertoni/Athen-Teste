@@ -57,7 +57,7 @@ begin
    where c.id = v_course_id;
 
   if not coalesce(v_accessible, false) then
-    raise exception 'course % is not accessible to the current user' using errcode = '42501';
+    raise exception 'course % is not accessible to the current user', v_course_id using errcode = '42501';
   end if;
 
   -- Conclusão (contexto de curso), sem attempt e sem XP.
