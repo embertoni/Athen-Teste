@@ -256,7 +256,9 @@ export default function Dashboard({ courseId }: DashboardProps) {
 
     element.addEventListener("wheel", handleWheel, { passive: false });
     return () => element.removeEventListener("wheel", handleWheel);
-  }, []);
+    // Reanexa quando a trilha (re)monta: durante o loading o <section> não existe,
+    // então o ref só aponta para o elemento depois que os dados chegam.
+  }, [loading, errorMessage, course, activeModule, trail.length]);
 
   // Centraliza o nó ativo após a troca de aula ou módulo.
   useEffect(() => {
