@@ -342,28 +342,28 @@ export default function Dashboard({ courseId }: DashboardProps) {
       ) : (
         <div className="dashboard" style={{ background: activeTheme.background, color: "#f4eeff" }}>
 
-          <header className="dashboard-header">
-            <label className="dashboard-course-select">
-              <span className="dashboard-course-select__icon">{DEFAULT_COURSE_ICON}</span>
+          <header className="dashboard-header relative flex flex-none flex-col items-center px-6 pb-[14px] pt-[26px] text-center">
+            <label className="dashboard-course-select inline-flex items-center gap-2 rounded-lg border border-[rgba(193,150,255,0.34)] bg-[rgba(87,46,151,0.22)] px-3 py-1.5 text-[#ffcc00] focus-within:border-[#A486D5] focus-within:ring-2 focus-within:ring-[#A486D5]/60">
+              <span className="dashboard-course-select__icon flex h-6 w-6 flex-none items-center justify-center text-xl leading-none">{DEFAULT_COURSE_ICON}</span>
               <select
-                className="dashboard-course-select__field"
+                className="dashboard-course-select__field max-w-[min(42vw,360px)] cursor-pointer border-0 bg-transparent text-sm font-bold text-[#ffcc00] outline-none"
                 value={selectedCourseId ?? course.id}
                 onChange={(event) => handleCourseChange(event.target.value)}
                 aria-label="Selecionar curso"
               >
                 {courses.map((availableCourse) => (
-                  <option key={availableCourse.id} value={availableCourse.id}>
+                  <option key={availableCourse.id} value={availableCourse.id} className="bg-[#1a0f35] text-[#f4eeff]">
                     {availableCourse.title}
                   </option>
                 ))}
               </select>
             </label>
-            <h1 className="dashboard-header__title">{activeItem?.type === "lesson" ? activeItem.aula.title : activeModule.title}</h1>
+            <h1 className="dashboard-header__title m-[7px_0_0] text-[clamp(26px,4vw,38px)] font-normal tracking-[0.02em] text-[#f4eeff]">{activeItem?.type === "lesson" ? activeItem.aula.title : activeModule.title}</h1>
           </header>
 
           <section
             ref={trailRef}
-            className="trail-scroll"
+            className="trail-scroll min-h-0 w-full flex-1 cursor-grab overflow-x-auto overflow-y-hidden"
             aria-label="Trilha de aprendizagem"
             onMouseDown={(event) => handlePointerDown(event.pageX)}
             onMouseMove={(event) => handlePointerMove(event.pageX)}
@@ -373,9 +373,9 @@ export default function Dashboard({ courseId }: DashboardProps) {
             onTouchMove={(event) => handlePointerMove(event.touches[0].pageX)}
             onTouchEnd={() => { dragState.current.dragging = false; }}
           >
-            <div className="trail" style={{ width: trailWidth }}>
-              <div className="trail__glow" style={{ background: `radial-gradient(ellipse 50% 60% at 50% 50%, ${hexToRgba(activeTheme.primary, 0.12)} 0%, transparent 70%)` }} />
-              <svg className="trail__path" width={trailWidth} height="320" aria-hidden="true">
+            <div className="trail relative h-[320px] max-w-none" style={{ width: trailWidth }}>
+              <div className="trail__glow pointer-events-none absolute inset-0 transition-[background] duration-700" style={{ background: `radial-gradient(ellipse 50% 60% at 50% 50%, ${hexToRgba(activeTheme.primary, 0.12)} 0%, transparent 70%)` }} />
+              <svg className="trail__path pointer-events-none absolute left-0 top-0 overflow-visible" width={trailWidth} height="320" aria-hidden="true">
                 <path d={createSmoothPath(positions)} fill="none" stroke={activeTheme.muted} strokeWidth="5" strokeDasharray="10 8" strokeLinecap="round" />
                 {Array.from({ length: pathEndIndex }).map((_, index) => (
                   <g key={`completed-segment-${index}`}>
@@ -443,18 +443,18 @@ export default function Dashboard({ courseId }: DashboardProps) {
           </section>
 
           {/* Rodapé: percentual do módulo ativo e atalhos para os módulos carregados. */}
-          <footer className="dashboard-footer">
-            <div className="progress-row" aria-label={`Progresso do módulo: ${progressPercent}%`}>
-              <div className="progress-blocks">
-                {Array.from({ length: progressBlockCount }).map((_, index) => <span key={index} className={`progress-block ${index < completedBlocks ? "progress-block--completed" : ""}`} style={{ borderColor: index < completedBlocks ? activeTheme.primary : activeTheme.muted, background: index < completedBlocks ? activeTheme.primary : "transparent" }} />)}
+          <footer className="dashboard-footer mx-auto flex w-full max-w-[960px] flex-none flex-col px-5 pb-5 pt-2">
+            <div className="progress-row flex items-center justify-center gap-3" aria-label={`Progresso do módulo: ${progressPercent}%`}>
+              <div className="progress-blocks flex min-h-6 items-center gap-1.5">
+                {Array.from({ length: progressBlockCount }).map((_, index) => <span key={index} className={`progress-block block h-3 w-3 rounded-[3px] border-2 border-transparent transition-all duration-500 ${index < completedBlocks ? "progress-block--completed" : ""}`} style={{ borderColor: index < completedBlocks ? activeTheme.primary : activeTheme.muted, background: index < completedBlocks ? activeTheme.primary : "transparent" }} />)}
               </div>
-              <span className="progress-separator" style={{ color: activeTheme.muted }}>|</span>
-              <strong className="progress-percent" style={{ color: activeTheme.primary }}>{progressPercent}%</strong>
+              <span className="progress-separator text-base font-black" style={{ color: activeTheme.muted }}>|</span>
+              <strong className="progress-percent text-xl tracking-[0.08em]" style={{ color: activeTheme.primary }}>{progressPercent}%</strong>
             </div>
-            <div className="module-carousel" aria-label="Navegação entre módulos">
+            <div className="module-carousel mt-4 flex items-center justify-center gap-0.5" aria-label="Navegação entre módulos">
               <button className="module-carousel__arrow" type="button" onClick={() => moveCarousel(-1)} aria-label="Módulo anterior">‹</button>
-              <div className="module-carousel__viewport">
-                <div className="module-carousel__track">
+              <div className="module-carousel__viewport w-[min(100%,330px)] overflow-hidden">
+                <div className="module-carousel__track grid grid-cols-3 items-end gap-0">
                   {carouselModules.map((module, index) => {
                     const isCurrent = index === 1;
 
