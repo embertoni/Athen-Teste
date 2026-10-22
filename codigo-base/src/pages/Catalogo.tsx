@@ -446,6 +446,7 @@ type CursoComMeta = {
 // Página
 // ---------------------------------------------------------------------------
 export default function Catalogo() {
+  const navigate = useNavigate();
   const [itens, setItens] = useState<CursoComMeta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -533,8 +534,7 @@ export default function Catalogo() {
               <h1 className="catalogo__titulo">Catálogo</h1>
               <p className="catalogo__subtitulo">Explore os cursos da comunidade e comece a aprender.</p>
             </div>
-            {/* Criação de curso ainda não implementada (tela própria pendente). */}
-            <button className="catalogo__botao-primario" type="button" disabled title="Em breve">
+            <button className="catalogo__botao-primario" type="button" onClick={() => navigate("/criar-curso")}>
               <Icone nome="plus" tamanho={19} />
               Criar curso
             </button>
