@@ -149,3 +149,35 @@ Isso não é burocracia: ajuda o revisor a saber onde olhar com mais atenção e
 - ❌ Ignorar o lint/typecheck porque "a IA disse que está certo".
 - ❌ Misturar vários escopos/Issues em uma mesma branch.
 - ❌ Usar cada IA do seu jeito sem fornecer o contexto do projeto.
+
+---
+
+## 9. Agent skills: setup após clonar o repositório
+
+As **agent skills** do projeto ficam versionadas em `.agents/skills/` (fonte única).
+O `AGENTS.md` na raiz é a fonte da verdade para qualquer agente e aponta para lá.
+
+Ferramentas como **Claude Code** e **Kiro** descobrem skills automaticamente a partir
+das suas próprias pastas (`.claude/skills/` e `.kiro/skills/`). Essas pastas são apenas
+**links** para `.agents/skills/` e **não são versionadas** (o git não carrega links de
+forma confiável entre Windows e Linux). Por isso, cada pessoa recria os links uma vez
+após clonar:
+
+- **Windows (PowerShell):**
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts\link-skills.ps1
+  ```
+
+- **Linux / macOS:**
+
+  ```bash
+  bash scripts/link-skills.sh
+  ```
+
+Os scripts são seguros para rodar de novo (refazem os links). No Windows são criadas
+*junctions* (não exigem admin); no Linux/macOS, *symlinks*. A pasta `.kiro/steering/`
+é config de steering do Kiro e não tem relação com as skills — não é mexida pelos scripts.
+
+> Ferramentas que leem `AGENTS.md` (como o opencode) encontram as skills por ele,
+> independentemente dessas pastas.
