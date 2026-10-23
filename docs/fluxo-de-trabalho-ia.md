@@ -160,8 +160,12 @@ O `AGENTS.md` na raiz é a fonte da verdade para qualquer agente e aponta para l
 Ferramentas como **Claude Code** e **Kiro** descobrem skills automaticamente a partir
 das suas próprias pastas (`.claude/skills/` e `.kiro/skills/`). Essas pastas são apenas
 **links** para `.agents/skills/` e **não são versionadas** (o git não carrega links de
-forma confiável entre Windows e Linux). Por isso, cada pessoa recria os links uma vez
-após clonar:
+forma confiável entre Windows e Linux).
+
+**Na prática, não é preciso fazer nada manualmente:** os links são recriados
+automaticamente ao rodar `npm install` dentro de `codigo-base/` (via o script
+`prepare`, que detecta o sistema operacional). Se precisar recriar os links sem
+reinstalar as dependências, rode um dos comandos abaixo a partir da raiz do repositório:
 
 - **Windows (PowerShell):**
 
