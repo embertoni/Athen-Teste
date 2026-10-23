@@ -18,6 +18,8 @@ A configuração tem três partes:
 3. **Configuração por-repo das skills de engenharia** (gerada pela skill
    `setup-matt-pocock-skills`): um bloco `## Agent skills` no `AGENTS.md` e três docs
    em `docs/agents/`.
+4. **Recriação automática dos links de skills** para que outros desenvolvedores
+   tenham o mesmo setup ao clonar: scripts multiplataforma + ligação ao `npm install`.
 
 ## Arquivos adicionados
 
@@ -33,10 +35,11 @@ A configuração tem três partes:
 `.agents/skills/` e o `skills-lock.json`. Alternativamente, copiar as duas coisas
 deste repositório.
 
-> Observação sobre `.claude/` e `.kiro/skills/`: o instalador também cria junctions
-> (links de diretório do Windows) nessas pastas apontando para `.agents/skills/`. O
-> git **não** versiona esses junctions, então eles não aparecem em commits e não
-> precisam ser reproduzidos. A fonte canônica é sempre `.agents/skills/`.
+> Observação sobre `.claude/skills/` e `.kiro/skills/`: essas pastas são apenas
+> **links** para `.agents/skills/` (junction no Windows, symlink no Linux/macOS). O
+> git **não** versiona links de forma confiável entre sistemas, então eles não são
+> commitados — são recriados por script (ver parte 4). A fonte canônica é sempre
+> `.agents/skills/`.
 
 ### 2. Arquivos de entrada para agentes (raiz)
 
@@ -81,6 +84,38 @@ Arquivos:
 com as mesmas escolhas acima, **ou** copiar o bloco `## Agent skills` para o `AGENTS.md`
 e copiar os três arquivos de `docs/agents/`.
 
+### 4. Recriação automática dos links de skills
+
+Como os links `.claude/skills/` e `.kiro/skills/` não podem ser versionados, foram
+adicionados scripts que os recriam a partir de `.agents/skills/`, ligados ao
+`npm install` para rodarem sozinhos após clonar.
+
+Arquivos:
+
+- **`scripts/link-skills.sh`** — Linux/macOS: recria `.claude/skills` e `.kiro/skills`
+  como **symlinks** para `../.agents/skills`. Marcado como executável (`100755`).
+- **`scripts/link-skills.ps1`** — Windows: recria as mesmas pastas como **junctions**
+  (não exigem admin nem Developer Mode).
+- **`scripts/link-skills.mjs`** — lançador cross-platform em Node: detecta o SO e chama
+  o script certo. É à prova de falha — se `.agents/skills` não existir ou o shell não
+  estiver disponível, apenas avisa e sai com sucesso, sem quebrar o `npm install`.
+- **`.gitignore`** (na raiz) — ignora `/.claude/skills/` e `/.kiro/skills/` para os
+  links gerados nunca serem commitados. `.agents/skills/` e `.kiro/steering/` continuam
+  versionados normalmente.
+- **`codigo-base/package.json`** — o script `prepare` (que roda automaticamente no
+  `npm install`) passou a chamar também `node scripts/link-skills.mjs`. Linha final:
+  `"prepare": "cd .. && husky codigo-base/.husky && node scripts/link-skills.mjs"`.
+- **`docs/fluxo-de-trabalho-ia.md`** — nova seção 9 explicando que os links são
+  recriados automaticamente no `npm install`, com os comandos manuais como alternativa.
+
+Resultado para quem clona: rodar `npm install` dentro de `codigo-base/` recria os
+links sozinho; nenhum passo manual é necessário.
+
+**Como reproduzir no upstream:** copiar os três arquivos de `scripts/`, o `.gitignore`
+da raiz, a seção 9 de `docs/fluxo-de-trabalho-ia.md`, e aplicar a mesma alteração no
+`prepare` do `codigo-base/package.json`. Se o upstream já tiver um `.gitignore` na raiz
+ou um `prepare`, mesclar em vez de sobrescrever.
+
 ## O que NÃO foi criado
 
 - **`.scratch/`** — não foi criado. Por convenção, as skills criam essa pasta no
@@ -99,5 +134,11 @@ KIRO.md                    (ponteiro para AGENTS.md)
 docs/agents/issue-tracker.md
 docs/agents/triage-labels.md
 docs/agents/domain.md
+scripts/link-skills.sh     (recria os links no Linux/macOS)
+scripts/link-skills.ps1    (recria os links no Windows)
+scripts/link-skills.mjs    (lançador cross-platform, chamado no npm install)
+.gitignore                 (ignora os links gerados .claude/.kiro skills)
+codigo-base/package.json   (prepare chama o lançador no npm install)
+docs/fluxo-de-trabalho-ia.md (seção 9 — setup das skills ao clonar)
 docs/mudancas-skills-setup.md   (este arquivo)
 ```
