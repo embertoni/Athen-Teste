@@ -1,71 +1,41 @@
 # AGENTS.md
 
-This is the single source of truth for any AI agent working in this repository,
-regardless of the tool (Claude Code, Kiro, Cursor, or anything else). Tool-specific
-entry files such as `CLAUDE.md` and `KIRO.md` exist only to redirect here — read
-this file in full.
+Entrada comum para qualquer agente neste repositório. Leia este arquivo inteiro.
+`CLAUDE.md`, `KIRO.md` e o steering do Kiro remetem a ele; as regras independem da ferramenta.
+
+## Antes de trabalhar
+
+1. Leia [o fluxo de trabalho com IA](docs/fluxo-de-trabalho-ia.md), que define o processo do projeto e tem precedência sobre skills.
+2. Carregue as referências pertinentes à tarefa pela tabela abaixo. Para outros assuntos ou material histórico, consulte o [índice da documentação](docs/README.md).
+3. Confira o estado local com `git status --short` e preserve alterações que já existiam. Para entender o comportamento implementado, confira os arquivos-fonte indicados na documentação.
+
+## Referências por tarefa
+
+| Ao trabalhar com | Leia |
+| --- | --- |
+| Git, commits, branches ou nomenclatura | [Convenções](docs/convencoes.md) |
+| Estrutura do código, navegação ou fluxo de dados | [Arquitetura atual](docs/arquitetura.md) |
+| Configuração e execução local | [README da aplicação](codigo-base/README.md) |
+| Interface visual, layout ou acessibilidade | [Guia de estilos](docs/estilo-padrao.md) |
+| Persistência, permissões, XP ou migrações | [Banco de dados atual](docs/banco-de-dados/documentacao-bd.md) |
+| Verificação de mudanças | [Testes e validações](docs/testes.md) |
+| Conceitos de produto | [Glossário](GLOSSARY.md) e [regras dos docs de domínio](docs/agents/domain.md) |
+| Specs ou tickets locais para skills | [Issue tracker](docs/agents/issue-tracker.md) |
+| Triagem de tickets | [Triage labels](docs/agents/triage-labels.md) |
 
 ## Skills
 
-Reusable agent skills live in `.agents/skills/`. This directory is the **canonical
-and only** location for skills. Any `.claude/skills/` or `.kiro/skills/` directories
-are not used; ignore them if present.
+A fonte canônica é `.agents/skills/<nome>/SKILL.md`.
 
-Each skill is a folder under `.agents/skills/<skill-name>/` containing:
+1. No início da tarefa, descubra as skills lendo as descrições do frontmatter em `.agents/skills/*/SKILL.md`; a lista instalada pode mudar.
+2. Leia por inteiro o `SKILL.md` aplicável antes de usá-lo e siga os arquivos de apoio exigidos por ele.
+3. Se houver dúvida sobre o fluxo adequado, consulte `.agents/skills/ask-matt/SKILL.md`.
 
-- `SKILL.md` — the skill's entry point. It starts with YAML frontmatter holding a
-  `name` and a `description`. The `description` states what the skill does and when
-  to use it.
-- Optional supporting files (`*.md`, an `agents/` folder, scripts, templates) that
-  `SKILL.md` links to for deeper detail.
+`.claude/skills` e `.kiro/skills` são links gerados para compatibilidade; consulte sempre os arquivos canônicos. Configuração e reparo dos links estão no [README da aplicação](codigo-base/README.md).
 
-### How to use skills
+## Fontes e manutenção
 
-1. **Discover.** At the start of a task, scan `.agents/skills/*/SKILL.md` and read
-   each frontmatter `description` to see which skills are available and when they apply.
-2. **Match.** If the user's request matches a skill's `description`, that skill is in
-   scope. When several could apply and you are unsure which fits, the `ask-matt` skill
-   is a router over the others.
-3. **Activate.** Read the matching `SKILL.md` in full **before** acting on the task,
-   then follow any supporting files it links to. Treat the skill's instructions as
-   binding for that task.
-4. **Don't guess.** Never describe or claim to follow a skill without actually reading
-   its `SKILL.md` first.
-
-### Available skills
-
-The installed skills are discovered by reading `.agents/skills/*/SKILL.md`. The set
-can change as skills are added or removed, so always read the directory rather than
-relying on a hard-coded list here. As a convenience, the currently installed skills
-are:
-
-`ask-matt`, `chief-of-staff`, `claude-handoff`, `code-review`, `codebase-design`,
-`diagnosing-bugs`, `domain-modeling`, `git-guardrails-claude-code`, `grill-me`,
-`grill-with-docs`, `grilling`, `handoff`, `implement`, `implement-spec`,
-`improve-codebase-architecture`, `loop-me`, `migrate-to-shoehorn`, `pr`, `prototype`,
-`research`, `retro`, `scaffold-exercises`, `setup-matt-pocock-skills`,
-`setup-pre-commit`, `setup-ts-deep-modules`, `tdd`, `teach`, `to-questionnaire`,
-`to-spec`, `to-tickets`, `triage`, `wait-what`, `wayfinder`, `wizard`,
-`writing-beats`, `writing-for-agents`, `writing-fragments`, `writing-shape`.
-
-## Project working rules
-
-The project's own engineering and AI-collaboration rules are documented in
-`docs/fluxo-de-trabalho-ia.md`. Follow them. They take precedence over anything in a
-skill when the two conflict.
-
-## Agent skills
-
-### Issue tracker
-
-Issues and specs are tracked as local markdown under `.scratch/<feature-slug>/`
-(real work is tracked externally in YouTrack). See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`,
-`ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- Regras do projeto: os guias apontados acima. Skills complementam essas regras.
+- Comportamento atual: código e configuração versionados. Se divergirem de uma regra documentada, registre a divergência e preserve a intenção da regra até resolver o conflito.
+- Histórico, propostas e capturas de tela têm status indicado no [índice](docs/README.md); use-os para contexto, sem assumir que descrevem o estado atual.
+- Ao mudar comportamento, atualize a referência responsável pelo assunto. Prefira links à repetição de regras, listas de versões ou catálogos de skills.

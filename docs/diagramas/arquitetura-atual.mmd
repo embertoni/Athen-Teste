@@ -1,0 +1,43 @@
+%% Referência atual conferida com o código em 2026-10-23.
+%% Explicação e caminhos: ../arquitetura.md. Configuração remota não verificada.
+flowchart LR
+  classDef client fill:#f3eefb,stroke:#54318c,color:#352044;
+  classDef data fill:#ffeb99,stroke:#a486d5,color:#54318c;
+  classDef remote fill:#f3f4f6,stroke:#6b7280,color:#111827;
+
+  User["Pessoa no navegador"]:::client
+  Assets["Assets estáticos do build Vite"]:::client
+
+  subgraph Client["Cliente Athen"]
+    Main["Main.tsx e Hub.tsx<br/>rotas e verificação de sessão"]:::client
+    Pages["Telas React<br/>estado e composição dos dados"]:::client
+    Cache["SidebarLeft<br/>cache próprio de perfil"]:::client
+    Repos["data/repositories.ts<br/>consultas e RPCs"]:::data
+    SDK["lib/supabase.ts<br/>SDK tipado e sessão"]:::data
+  end
+
+  subgraph Supabase["Recursos Supabase acessados pelo cliente"]
+    Auth["Auth"]:::remote
+    REST["Consultas sobre tabelas e views"]:::remote
+    RPC["Funções SQL via RPC"]:::remote
+    RLS["Políticas RLS e autorização nas funções"]:::remote
+    DB[("PostgreSQL")]:::remote
+    Storage["Storage<br/>avatar e banner"]:::remote
+  end
+
+  Assets --> User
+  User --> Main
+  Main --> Pages
+  Pages --> Repos
+  Cache --> Repos
+  Repos --> SDK
+  Main --> SDK
+  Cache --> SDK
+  Pages -->|"Auth e Storage diretos"| SDK
+  SDK --> Auth
+  SDK --> REST
+  SDK --> RPC
+  SDK --> Storage
+  REST --> RLS
+  RPC --> RLS
+  RLS --> DB
