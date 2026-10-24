@@ -406,7 +406,7 @@ docs/relatorio-trabalho-local.md (este registro, parte 2)
 
 ## 3. Revisão e documentação realizadas pelo Codex
 
-**Data:** 2026-10-23.
+**Datas:** 2026-10-23 e 2026-10-24.
 
 **Branches envolvidas:** `sprint04`, sem novas branches de página. A gravação e o envio desta sessão para `origin/sprint04` foram solicitados explicitamente pelo usuário, como exceção ao fluxo usual de branches de issue. `origin` é `https://github.com/embertoni/Athen-Teste.git`; `upstream` é `https://github.com/VitorSoaresGoncalves/Athen.git`. O destino autorizado desta entrega é somente o fork.
 
@@ -456,6 +456,24 @@ O HTML foi inicialmente gerado no diretório temporário e depois copiado para `
 | `docs/architecture-review-20261023-182214.html` | Criar | Relatório visual das três oportunidades de arquitetura, preservado como proposta datada |
 
 As imagens antigas dos diagramas não foram renderizadas novamente; seu status está indicado no índice. Não foi criado ADR nesta sessão.
+
+### Diagrama arquitetural no README — atualização de 2026-10-24
+
+**Branch envolvida:** `sprint04`. O usuário solicitou explicitamente o commit e o push de todas as alterações para `origin/sprint04`, mantendo a exceção ao fluxo usual registrada nesta parte.
+
+| Arquivo | O que foi atualizado |
+| --- | --- |
+| `README.md` | Inclusão do diagrama ao final, em bloco Mermaid nativo do GitHub, com links para a fonte e a documentação; sem embedmd ou GitHub Actions para geração |
+| `docs/diagramas/arquitetura-atual.mmd` | Organização em Client, Supabase, Integrações externas e CI/CD; nomes e divisão aproveitados do SVG v3, preservando detalhes do cliente React, SDK, banco e cache de perfil |
+| `docs/arquitetura.md` | Descrição das integrações Google OAuth, SMS provider (OTP), Resend SMTP, Gmail e Edge Functions, além das responsabilidades de validação e migração |
+| `docs/diagramas/README.md` | Orientação para manter a fonte Mermaid e o bloco do README sincronizados, com descrição dos quatro agrupamentos |
+| `docs/relatorio-trabalho-local.md` | Registro desta atualização na parte 3 |
+
+O arquivo local `docs/diagramas/athen-arch-diagram-v3.svg` foi comparado com o Mermaid e as fontes do projeto. Seu XML era válido, mas a representação usava ícones de servidor para componentes do navegador e ligava GitHub Actions à aplicação de migrações, relação ausente no workflow consultado. A divisão e a nomenclatura foram incorporadas ao Mermaid com as correções antes da exclusão do SVG, conforme solicitado. O SVG não estava versionado, portanto sua remoção não gera uma exclusão no diff do Git.
+
+Por decisão do usuário, a apresentação final trata todos os componentes como integrantes da arquitetura, sem rótulos de progresso, referências à v3 ou estilos de pendência. O diagrama distingue autenticação Google OAuth de entrega de e-mail ao Gmail e mantém as responsabilidades de GitHub Actions e Supabase CLI separadas. Essa edição foi exclusivamente documental: não alterou a aplicação, as integrações, o workflow nem o banco remoto.
+
+Foram conferidos os caminhos locais, a igualdade entre o bloco Mermaid do README e sua fonte e `git diff --check`. A renderização no GitHub e a execução dos serviços externos não foram validadas. A sincronização entre as duas cópias é manual.
 
 ### Banco de dados e material legado
 

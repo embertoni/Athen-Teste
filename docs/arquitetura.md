@@ -1,6 +1,6 @@
 # Arquitetura atual
 
-Descrição da implementação versionada, conferida em 2026-10-23. Não confirma o estado de um Supabase remoto. O [diagrama atual](diagramas/arquitetura-atual.mmd) representa estas relações; versões e imagens anteriores estão identificadas no [índice de diagramas](diagramas/README.md).
+Referência da arquitetura do projeto. O [diagrama atual](diagramas/arquitetura-atual.mmd) apresenta os componentes e suas integrações; versões e imagens anteriores estão identificadas no [índice de diagramas](diagramas/README.md).
 
 ## Caminho de uma interação
 
@@ -44,6 +44,12 @@ Curso e Sala são contextos diferentes de execução e pontuação. Consulte as 
 O build produz assets estáticos em `codigo-base/dist/`. Vercel é o destino citado no material histórico; o deploy e o fallback das rotas precisam ser verificados no ambiente de hospedagem. Este checkout não contém `vercel.json` nem configuração local `supabase/config.toml`.
 
 O perfil usa o bucket `avatars` para avatar e banner. A existência do bucket e suas políticas precisam ser verificadas no ambiente; a chamada no cliente não garante o provisionamento do recurso.
+
+No diagrama, `Resend SMTP` representa o envio de e-mails de autenticação e a entrega ao Gmail do destinatário. Google OAuth representa autenticação com uma conta Google, enquanto `SMS provider (OTP)` representa o envio de códigos por SMS.
+
+`Edge Functions` representa a execução de funções no backend, com acesso ao banco e envio de e-mails por meio do Resend SMTP.
+
+O [workflow de CI](../.github/workflows/ci.yml) executa lint, verificação de tipos, testes, build e E2E. O agrupamento CI/CD reúne GitHub Actions e `Supabase CLI / migrações`, com responsabilidades distintas: validação da aplicação e aplicação das migrações SQL, respectivamente.
 
 ## Propostas e divergências conhecidas
 

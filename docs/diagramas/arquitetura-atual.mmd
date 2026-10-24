@@ -1,43 +1,58 @@
-%% Referência atual conferida com o código em 2026-10-23.
-%% Explicação e caminhos: ../arquitetura.md. Configuração remota não verificada.
-flowchart LR
+flowchart TB
   classDef client fill:#f3eefb,stroke:#54318c,color:#352044;
   classDef data fill:#ffeb99,stroke:#a486d5,color:#54318c;
   classDef remote fill:#f3f4f6,stroke:#6b7280,color:#111827;
 
-  User["Pessoa no navegador"]:::client
-  Assets["Assets estáticos do build Vite"]:::client
-
-  subgraph Client["Cliente Athen"]
-    Main["Main.tsx e Hub.tsx<br/>rotas e verificação de sessão"]:::client
+  subgraph Client["Client — codigo-base/ (Vite + React + TS)"]
+    SPA["React SPA — Main.tsx / Hub.tsx"]:::client
+    Guard["ProtectedRoute + SupabaseConnect.tsx<br/>verificação de sessão no navegador"]:::client
     Pages["Telas React<br/>estado e composição dos dados"]:::client
     Cache["SidebarLeft<br/>cache próprio de perfil"]:::client
-    Repos["data/repositories.ts<br/>consultas e RPCs"]:::data
-    SDK["lib/supabase.ts<br/>SDK tipado e sessão"]:::data
+    Repos["repositories.ts + supabase.ts<br/>consultas, RPCs e SDK tipado"]:::data
+    SPA --> Guard
+    Guard -->|"rotas internas"| Pages
+    SPA -->|"rotas públicas"| Pages
+    Pages --> Repos
+    Cache --> Repos
+    Guard -->|"sessão via SDK"| Repos
   end
 
-  subgraph Supabase["Recursos Supabase acessados pelo cliente"]
-    Auth["Auth"]:::remote
-    REST["Consultas sobre tabelas e views"]:::remote
-    RPC["Funções SQL via RPC"]:::remote
-    RLS["Políticas RLS e autorização nas funções"]:::remote
-    DB[("PostgreSQL")]:::remote
-    Storage["Storage<br/>avatar e banner"]:::remote
+  subgraph Supabase["Supabase — backend gerenciado"]
+    Auth["Auth / GoTrue"]:::remote
+    REST["PostgREST API<br/>tabelas, views e chamadas RPC"]:::remote
+    Storage["Storage — avatares<br/>avatar e banner no bucket avatars"]:::remote
+    subgraph Database["PostgreSQL — migrações numeradas"]
+      Rules["RLS policies + RPC + triggers<br/>políticas e funções SQL no banco"]:::data
+      DB[("Dados persistidos")]:::remote
+      Rules --> DB
+    end
+    Edge["Edge Functions"]:::remote
+    Auth --> DB
+    REST --> Rules
+    Edge -->|"acesso a dados"| DB
   end
 
-  Assets --> User
-  User --> Main
-  Main --> Pages
-  Pages --> Repos
-  Cache --> Repos
-  Repos --> SDK
-  Main --> SDK
-  Cache --> SDK
-  Pages -->|"Auth e Storage diretos"| SDK
-  SDK --> Auth
-  SDK --> REST
-  SDK --> RPC
-  SDK --> Storage
-  REST --> RLS
-  RPC --> RLS
-  RLS --> DB
+  subgraph External["Integrações externas"]
+    Google["Google OAuth"]:::remote
+    SMS["SMS provider (OTP)"]:::remote
+    SMTP["Resend SMTP"]:::remote
+    Mail["E-mail do destinatário — Gmail"]:::remote
+    SMTP -->|"entrega de e-mail"| Mail
+  end
+
+  subgraph CI["CI/CD — .github/workflows/ci.yml"]
+    GH["GitHub Actions"]:::remote
+    Checks["Lint, tipos, testes, build e E2E"]:::data
+    CLI["Supabase CLI / migrações"]:::data
+    GH --> Checks
+  end
+
+  Repos --> Auth
+  Repos --> REST
+  Pages -->|"Auth e Storage diretos via SDK"| Repos
+  Repos --> Storage
+  Auth -->|"OAuth"| Google
+  Auth -->|"OTP"| SMS
+  Auth -->|"e-mails de autenticação"| SMTP
+  Edge -->|"envio de e-mail"| SMTP
+  CLI -->|"aplicação de migrações"| Rules
