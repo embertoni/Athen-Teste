@@ -14,6 +14,7 @@ const NOTEBOOK_ROUTE = '/caderno';
 const NOTIFICACOES_ROUTE = '/notificacoes';
 const CONFIG_ROUTE = '/configuracoes';
 const CATALOGO_ROUTE = '/catalogo';
+const CRIAR_CURSO_ROUTE = '/criar-curso';
 
 /** Evento disparado pelo Profile depois de salvar, para a sidebar recarregar o perfil. */
 export const PROFILE_UPDATED_EVENT = 'athen:profile-updated';
@@ -47,6 +48,7 @@ function streakAtiva(lastStudyDate: string | null) {
 const itens: SidebarItem[] = [
     { text: "Início", to: DASHBOARD_ROUTE },
     { text: "Catálogo", to: CATALOGO_ROUTE },
+    { text: "Criar curso", to: CRIAR_CURSO_ROUTE },
     { text: "Salas", to: SALAS_ROUTE },
     { text: "Ranking", to: RANKING_ROUTE },
     { text: "Amigos", to: AMIGOS_ROUTE },

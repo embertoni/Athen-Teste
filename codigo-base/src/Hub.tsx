@@ -12,6 +12,7 @@ import ConfigPage from './pages/ConfigPage'
 import Amigos from './pages/Amigos';
 import NotebookPage from './pages/Notebook';
 import Catalogo from './pages/Catalogo';
+import CriarCurso from './pages/criar-curso/CriarCurso';
 import Notificacoes from './pages/Notificacoes';
 
 export default function Hub() {
@@ -34,6 +35,7 @@ export default function Hub() {
         <Route path="/caderno" element={<ProtectedRoute><NotebookPage /></ProtectedRoute>} />
         <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
         <Route path="/catalogo" element={<ProtectedRoute><Catalogo/></ProtectedRoute>}/>
+        <Route path="/criar-curso" element={<ProtectedRoute><CriarCurso /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )
