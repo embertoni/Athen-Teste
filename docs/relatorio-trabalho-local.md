@@ -540,7 +540,7 @@ Não foram executados nesta sessão `lint`, `typecheck`, `test:run`, `test:check
 
 **Registro:** 2026-10-27, com base nos arquivos atuais de `sprint04` em `embertoni/Athen-Teste`. Esta seção documenta a implementação já presente no checkout; a atualização deste relatório fica somente local, sem commit ou push nesta sessão.
 
-Esta etapa supera a exclusão histórica da parte 1: o botão "Criar curso" do Catálogo está ativo e abre uma página própria para cadastrar o curso com seus módulos, aulas e questões. O fluxo também está acessível pelo item "Criar curso" da sidebar esquerda.
+O botão "Criar curso" da página do Catálogo é a única entrada de navegação da interface para cadastrar o curso com seus módulos, aulas e questões. A sidebar esquerda apresenta o Catálogo, sem item próprio de criação de curso. A rota `/criar-curso` permanece protegida por sessão e pode ser aberta diretamente pela URL.
 
 ### Arquivos finais e integração
 
@@ -554,7 +554,7 @@ Todos os caminhos desta tabela são relativos à raiz do repositório.
 | `codigo-base/src/pages/criar-curso/questionConfig.ts` | Tipos de configuração, valores iniciais, XP padrão, validações por tipo, cálculo da soma esperada e geração de slug |
 | `codigo-base/src/Hub.tsx` | Importação da página e rota `/criar-curso` envolvida por `ProtectedRoute` |
 | `codigo-base/src/pages/Catalogo.tsx` | Botão "Criar curso" navega para `/criar-curso` |
-| `codigo-base/src/components/sidebar/SidebarLeft.tsx` | Inclusão do item "Criar curso" apontando para a nova rota |
+| `codigo-base/src/components/sidebar/SidebarLeft.tsx` | Navegação para o Catálogo, sem item próprio para criação de curso |
 
 ### Comportamento observado no código
 
@@ -570,8 +570,8 @@ Ao salvar, a página obtém o usuário autenticado e cria primeiro o curso, depo
 - As gravações são sequenciais, sem transação conjunta ou compensação nesta página. Uma falha intermediária pode deixar parte da estrutura já gravada; o retorno de erro não implica desfazer o curso criado.
 - A rota exige sessão, mas não verifica papel de administrador ou educador. A autorização efetiva depende das políticas do banco; as opções de visibilidade apresentadas no formulário não comprovam essas permissões.
 - Esta implementação usa os repositórios e tipos existentes. Os sete arquivos acima não incluem nova migração SQL, dependência ou alteração manual dos tipos gerados.
-- Na comparação dos arquivos atuais com `upstream/sprint04` realizada em 2026-10-27, a pasta `criar-curso` ainda não existe no principal, que possui criação de curso dentro de `Cursos.tsx`. A reprodução deve integrar a nova tela com Catálogo, rotas e sidebar, preservando funcionalidades próprias do principal.
+- Na comparação dos arquivos atuais com `upstream/sprint04` realizada em 2026-10-27, a pasta `criar-curso` ainda não existe no principal, que possui criação de curso dentro de `Cursos.tsx`. A reprodução deve integrar a nova tela com o botão do Catálogo e a rota protegida, mantendo a sidebar sem entrada própria de criação e preservando funcionalidades próprias do principal.
 
 ### Verificação deste registro
 
-Foram lidos a página, o editor, as funções de configuração e os pontos de navegação para conferir as afirmações e a existência dos caminhos citados. A atualização é exclusivamente documental: não altera o código, o banco nem o upstream. Não foram executados testes da aplicação, homologação visual ou gravações no Supabase nesta sessão; as validações históricas da parte 1 não comprovam o funcionamento desta nova página.
+Foram lidos a página, o editor, as funções de configuração e os pontos de navegação para conferir as afirmações e a existência dos caminhos citados. A navegação foi conferida no código: o botão do Catálogo aponta para a rota protegida, e a sidebar não contém entrada de criação. Passaram `lint`, `typecheck`, `test:run` (dois testes), `test:check` e `build`; o build emitiu aviso sobre chunk acima de 500 kB. O `test:e2e` indicou sucesso no teste da página inicial, mas permaneceu no encerramento e foi interrompido, sem confirmação de conclusão normal do comando. Não houve gravações no Supabase nem homologação visual do fluxo autenticado de criação; os testes existentes e as validações históricas da parte 1 não comprovam esse fluxo. As alterações desta atualização permanecem locais, sem commit ou push.
