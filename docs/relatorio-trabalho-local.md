@@ -9,6 +9,7 @@ O ponto de comparação histórico é `c4dcdfa` (merge do PR #32), identificado 
 | 1 | Páginas, layout e banco da sprint04 | Histórico original, organizado por página e área compartilhada |
 | 2 | Skills e configuração comum de agentes | Conteúdo consolidado do antigo relatório de setup |
 | 3 | Revisão de arquitetura, documentação e consolidação do histórico | Alterações desta sessão do Codex e respectivos arquivos finais |
+| 4 | Página de criação de cursos | Implementação atual no fork, navegação, persistência e cuidados para reprodução |
 
 ## Como usar para a reprodução manual
 
@@ -59,8 +60,9 @@ Todas as branches passaram pelo pipeline local (`lint`, `typecheck`, `test:run`,
 | `src/Hub.tsx` | Rota e navegação atualizadas para o novo nome "Catálogo". |
 | `src/components/sidebar/SidebarLeft.tsx` | Item de menu atualizado de "Cursos" para "Catálogo". |
 
-Exclusões mantidas: criação de curso (botão "Criar curso" permanece desabilitado)
-e a tela de criação de aulas.
+Exclusões naquela etapa: criação de curso (botão "Criar curso" permanecia desabilitado)
+e a tela de criação de aulas. Essa limitação histórica foi superada pelo fluxo de
+criação de cursos, módulos, aulas e questões descrito na parte 4.
 
 ---
 
@@ -533,3 +535,43 @@ Não foram executados nesta sessão `lint`, `typecheck`, `test:run`, `test:check
 3. Para o resultado documental desta sessão, crie/substitua os arquivos da parte 3 e exclua `docs/mudancas-skills-setup.md` somente junto da consolidação e da atualização dos links.
 4. Trate o relatório HTML como proposta, os esboços/imagens antigos como histórico e as descrições de banco como referências do SQL versionado. Nenhum deles comprova o estado remoto.
 5. Valide novamente o resultado no verdadeiro repositório. A documentação conferida aqui e os testes antigos não garantem que a reprodução manual preserve o comportamento de outro checkout.
+
+## 4. Página de criação de cursos no fork
+
+**Registro:** 2026-10-27, com base nos arquivos atuais de `sprint04` em `embertoni/Athen-Teste`. Esta seção documenta a implementação já presente no checkout; a atualização deste relatório fica somente local, sem commit ou push nesta sessão.
+
+Esta etapa supera a exclusão histórica da parte 1: o botão "Criar curso" do Catálogo está ativo e abre uma página própria para cadastrar o curso com seus módulos, aulas e questões. O fluxo também está acessível pelo item "Criar curso" da sidebar esquerda.
+
+### Arquivos finais e integração
+
+Todos os caminhos desta tabela são relativos à raiz do repositório.
+
+| Arquivo | O que está implementado |
+| --- | --- |
+| `codigo-base/src/pages/criar-curso/CriarCurso.tsx` | Formulário de curso, módulos, aulas e questões; validação antes de salvar; gravação pelos repositórios existentes; ações de salvar rascunho, publicar e cancelar |
+| `codigo-base/src/pages/criar-curso/CriarCurso.css` | Estilos da nova página, que utiliza `PageLayout` na variante `bare` |
+| `codigo-base/src/pages/criar-curso/EditorConfigQuestao.tsx` | Campos de configuração para associação, múltipla escolha, preenchimento de lacunas e somatório |
+| `codigo-base/src/pages/criar-curso/questionConfig.ts` | Tipos de configuração, valores iniciais, XP padrão, validações por tipo, cálculo da soma esperada e geração de slug |
+| `codigo-base/src/Hub.tsx` | Importação da página e rota `/criar-curso` envolvida por `ProtectedRoute` |
+| `codigo-base/src/pages/Catalogo.tsx` | Botão "Criar curso" navega para `/criar-curso` |
+| `codigo-base/src/components/sidebar/SidebarLeft.tsx` | Inclusão do item "Criar curso" apontando para a nova rota |
+
+### Comportamento observado no código
+
+O formulário reúne título, slug sugerido a partir do título e editável, descrição, categoria, tags separadas por vírgula e visibilidade pública ou privada. Permite adicionar e remover módulos, aulas e questões, mantendo pelo menos um módulo e uma aula por módulo na interface. Cada módulo tem título, descrição e cor; cada aula tem título e conteúdo textual e pode ser criada sem questões.
+
+As questões possuem enunciado, tipo e configuração específica. O XP padrão é definido pelo tipo: associação (2), múltipla escolha (4), lacunas (6) e somatório (8). Trocar o tipo reinicia a configuração e o XP da questão. A validação exige os títulos e enunciados pertinentes e confere a configuração de cada questão; salvar como rascunho passa pela mesma validação de publicar.
+
+Ao salvar, a página obtém o usuário autenticado e cria primeiro o curso, depois seus módulos, aulas e questões em chamadas sequenciais aos repositórios. As posições dos elementos seguem sua ordem no formulário. As ações gravam o status do curso como `draft` ou `published`; após sucesso, a navegação retorna a `/catalogo`, enviando `cursoCriadoId` no estado da rota. Erros são apresentados no formulário, com mensagem específica para conflito de unicidade.
+
+### Limites e cuidados ao reproduzir no principal
+
+- O estado do formulário permanece em memória até salvar; não há recuperação automática do preenchimento após sair ou recarregar a página, nem edição de cursos existentes nesta tela.
+- As gravações são sequenciais, sem transação conjunta ou compensação nesta página. Uma falha intermediária pode deixar parte da estrutura já gravada; o retorno de erro não implica desfazer o curso criado.
+- A rota exige sessão, mas não verifica papel de administrador ou educador. A autorização efetiva depende das políticas do banco; as opções de visibilidade apresentadas no formulário não comprovam essas permissões.
+- Esta implementação usa os repositórios e tipos existentes. Os sete arquivos acima não incluem nova migração SQL, dependência ou alteração manual dos tipos gerados.
+- Na comparação dos arquivos atuais com `upstream/sprint04` realizada em 2026-10-27, a pasta `criar-curso` ainda não existe no principal, que possui criação de curso dentro de `Cursos.tsx`. A reprodução deve integrar a nova tela com Catálogo, rotas e sidebar, preservando funcionalidades próprias do principal.
+
+### Verificação deste registro
+
+Foram lidos a página, o editor, as funções de configuração e os pontos de navegação para conferir as afirmações e a existência dos caminhos citados. A atualização é exclusivamente documental: não altera o código, o banco nem o upstream. Não foram executados testes da aplicação, homologação visual ou gravações no Supabase nesta sessão; as validações históricas da parte 1 não comprovam o funcionamento desta nova página.
