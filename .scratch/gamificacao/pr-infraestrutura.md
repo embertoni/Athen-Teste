@@ -1,10 +1,10 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: commits e proposta de PR de infraestrutura preparados. A sincronização foi autorizada e aberta separadamente como [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2), em draft, com 25 arquivos em conflito. O PR de infraestrutura aguarda essa base ser resolvida/revisada/integrada; merge permanece sem autorização.
+Estado: commits e proposta de PR de infraestrutura preparados. A sincronização foi conciliada e enviada separadamente no [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2), pronto para revisão e sem conflitos, head `c3d5131`. O usuário autorizou sua integração em `sprint04`; aprovação humana independente e execução de CI remota continuam pendentes. O PR de infraestrutura aguarda essa base ser integrada e sua branch conciliada/validada contra o resultado. A autorização atual de merge identifica o PR #2, sem se estender automaticamente a este PR futuro.
 
-**Bloqueio real do destino:** origin/sprint04 está em `59bfd138bc79fb3ce6513e04a645de2fa64c4c1a`; a base local usada está em `2c3d19dd6b92a44967c950d5bc03b5cb19f42e02`. O PR #2 propõe essa sincronização exclusivamente no fork. As referências divergem e o diff origin/sprint04...infraestrutura inclui trabalho histórico anterior à entrega. A publicação separada evita apresentar esse conjunto como infraestrutura já revisada. Nenhuma base remota foi alterada; os conflitos e a revisão do PR #2 precisam ser tratados antes do encaminhamento dependente.
+**Bloqueio real do destino:** origin/sprint04 está em `59bfd138bc79fb3ce6513e04a645de2fa64c4c1a`; a base local usada está em `2c3d19dd6b92a44967c950d5bc03b5cb19f42e02`. O PR #2 concilia essas histórias exclusivamente no fork, com testes próprios aprovados, preservando as duas intenções. O diff origin/sprint04...infraestrutura ainda inclui trabalho histórico anterior à entrega. Nenhuma base remota foi alterada; a revisão humana e a CI do PR #2 precisam ser concluídas antes do encaminhamento dependente. O registro efetivo está na seção 7 do guia.
 
-**Único destino de escrita:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Por instrução explícita de 31/10/2026, **VitorSoaresGoncalves/Athen permanece somente leitura**, inclusive após esta entrega. Não criar PR, branch, commit, comentário ou alteração de configuração no original. A sincronização proposta usa o original apenas como fonte de leitura e tem o fork como destino; ainda aguarda decisão de escopo.
+**Único destino de escrita:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Por instrução explícita de 31/10/2026, **VitorSoaresGoncalves/Athen permanece somente leitura**, inclusive após esta entrega. Não criar PR, branch, commit, comentário ou alteração de configuração no original. A sincronização usa o original apenas como fonte de leitura e tem o fork como destino; resolução dos conflitos e merge do PR #2 já autorizados.
 
 **Título proposto:** `test: prepara validacao SQL isolada para gamificacao`
 
@@ -16,7 +16,7 @@ Estado: commits e proposta de PR de infraestrutura preparados. A sincronização
 
 Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento que existiam sem versionamento foram adicionados; as respostas e propostas tiveram conteúdo literal e hashes dos arquivos locais conferidos. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entrou nos commits.
 
-**Sequência:** commits locais da entrega concluídos; registro documental final nesta alteração. Após nova autorização para push/PR, reconferir remotos/base, publicar essa branch no fork, abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis dentro do mesmo escopo. O merge depende da aprovação de outra pessoa conforme Convenções e de autorização própria. Só depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
+**Sequência:** commits locais da entrega concluídos; push e abertura de PR no fork já autorizados pelo usuário. Após integração do PR #2, reconferir remotos/base, conciliar e validar a branch de infraestrutura, publicá-la no fork, abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis dentro do mesmo escopo. O merge deste futuro PR depende da aprovação de outra pessoa conforme Convenções e de autorização própria. Só depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
 
 ---
 
