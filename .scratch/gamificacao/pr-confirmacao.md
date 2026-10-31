@@ -1,6 +1,6 @@
 # Encaminhamento da fatia 04.1 — issue 42
 
-Branch: issue/42-finalizacao-imutavel. Base sprint04: 1ab3f9f. Entrega validada localmente; publicar PR somente no Athen-Teste. Merge ainda depende de autorização própria. O ticket 04 principal permanece parcial.
+Branch: issue/42-finalizacao-imutavel. Base sprint04: 1ab3f9f. Commit de implementação: 3d4457b. [PR #4](https://github.com/embertoni/Athen-Teste/pull/4) publicado somente no Athen-Teste, com CI aprovada. Merge ainda depende de autorização própria. O ticket 04 principal permanece parcial.
 
 ## Summary
 
@@ -26,7 +26,8 @@ reenvio / retorno perdido → confirmação própria → mesmo resultado e insta
 - Lint, typecheck, Vitest 2/2, test:check, build e test:db:check aprovados. Sanidade e concorrência anteriores também passaram no schema 0001–0023.
 - Revisão técnica: Padrões apontou inversão de locks no UPDATE direto, corrigida e coberta por corrida real; conferência incremental sem achado material. Spec sem desvio no subticket. Revisão humana adicional dispensada conforme convenções do fork.
 - Tipos regenerados do schema local pelo CLI, sem edição manual. database.ts anterior era UTF-16LE; a saída atual é UTF-8, podendo aparecer como diff binário. JSON não nulo exigiu guard no CrudConsole. Comando/alvo registrados na documentação de banco.
-- Projeto local athen-gamificacao-test, Postgres 127.0.0.1:55432, container d264e2ac1f34, labels conferidas; parado com volume preservado. Respostas/propostas literais preservadas. CI desta branch ainda precisa ser confirmada após publicar.
+- Projeto local athen-gamificacao-test, Postgres 127.0.0.1:55432, container d264e2ac1f34, labels conferidas; parado com volume preservado. Respostas/propostas literais preservadas.
+- [CI 41221816477](https://github.com/embertoni/Athen-Teste/actions/runs/41221816477), commit 3d4457b: quality, database e e2e aprovados. Logs confirmam 0001–0023 no Supabase descartável, sanidade, regressões, rollback e duas corridas de aprendizagem; Chromium **21/21, 18,5s**. Descrição do PR conferida remotamente, com acentos íntegros.
 
 ## Merge Danger
 
