@@ -1,8 +1,10 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: proposta de PR preparada, com documentação e infraestrutura commitadas localmente. Push, publicação de PR e merge ainda aguardam autorização própria.
+Estado: commits e proposta de PR preparados; push e abertura do PR autorizados posteriormente pelo usuário. Publicação aguardando decisão sobre divergência da branch base no fork, conferida em 31/10/2026. Merge permanece sem autorização.
 
-**Destino:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Integração no upstream é posterior e não faz parte deste encaminhamento.
+**Bloqueio real do destino:** origin/sprint04 está em `59bfd138bc79fb3ce6513e04a645de2fa64c4c1a`; upstream/sprint04 e a base local usada estão em `2c3d19dd6b92a44967c950d5bc03b5cb19f42e02`. As referências divergem. O diff de PR origin/sprint04...HEAD contém **219 arquivos**, incluindo trabalho histórico anterior à entrega. Publicar esse diff como se fosse somente infraestrutura seria incorreto. Rota proposta: sincronizar a sprint04 do fork por PR separado e revisão humana; depois reconferir e publicar o PR de infraestrutura. A decisão de sincronização ainda requer input; nenhuma base remota foi alterada.
+
+**Único destino de escrita:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Por instrução explícita de 31/10/2026, **VitorSoaresGoncalves/Athen permanece somente leitura**, inclusive após esta entrega. Não criar PR, branch, commit, comentário ou alteração de configuração no original. A sincronização proposta usa o original apenas como fonte de leitura e tem o fork como destino; ainda aguarda decisão de escopo.
 
 **Título proposto:** `test: prepara validacao SQL isolada para gamificacao`
 

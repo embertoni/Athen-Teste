@@ -4,6 +4,8 @@ Status: ready-for-agent
 
 Issue de equipe: **42**, responsável: solicitante; sprint: **sprint04**. Estado “Em andamento” confirmado pelo usuário. Os números dos tickets locais não são IDs do YouTrack. Guia, fluxo e interfaces de teste aprovados pelo usuário em 30/10/2026; commits necessários no repositório embertoni/Athen-Teste posteriormente autorizados expressamente. Pushes, merges, publicação de PRs e implantação continuam sujeitos a nova autorização. Após retomada solicitada, tickets 01–03 validados localmente na branch issue/42-testes-banco-gamificacao, sem integração. Ticket 04 aguarda suas dependências integradas; ticket 05 registra defeito de reingresso observado no baseline.
 
+**Restrição de destino recebida em 31/10/2026:** toda escrita deve ficar exclusivamente em **embertoni/Athen-Teste**. **VitorSoaresGoncalves/Athen é somente leitura**: não criar/alterar commits, branches, PRs, comentários, configurações ou qualquer outro recurso nesse repositório, por Git ou conectores. Isso substitui o plano histórico de integração posterior no original, sem reescrever respostas literais. Push e PR da infraestrutura para o fork já foram autorizados; sincronização da base divergente no fork ainda aguarda decisão, e merge não foi autorizado.
+
 ## Problem Statement
 
 O aluno não tem missões automáticas com recompensa verificável. A classificação mistura nível vitalício com liga, soma repetições no PAC e pode revelar desempenho restrito. Educadores precisam publicar missões para sua sala sem misturar matrícula, conclusão e pontuação entre contextos.
