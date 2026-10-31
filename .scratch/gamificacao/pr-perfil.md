@@ -1,6 +1,6 @@
 # Encaminhamento da fatia 04.2 — issue 42
 
-Branch issue/42-protege-campos-perfil, base sprint04 da23867 (PR #4 integrado). Validação local concluída; CI remota a conferir após publicação exclusivamente no Athen-Teste. Merge futuro exige autorização própria. Ticket 04 principal continua parcial.
+Branch issue/42-protege-campos-perfil, base sprint04 da23867 (PR #4 integrado). Commit de implementação a89d1eb; [PR #5](https://github.com/embertoni/Athen-Teste/pull/5) publicado somente no Athen-Teste e CI aprovada. Merge futuro exige autorização própria. Ticket 04 principal continua parcial.
 
 ## Summary
 
@@ -23,7 +23,8 @@ INSERT/DELETE de perfil e EXECUTE dos helpers internos deixam de ser permitidos 
 - SQL final 0001–0024: permissions, seed, sanidade, learning e concorrências aprovados. Edição pessoal, mistura de campos, identidade alheia, anon/admin, rollback, estudo e desativação exercitados no banco fictício verificado.
 - Lint, typecheck, Vitest 2/2, test:check, build e test:db:check aprovados; **24 E2E Chromium passaram (29,4s)**. HTTP fictício verifica payload/feedback de Perfil, Configurações e CRUD; não substitui SQL/RLS.
 - Evidências visuais em docs/evidencias/campos-oficiais-perfil. Projeto local athen-gamificacao-test, 127.0.0.1:55432, container 28f3a7f55c6c; parado preservando banco. Questionário/propostas literais preservados.
-- Nenhuma coluna/assinatura pública de dados alterada: tipos gerados preservados, sem edição manual ou regeneração desnecessária. CI inclui permissions e seed revertido; execução remota ainda pendente.
+- Nenhuma coluna/assinatura pública de dados alterada: tipos gerados preservados, sem edição manual ou regeneração desnecessária.
+- [CI 41233522556](https://github.com/embertoni/Athen-Teste/actions/runs/41233522556), commit a89d1eb: quality, database e e2e aprovados. Logs conferidos: migração 0024, permissions, seed real duas vezes com rollback e concorrências; **24 E2E (21,6s)**. Descrição remota conferida com acentos íntegros e sem U+FFFD.
 
 ## Merge Danger
 
