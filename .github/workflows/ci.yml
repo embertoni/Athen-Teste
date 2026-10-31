@@ -56,6 +56,10 @@ jobs:
         run: npm run test:db:concurrency
       - name: Stable learning confirmation and rollback
         run: npm run test:db:learning
+      - name: Protected profile fields and legitimate edits
+        run: npm run test:db:permissions
+      - name: Demo seed roles and replay in rollback transaction
+        run: npm run test:db:seed
       - name: Concurrent finalization of the same attempt
         run: npm run test:db:learning:concurrency
       - name: Stop isolated project

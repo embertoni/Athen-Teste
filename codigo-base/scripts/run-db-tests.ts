@@ -18,14 +18,23 @@ try {
     await testConcurrentSessions(client);
   } else {
     await client.query('begin');
-    const file = process.argv.includes('--learning') ? 'learning.sql' : 'sanity.sql';
+    if (process.argv.includes('--seed')) {
+      const seed = await readFile(new URL('../supabase/seed.sql', import.meta.url), 'utf8');
+      await client.query(seed);
+      await client.query(seed);
+    }
+    const file = process.argv.includes('--seed') ? 'seed.sql'
+      : process.argv.includes('--permissions') ? 'permissions.sql'
+      : process.argv.includes('--learning') ? 'learning.sql' : 'sanity.sql';
     await client.query(await readFile(new URL(`../tests/db/${file}`, import.meta.url), 'utf8'));
   }
   if (process.argv.includes('--prove-failure')) {
     await client.query("do $$ begin raise exception 'Falha intencional do harness'; end $$");
   }
   if (!concurrent) {
-    console.warn(process.argv.includes('--learning') ? 'Aprendizagem aprovada: confirmacao persistida sob aluno/RLS.'
+    console.warn(process.argv.includes('--seed') ? 'Seed ficticio aprovado em transacao descartada: papeis e reaplicacao.'
+      : process.argv.includes('--permissions') ? 'Permissoes aprovadas: campos oficiais e edicao legitima do perfil.'
+      : process.argv.includes('--learning') ? 'Aprendizagem aprovada: confirmacao persistida sob aluno/RLS.'
       : 'Sanidade aprovada: aluno autenticado, RLS e conclusao de aula vazia com zero XP.');
   }
 } catch (error) {

@@ -17,6 +17,8 @@
     "test:db:concurrency": "tsx scripts/run-db-tests.ts --concurrency",
     "test:db:learning": "tsx scripts/run-db-tests.ts --learning",
     "test:db:learning:concurrency": "tsx scripts/run-db-tests.ts --learning-concurrency",
+    "test:db:permissions": "tsx scripts/run-db-tests.ts --permissions",
+    "test:db:seed": "tsx scripts/run-db-tests.ts --seed",
     "test:db:check": "tsc -p tsconfig.db.json --noEmit",
     "test:check": "tsc -p tsconfig.test.json --noEmit",
     "test:e2e": "playwright test",

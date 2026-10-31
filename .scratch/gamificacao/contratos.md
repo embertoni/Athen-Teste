@@ -1,6 +1,6 @@
 # Contratos executivos — primeira etapa
 
-Estado: contrato alvo da sessão 02, implementado incrementalmente. A fatia 04.1 materializa confirmação persistida e escrita serializada por `finalize_attempt`, `get_attempt_confirmation` e `save_attempt_answer` na migração 0023, validada apenas no projeto local isolado. Snapshot no início, ordinal e livro decimal continuam previstos, sem alegar implementação. Fonte: [spec](spec.md), guia 2.2–2.4/3.4 e Q007/Q053–Q060/Q091–Q094/Q126/Q142.
+Estado: contrato alvo da sessão 02, implementado incrementalmente. A fatia 04.1 materializa confirmação persistida e escrita serializada por `finalize_attempt`, `get_attempt_confirmation` e `save_attempt_answer` na migração 0023, integrada pelo PR #4. A fatia 04.2 protege campos oficiais de perfil na migração 0024, validada localmente e na CI do PR #5 ainda não integrado, sem alterar o cálculo legado. Snapshot no início, ordinal e livro decimal continuam previstos, sem alegar implementação. Fonte: [spec](spec.md), guia 2.2–2.4/3.4 e Q007/Q053–Q060/Q091–Q094/Q126/Q142.
 
 ## Aprendizagem
 
@@ -15,7 +15,7 @@ Estado: contrato alvo da sessão 02, implementado incrementalmente. A fatia 04.1
 
 Resumo oficial inclui execução, versão, contexto, instante do servidor, acertos/total, base, bônus por concessão e conquistas. Reconsulta pode refletir a confirmação como recuperada, mas os valores oficiais permanecem iguais; não repetir celebração. Prévia de autor/admin fica separada do estudo oficial sem base/bônus/amostra.
 
-As atuais entradas tentativaRepository.iniciar, respostaRepository.salvar, tentativaRepository.finalizar e dominioRepository.concluirAulaSemQuestoes são pontos de migração. Hoje início é insert, resposta é upsert e finalize_attempt recalcula o resultado: a compatibilidade deverá encaminhar ao mesmo controle de unicidade, sem conservar uma segunda autoridade de pagamento.
+As atuais entradas tentativaRepository.iniciar, respostaRepository.salvar, tentativaRepository.finalizar e dominioRepository.concluirAulaSemQuestoes são pontos de migração. Hoje início é insert; resposta passa pela RPC save_attempt_answer, ainda substituível antes da confirmação. finalize_attempt persiste a confirmação em 0023 e reenvio não recalcula resultado. O cálculo inteiro legado permanece encapsulado, até a evolução para o livro único; não conservar uma segunda autoridade de pagamento.
 
 ## Persistência e chaves a materializar incrementalmente
 
