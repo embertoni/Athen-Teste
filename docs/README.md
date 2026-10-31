@@ -29,7 +29,8 @@ Use este índice para escolher a referência da tarefa. As referências técnica
 | [Definição do projeto](definicao-do-projeto.md) | Visão de produto; distingue intenção original de evidência de implementação |
 | [Diagramas](diagramas/README.md) | Aponta para o diagrama atual e identifica versões e imagens históricas |
 | [Notas do banco legado](historico/banco-de-dados-legado.md) | Esquema antigo com nomes como `Usuario`; não corresponde ao modelo atual |
-| [Histórico do trabalho local](relatorio-trabalho-local.md) | Três partes cumulativas: páginas/banco, setup de skills e revisão documental do Codex; arquivos e validações para reprodução manual no upstream |
+| [Histórico do trabalho local](relatorio-trabalho-local.md) | Registro histórico; referências a reprodução no upstream não autorizam escrita no original |
+| [Conciliação da sprint04 no Athen-Teste](relatorio-sincronizacao-sprint04.md) | Decisões dos conflitos, validações e pendências do PR #2; escrita limitada ao fork |
 | [Setup de skills — parte 2 do histórico](relatorio-trabalho-local.md#2-skills-e-configuração-comum-de-agentes) | Conteúdo consolidado; instruções atuais de uso no README da aplicação |
 | [Revisão de arquitetura de 2026-10-23](architecture-review-20261023-182214.html) | Propostas de refatoração; não são decisões aprovadas nem arquitetura implementada |
 | `sketch-dashboard/`, `sketch-amigos/` e `video-ideia-layout-perfil.mp4` | Esboços e referências visuais; não definem comportamento implementado |

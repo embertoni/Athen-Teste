@@ -21,6 +21,8 @@ Status: resolved
 
 **Ponto de teste:** comando público do harness e acesso SQL com papel real. Não antecipar toda a suíte de missões/ligas/PAC.
 
+**Retomada em 31/10/2026:** infraestrutura conciliada com a sprint04 integrada pelo PR #2 (`2d55fd3`). Bootstrap/sanidade/concorrência e pipeline reexecutados com sucesso; projeto local parado com volume preservado. Entrega continua local, aguardando publicação/integração própria; registro atual na seção 7 do guia.
+
 **Compatibilidade:** SQL histórico preservado; nenhuma alteração em banco compartilhado. Nova configuração fica isolada da aplicação e de suas credenciais.
 
 **Evidência para fechar:** comandos e saídas de sucesso/falha, alvo e esquema identificados, diff revisado e registro no guia. Pronto localmente não significa integrado.

@@ -13,12 +13,10 @@ type NotebookComCurso = {
   curso: Curso | null;
 };
 
-// ATENÇÃO: a tabela "notebooks" não tem mais course_id (chave estrangeira para courses).
-// Antes o caderno se ligava ao curso por essa FK; hoje a ligação é feita apenas pelo título
-// (notebooks.title === courses.title), convenção usada também no CursoNotebook.
-// Isso é frágil: se o aluno renomear o caderno, ele deixa de aparecer ligado ao curso.
-// TODO: reintroduzir a coluna course_id em notebooks (FK -> courses.id) e voltar a casar por ela,
-// como era antes, em vez de depender do título.
+// ATENÇÃO: a tabela "notebooks" não tem mais course_id. O caderno de um curso é identificado
+// pelo título (notebooks.title === courses.title), convenção usada também no CursoNotebook.
+// Se o aluno renomear o caderno, ele deixa de aparecer ligado ao curso.
+// O ideal é adicionar uma coluna course_id em notebooks.
 function cursoDoNotebook(notebook: Notebook, cursos: Curso[]): Curso | null {
   return cursos.find((curso) => curso.title === notebook.title) ?? null;
 }
@@ -36,13 +34,8 @@ function dataFormatada(data: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(data));
 }
 
-// Deixa o texto comparável na busca: minúsculo e sem acentos. Assim "pratica" encontra
-// "Prática" (e vice-versa). NFD separa a letra do acento; o regex remove os diacríticos.
 function normalizarBusca(texto: string) {
-  return texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase();
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
 }
 
 function NotebookCard({ item, onOpen }: { item: NotebookComCurso; onOpen: () => void }) {
@@ -87,7 +80,7 @@ export default function NotebookPage() {
   const selectedNotebook = notebooks.find(({ notebook }) => notebook.id === selectedId) ?? null;
   const selectedPage = pages.find((page) => page.id === selectedPageId) ?? null;
 
-  // A pesquisa procura pelo nome do notebook ou pelo curso, ignorando acentos.
+  // A pesquisa procura pelo nome do notebook ou pelo curso.
   const notebooksVisiveis = useMemo(() => {
     const term = normalizarBusca(search.trim());
     if (!term) return notebooks;
@@ -284,33 +277,29 @@ export default function NotebookPage() {
 
   return (
     <PageLayout variant="bare">
-      <div className="min-h-svh bg-[#140a2b] font-body text-ink">
-        <main className="relative isolate min-h-svh">
-          <div className="pointer-events-none fixed -right-[120px] -top-[200px] -z-10 h-[560px] w-[700px] rounded-full bg-[radial-gradient(circle,rgba(120,63,220,0.2),rgba(20,10,43,0)_68%)]" />
-
-          <div className="mx-auto max-w-[1700px] px-[56px] pb-[48px] pt-[42px] max-[760px]:px-[20px] max-[760px]:pt-[28px]">
+      <div className="min-h-svh bg-canvas px-[56px] pb-[48px] pt-[42px] max-[760px]:px-[20px] max-[760px]:pt-[28px]">
           {/* Estante: pesquisa e cards em ordem alfabética. */}
           {!selectedNotebook && (
             <>
               <header className="mb-[32px]">
-                <p className="mb-[10px] text-[10px] font-bold uppercase tracking-[1.4px] text-violet-pale/50">PLATAFORMA / <span className="text-gold">NOTEBOOK</span></p>
-                <h1 className="font-display text-[36px] leading-[1.05] tracking-[-0.8px] text-ink min-[760px]:text-[46px]">Notebook</h1>
-                <p className="mt-[9px] text-[14px] text-muted">Escolha um caderno para abrir suas anotações e acompanhar seus estudos.</p>
+                <p className="mb-[10px] text-[10px] font-bold uppercase tracking-[1.4px] text-muted">PLATAFORMA / <span className="text-gold">CADERNOS</span></p>
+                <h1 className="font-display text-[46px] font-normal leading-[1.05] tracking-[-0.8px] text-ink max-[760px]:text-[36px]">Minha estante</h1>
+                <p className="mt-[9px] text-[14px] text-muted">Escolha um caderno para abrir suas anotações. Os cadernos são organizados em ordem alfabética.</p>
               </header>
 
               {loading && <p className="mt-10 text-sm text-muted">Carregando seus cadernos...</p>}
               {error && <p className="mt-8 rounded-lg border border-[#c2455a]/40 bg-[#3a1522] px-4 py-3 text-sm text-[#f2b4bd]">{error}</p>}
-              {!loading && !error && notebooks.length === 0 && <div className="mt-10 rounded-xl border border-dashed border-violet-mid/35 bg-[#1d1a31]/70 px-6 py-16 text-center"><p className="text-4xl">📖</p><h2 className="mt-3 font-display text-xl">Sua estante está vazia</h2><p className="mt-2 text-sm text-muted">Crie um notebook dentro de um curso para ele aparecer aqui.</p></div>}
+              {!loading && !error && notebooks.length === 0 && <div className="mt-10 rounded-xl border border-dashed border-violet-mid/35 bg-surface/70 px-6 py-16 text-center"><p className="text-4xl">📖</p><h2 className="mt-3 font-display text-xl text-ink">Sua estante está vazia</h2><p className="mt-2 text-sm text-muted">Crie um notebook dentro de um curso para ele aparecer aqui.</p></div>}
 
-              {!loading && notebooks.length > 0 && <div className="mt-8"><label htmlFor="notebook-search" className="sr-only">Pesquisar notebooks</label><input id="notebook-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por caderno ou curso..." className="mb-7 w-full rounded-lg border border-violet-mid/30 bg-[#1d1a31] px-4 py-3 text-sm text-ink outline-none placeholder:text-[#8f829f] focus:border-violet-mid focus:ring-2 focus:ring-violet-mid/25" /><div className="grid grid-cols-1 gap-7 min-[900px]:grid-cols-2">{notebooksVisiveis.map((item) => <NotebookCard key={item.notebook.id} item={item} onOpen={() => void abrirNotebook(item.notebook.id)} />)}</div>{notebooksVisiveis.length === 0 && <p className="rounded-lg border border-dashed border-violet-mid/30 px-5 py-10 text-center text-sm text-muted">Nenhum notebook encontrado.</p>}</div>}
+              {!loading && notebooks.length > 0 && <div className="mt-8"><label htmlFor="notebook-search" className="sr-only">Pesquisar notebooks</label><input id="notebook-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por caderno ou curso..." className="mb-7 w-full rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-gold focus:ring-2 focus:ring-gold/25" /><div className="grid grid-cols-1 gap-7 min-[900px]:grid-cols-2">{notebooksVisiveis.map((item) => <NotebookCard key={item.notebook.id} item={item} onOpen={() => void abrirNotebook(item.notebook.id)} />)}</div>{notebooksVisiveis.length === 0 && <p className="rounded-lg border border-dashed border-line px-5 py-10 text-center text-sm text-muted">Nenhum notebook encontrado.</p>}</div>}
             </>
           )}
 
           {/* Editor: navegação lateral, título, páginas e conteúdo. */}
-          {selectedNotebook && <div className="flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl border border-[#a486d5]/20 bg-[#1d1a31] shadow-2xl shadow-black/20 min-[1000px]:flex-row">
-            <aside className="w-full shrink-0 border-b border-[#a486d5]/20 bg-[#171628] p-5 min-[1000px]:w-[320px] min-[1000px]:border-b-0 min-[1000px]:border-r">
-              <button type="button" onClick={fecharNotebook} className="mb-6 text-sm text-[#b8aacb] hover:text-[#f4eeff]">← Voltar para a estante</button>
-              <div className="rounded-lg border border-[#d4b56d]/45 bg-[#f7e7b5] p-4 text-[#302719] shadow-[3px_4px_0_rgba(94,65,28,0.2)]"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#806a3d]">{selectedNotebook.curso?.title || "Sem curso"}</p><div className="mt-3 text-3xl">📖</div><label className="mt-4 block text-xs font-bold text-[#806a3d]" htmlFor="notebook-name">Nome do notebook</label><p className="mt-1 break-words py-1 text-lg font-bold text-[#493a25]">{notebookName || "Anotações"}</p></div><button type="button" onClick={() => void salvarTudo()} disabled={saving} className="mt-3 w-full rounded-md bg-[#a486d5] px-3 py-2 text-sm font-bold text-[#171628] hover:bg-[#c9b8e8] disabled:opacity-60">{saving ? "Salvando..." : "Salvar"}</button><div className="mt-8"><div className="mb-2 flex items-center justify-between"><h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[#a99bbb]">Trocar notebook</h2><span className="text-xs text-[#8f829f]">{notebooks.length}</span></div><div className="max-h-[38vh] space-y-2 overflow-y-auto pr-1 min-[1000px]:max-h-[48vh]">{notebooks.map((item) => <button key={item.notebook.id} type="button" onClick={() => void abrirNotebook(item.notebook.id)} className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${item.notebook.id === selectedId ? "border-[#a486d5] bg-[#a486d5]/15 text-[#f4eeff]" : "border-transparent text-[#b8aacb] hover:border-[#a486d5]/25 hover:bg-[#a486d5]/10"}`}><span>📖</span><span className="min-w-0"><strong className="block truncate">{item.notebook.title}</strong><small className="block truncate text-xs text-[#8f829f]">{item.curso?.title || "Sem curso"}</small></span></button>)}</div></div>
+          {selectedNotebook && <div className="flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-2xl shadow-black/20 min-[1000px]:flex-row">
+            <aside className="w-full shrink-0 border-b border-line bg-canvas p-5 min-[1000px]:w-[320px] min-[1000px]:border-b-0 min-[1000px]:border-r">
+              <button type="button" onClick={fecharNotebook} className="mb-6 text-sm text-muted hover:text-ink">← Voltar para a estante</button>
+              <div className="rounded-lg border border-[#d4b56d]/45 bg-[#f7e7b5] p-4 text-[#302719] shadow-[3px_4px_0_rgba(94,65,28,0.2)]"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#806a3d]">{selectedNotebook.curso?.title || "Sem curso"}</p><div className="mt-3 text-3xl">📖</div><label className="mt-4 block text-xs font-bold text-[#806a3d]" htmlFor="notebook-name">Nome do notebook</label><p className="mt-1 break-words py-1 text-lg font-bold text-[#493a25]">{notebookName || "Anotações"}</p></div><button type="button" onClick={() => void salvarTudo()} disabled={saving} className="mt-3 w-full rounded-md bg-gold px-3 py-2 text-sm font-bold text-violet hover:bg-gold-light disabled:opacity-60">{saving ? "Salvando..." : "Salvar"}</button><div className="mt-8"><div className="mb-2 flex items-center justify-between"><h2 className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Trocar notebook</h2><span className="text-xs text-muted">{notebooks.length}</span></div><div className="max-h-[38vh] space-y-2 overflow-y-auto pr-1 min-[1000px]:max-h-[48vh]">{notebooks.map((item) => <button key={item.notebook.id} type="button" onClick={() => void abrirNotebook(item.notebook.id)} className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${item.notebook.id === selectedId ? "border-gold bg-gold/15 text-ink" : "border-transparent text-muted hover:border-violet-mid/25 hover:bg-violet-mid/10"}`}><span>📖</span><span className="min-w-0"><strong className="block truncate">{item.notebook.title}</strong><small className="block truncate text-xs text-muted">{item.curso?.title || "Sem curso"}</small></span></button>)}</div></div>
             </aside>
 
             <section className="flex min-h-[600px] min-w-0 flex-1 flex-col bg-[#ead18b] text-[#302719]">
@@ -321,8 +310,6 @@ export default function NotebookPage() {
             </section>
           </div>}
         </div>
-        </main>
-      </div>
     </PageLayout>
   );
 }

@@ -1,8 +1,8 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: commits e proposta de PR de infraestrutura preparados. A sincronização foi conciliada e enviada separadamente no [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2), pronto para revisão e sem conflitos, head `c3d5131`. O usuário autorizou sua integração em `sprint04`; aprovação humana independente e execução de CI remota continuam pendentes. O PR de infraestrutura aguarda essa base ser integrada e sua branch conciliada/validada contra o resultado. A autorização atual de merge identifica o PR #2, sem se estender automaticamente a este PR futuro.
+Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) integrado pelo usuário em `2d55fd3e6999ccbbd09655e1939f66eabcc00624`. Infraestrutura conciliada contra essa sprint04 e revalidada localmente. Push e criação deste PR já autorizados; aprovação humana adicional dispensada expressamente pelo usuário neste fork. Merge deste novo PR ainda requer autorização própria.
 
-**Bloqueio real do destino:** origin/sprint04 está em `59bfd138bc79fb3ce6513e04a645de2fa64c4c1a`; a base local usada está em `2c3d19dd6b92a44967c950d5bc03b5cb19f42e02`. O PR #2 concilia essas histórias exclusivamente no fork, com testes próprios aprovados, preservando as duas intenções. O diff origin/sprint04...infraestrutura ainda inclui trabalho histórico anterior à entrega. Nenhuma base remota foi alterada; a revisão humana e a CI do PR #2 precisam ser concluídas antes do encaminhamento dependente. O registro efetivo está na seção 7 do guia.
+**Base atual e limite da evidência:** origin/sprint04 em `2d55fd3`, incorporada na branch de infraestrutura por merge preservando os commits anteriores. Único conflito no README resolvido mantendo setup da aplicação e banco isolado; nenhum diff de páginas, Playwright ou E2E contra a sprint integrada. A API do fork lista zero workflows; arquivo ci.yml está na sprint, mas não em main (branch padrão). Gatilhos de push passam a incluir sprints; CI remota só será declarada após execução real.
 
 **Único destino de escrita:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Por instrução explícita de 31/10/2026, **VitorSoaresGoncalves/Athen permanece somente leitura**, inclusive após esta entrega. Não criar PR, branch, commit, comentário ou alteração de configuração no original. A sincronização usa o original apenas como fonte de leitura e tem o fork como destino; resolução dos conflitos e merge do PR #2 já autorizados.
 
@@ -16,13 +16,13 @@ Estado: commits e proposta de PR de infraestrutura preparados. A sincronização
 
 Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento que existiam sem versionamento foram adicionados; as respostas e propostas tiveram conteúdo literal e hashes dos arquivos locais conferidos. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entrou nos commits.
 
-**Sequência:** commits locais da entrega concluídos; push e abertura de PR no fork já autorizados pelo usuário. Após integração do PR #2, reconferir remotos/base, conciliar e validar a branch de infraestrutura, publicá-la no fork, abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis dentro do mesmo escopo. O merge deste futuro PR depende da aprovação de outra pessoa conforme Convenções e de autorização própria. Só depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
+**Sequência:** base integrada, conciliação e validação local concluídas; publicar a infraestrutura no fork e abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis no mesmo escopo. A revisão humana adicional foi dispensada pelo usuário, conforme exceção em Convenções. Depois de autorizado e integrado este PR, criar a branch dependente do núcleo a partir da sprint atualizada.
 
 ---
 
 ## Summary
 
-O projeto tinha um runner SQL legado interativo e uma versão de Node na CI incompatível com as dependências atuais. Esta entrega prepara a validação isolada necessária antes do núcleo de aprendizagem, missões, ligas e PAC.
+O runner SQL legado é interativo e não valida com segurança o esquema atual. Esta entrega adiciona bootstrap, sanidade e concorrência em Supabase local exclusivo, com um job descartável na CI, antes do núcleo de aprendizagem, missões, ligas e PAC.
 
 ```text
 projeto Supabase local exclusivo
@@ -33,19 +33,19 @@ projeto Supabase local exclusivo
   limpeza de dados fictícios e parada do projeto
 ```
 
-Inclui o planejamento aprovado e seus contratos/tickets. A CI usa Node 24.19.0 e recebe um job database descartável. Regras novas de crédito, missões, PAC e temporadas ainda não foram implementadas.
+Inclui o planejamento aprovado e seus contratos/tickets, preservando as fontes literais. A CI mantém Node 24.19.0 já integrado pelo PR #2 e recebe o job database, push nas sprints e dispatch manual (este depende do arquivo na branch padrão). Regras novas de crédito, missões, PAC e temporadas ainda não foram implementadas. Nenhuma página de produto difere da sprint integrada. A dispensa de revisão adicional foi registrada somente para o Athen-Teste.
 
 ## Evidence
 
-- **Before:** Node 22.12.0 era incompatível com 18 das 278 declarações de engines verificadas no lockfile; o runner legado não validava o esquema atual de forma automatizada confiável.
-  **After:** Node 24.19.0 satisfaz as declarações verificadas; jobs quality/e2e/database alinhados, YAML conferido.
+- **Before:** runner legado sem ambiente isolado, seleção segura de migrações ou job SQL automatizado.
+  **After:** scripts recusam destino remoto, conferem container/configuração/marcador e executam sanidade e concorrência no projeto athen-gamificacao-test. Node 24.19.0 preservado nos três jobs; YAML conferido.
 - Bootstrap de 0001–0022 comprovado em duas instalações do zero; reaplicação com manifesto igual não repete SQL. v1/v2 legados e seed.sql excluídos.
 - Sanidade sob authenticated/aluno com RLS: conclusão idempotente, progresso e zero XP. Concorrência: dois PIDs/claims, barreira observada em pg_locks, duas salas, curso privado, ingresso sem matrícula e rollback após falha SQL.
 - Falha intencional retorna 1; repetição normal retorna 0. URL ausente/remota e configuração alterada são recusadas.
-- Pipeline local aprovado: lint, typecheck, test:run (2/2), test:check, build e test:db:check. Chromium: 12/12, saída 0, com dois workers fora da sandbox. Execução anterior na sandbox foi interrompida no encerramento e não foi considerada aprovação completa.
-- Padrões e Spec revisados separadamente; sem achados materiais restantes. Respostas e propostas preservadas por SHA-256.
+- Pipeline após conciliação aprovado: lint, typecheck, test:run (2/2), test:check, build e test:db:check. Chromium: **19/19, saída 0, 28,2s**, com dois workers, preview fictício exclusivo e build sequencial. Bootstrap reconheceu manifesto sem reaplicar SQL; sanidade e concorrência retornaram 0.
+- Revisão técnica final contra a sprint integrada: Padrões sem achados materiais; Spec sem defeito funcional, com dois estados documentais obsoletos corrigidos antes da publicação. Revisão humana adicional dispensada pelo usuário. Respostas e propostas preservadas por SHA-256 (3/3).
 
-Ambiente validado: Windows, Node 24.19.0, Docker 29.9.2 Linux, Supabase CLI 2.121.0 e imagem Postgres 17.11.0.004. **A execução remota no GitHub/Linux ainda precisa ocorrer após publicação.** Os E2E existentes usam respostas HTTP controladas; não comprovam login real ou as regras futuras.
+Ambiente validado: Windows, Node 24.19.0, Docker 29.9.2 Linux, Supabase CLI 2.121.0 e imagem Postgres 17.11.0.004. Container confirmado `0a25183e82e6`, label athen-gamificacao-test e banco em 127.0.0.1:55432; parado com volume preservado. **A API lista zero workflows no fork; execução remota ainda não comprovada.** Os E2E usam respostas HTTP controladas; não comprovam login real ou as regras futuras. A limitação preexistente da sidebar em 360px e o trigger room_members.updated_at continuam registrados, sem correção neste escopo.
 
 ## Merge Danger
 
@@ -63,4 +63,4 @@ O ensaio encontrou defeito preexistente no reingresso em salas: trigger tenta at
 
 - Ferramenta(s): Codex; subagentes de revisão somente de leitura.
 - Escopo gerado por IA: preparação documental, harness SQL local, testes, configuração de CI e referências de execução.
-- Revisado e validado localmente por: Codex com checagens automatizadas e revisão nos eixos Padrões/Spec; revisão humana independente pendente.
+- Revisado e validado localmente por: Codex com checagens automatizadas e revisão técnica nos eixos Padrões/Spec; revisão humana adicional dispensada expressamente pelo responsável neste fork.

@@ -21,4 +21,6 @@ Status: resolved
 
 **Ponto de teste:** harness público e SQL real; ampliar cenários de negócio somente ao implementar cada regra.
 
+**Retomada em 31/10/2026:** base de sincronização integrada em `2d55fd3`; infraestrutura conciliada, com bootstrap sem reaplicação, sanidade e concorrência aprovados no projeto local athen-gamificacao-test. Job database preservado e YAML dos três jobs conferido; adicionados push em sprint e dispatch manual, respeitando a restrição do GitHub sobre branch padrão. Containers parados preservando volume. Publicação e execução remota serão registradas no guia, sem transformar resolved local em CI aprovada.
+
 **Evidência para fechar:** execução local/CI quando autorizada, papéis e destino, resultado e limitações. Pipeline remoto não pode ser presumido pela leitura do YAML.

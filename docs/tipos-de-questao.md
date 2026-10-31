@@ -84,7 +84,7 @@ Os valores da tabela são os padrões do editor de criação. A questão persist
 | --- | --- |
 | Tipos aceitos pelo modelo atual | [Enum de questões](../codigo-base/supabase/migrations/0001_extensions_and_enums.sql) |
 | Nomes, valores padrão e validação de autoria | [Configuração das questões](../codigo-base/src/pages/criar-curso/questionConfig.ts) |
-| Campos de criação para cada tipo | [Editor de configuração](../codigo-base/src/pages/criar-curso/EditarConfigQuestao.tsx) |
+| Campos de criação para cada tipo | [Editor de configuração](../codigo-base/src/pages/criar-curso/EditorConfigQuestao.tsx) |
 | Interações, respostas e feedback | [Modal de aula](../codigo-base/src/components/lesson/LessonModal.tsx) |
 | Comparação de respostas e XP parcial de associação | [Função `grade_answer`](../codigo-base/supabase/migrations/0010_domain_functions.sql) |
 | Finalização, contextos e repetição de acertos | [Regra de finalização vigente](../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql) |

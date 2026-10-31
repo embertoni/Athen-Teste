@@ -102,7 +102,7 @@ Criar e **Publicar** outro curso, também público:
 
 **Não responder essa questão pelo Catálogo/dashboard de curso antes do bloco de sala.** A regra que impede ganhar XP repetindo acertos vale também entre contextos. O segundo curso evita que os acertos do primeiro zerem o XP interno da demo.
 
-Fontes: [criação e publicação](../codigo-base/src/pages/criar-curso/CriarCurso.tsx), [editor dos quatro tipos](../codigo-base/src/pages/criar-curso/EditarConfigQuestao.tsx), [configurações e XP](../codigo-base/src/pages/criar-curso/questionConfig.ts), [edição de conteúdo publicado](../codigo-base/supabase/migrations/0019_course_edit_gating.sql), [repetição de acertos](../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql).
+Fontes: [criação e publicação](../codigo-base/src/pages/criar-curso/CriarCurso.tsx), [editor dos quatro tipos](../codigo-base/src/pages/criar-curso/EditorConfigQuestao.tsx), [configurações e XP](../codigo-base/src/pages/criar-curso/questionConfig.ts), [edição de conteúdo publicado](../codigo-base/supabase/migrations/0019_course_edit_gating.sql), [repetição de acertos](../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql).
 
 Para consultar as regras de cada formato, usar [Tipos de questão](tipos-de-questao.md). Somente os quatro tipos da seção de funcionalidades implementadas entram nesta demo; as seis propostas futuras do documento não fazem parte do percurso.
 

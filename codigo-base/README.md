@@ -1,6 +1,31 @@
-# Athen — execução local
+# Aplicação Athen
 
-Use a versão de Node definida nos jobs de [CI](../.github/workflows/ci.yml), compatível com as engines do lockfile, e instale as dependências com `npm ci` em `codigo-base/`. Os comandos da aplicação e seu alcance estão em [Testes e validações](../docs/testes.md). O ambiente de banco abaixo é exclusivo para ensaios fictícios e não utiliza o `.env` da aplicação.
+Cliente web React/TypeScript servido pelo Vite, com Supabase para autenticação, persistência e regras de domínio. Para trabalhar no repositório, comece por [AGENTS.md](../AGENTS.md).
+
+## Executar localmente
+
+Use a versão de Node definida no [workflow](../.github/workflows/ci.yml), compatível com as engines do lockfile. Use npm com o lockfile versionado.
+
+Na raiz do repositório:
+
+```bash
+cd codigo-base
+npm ci
+```
+
+Copie `.env.example` para `.env.local` nesta pasta e configure localmente `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` para o ambiente de desenvolvimento apropriado. O [cliente Supabase](src/lib/supabase.ts) lança erro ao importar se uma dessas variáveis estiver ausente; a página inicial também depende dessa importação.
+
+As variáveis `VITE_` integram o cliente web. Use a chave pública/anon apropriada; credenciais administrativas ficam fora do cliente. Os campos `SUPABASE_TEST_*` presentes no exemplo não são consumidos pelos testes Vitest e E2E atuais.
+
+```bash
+npm run dev
+```
+
+Use o endereço informado pelo Vite. O catálogo de comandos está em [package.json](package.json), e o alcance de cada validação em [Testes](../docs/testes.md).
+
+## Orientação no código
+
+Consulte a [arquitetura atual](../docs/arquitetura.md) para localizar rotas, telas, consultas, layout e regras do banco. A configuração de acesso a um Supabase não aplica o SQL automaticamente: veja a [referência de banco](../docs/banco-de-dados/documentacao-bd.md) antes de preparar ou alterar um ambiente.
 
 ## Banco SQL descartável
 
@@ -42,82 +67,14 @@ npx --no-install supabase stop --workdir .supabase-test --no-backup
 
 Esse comando elimina os dados locais desse projeto. Recomece pela preparação/inicialização acima. Não é necessário apagar diretórios ou volumes manualmente. O harness não é uma validação das regras futuras de missões, PAC ou ligas; sua evolução segue os tickets e o [guia de execução](../docs/planejamento-gamificacao/guia-desenvolvimento-missoes-ligas-e-pac.md).
 
-## Referência original do template
+## Skills e hooks após instalar
 
-O texto abaixo é a referência original do template de frontend.
+O lifecycle `prepare` configura Husky e chama o [lançador de links](../scripts/link-skills.mjs). Ele tenta criar `.claude/skills` e `.kiro/skills` como links para `.agents/skills`: junctions no Windows, symlinks em Linux/macOS. O lançador avisa se a criação falhar; o sucesso da instalação não garante que os links tenham sido criados.
 
-# React + TypeScript + Vite
+Para tentar recriá-los sem reinstalar, execute a partir da raiz:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+node scripts/link-skills.mjs
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+Os arquivos canônicos continuam disponíveis em `.agents/skills/`, mesmo sem os links. Configurações locais das ferramentas não substituem [AGENTS.md](../AGENTS.md).

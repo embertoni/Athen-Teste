@@ -4,6 +4,7 @@ import { PageLayout } from "../components/layout/PageLayout";
 import { amizadeRepository, medalhaRepository, medalhaUsuarioRepository, usuarioRepository } from "../data/repositories";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database";
+import "./Amigos.css";
 
 type Perfil = Database["public"]["Tables"]["profiles"]["Row"];
 type Amizade = Database["public"]["Tables"]["friendships"]["Row"];
@@ -73,8 +74,8 @@ const perfilParaPessoa = (perfil: Perfil): Pessoa => ({
   nivel: perfil.level,
 });
 
-const botaoPrimario = "rounded-md bg-[#a486d5] px-3 py-1.5 text-xs font-bold text-[#171628] hover:bg-[#c9b8e8] disabled:cursor-wait disabled:opacity-60";
-const botaoSecundario = "rounded-md border border-[#a486d5]/30 px-3 py-1.5 text-xs font-bold text-[#d8c9f2] hover:bg-[#a486d5]/10 disabled:cursor-wait disabled:opacity-60";
+const botaoPrimario = "rounded-md bg-gold px-3 py-1.5 text-xs font-bold text-violet hover:bg-gold-light disabled:cursor-wait disabled:opacity-60";
+const botaoSecundario = "rounded-md border border-line px-3 py-1.5 text-xs font-bold text-violet-pale hover:text-ink disabled:cursor-wait disabled:opacity-60";
 const caixaVazia = "rounded-md border border-dashed border-[#a486d5]/35 bg-[#1d1a31]/70 px-6 py-14 text-center";
 
 // Foto do usuário. Sem foto, usa um ícone neutro de pessoa.
@@ -395,15 +396,17 @@ export default function Amigos() {
 
   return (
     <PageLayout variant="bare">
-      <div className="min-h-svh bg-[#140a2b] font-body text-[#f4eeff]">
-        <main className="relative isolate min-h-svh">
-          <div className="pointer-events-none fixed -right-[120px] -top-[200px] -z-10 h-[560px] w-[700px] rounded-full bg-[radial-gradient(circle,rgba(120,63,220,0.2),rgba(20,10,43,0)_68%)]" />
+      <div className="amigos">
+        <main className="relative isolate min-h-svh w-full">
+          <div className="amigos__brilho" />
 
-          <div className="mx-auto max-w-[1320px] px-[56px] pb-[48px] pt-[42px]">
-            <header className="mb-[32px]">
-            <p className="mb-[10px] text-[10px] font-bold uppercase tracking-[1.4px] text-[#c9b8e8]/50">PLATAFORMA / <span className="text-[#ffcc00]">AMIGOS</span></p>
-            <h1 className="font-display text-[36px] leading-[1.05] tracking-[-0.8px] text-[#f4eeff] min-[760px]:text-[46px]">Amigos</h1>
-            <p className="mt-[9px] text-[14px] text-[#b8aacb]">Encontre pessoas e acompanhe sua rede de estudos.</p>
+          <div className="amigos__main mx-auto w-full max-w-[1320px]">
+            <header className="amigos__cabecalho">
+            <div>
+            <p className="amigos__caminho">PLATAFORMA / <span>AMIGOS</span></p>
+            <h1 className="amigos__titulo">Amigos</h1>
+            <p className="amigos__subtitulo">Encontre pessoas e acompanhe sua rede de estudos.</p>
+            </div>
           </header>
 
           {carregando ? (

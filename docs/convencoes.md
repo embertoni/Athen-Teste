@@ -43,6 +43,8 @@ Confirme o estado local antes dessa sequência e preserve o trabalho existente. 
 
 Antes de enviar código, execute as [validações locais](testes.md). Para mudanças visuais, registre evidência da interface. Abra o PR contra a sprint correspondente; ele exige pelo menos uma aprovação de outra pessoa. O autor não aprova o próprio PR. Após revisão e validação, siga o processo de integração da equipe.
 
+**Exceção autorizada para `embertoni/Athen-Teste`:** em 31/10/2026, o responsável dispensou a necessidade de revisão adicional ao longo do desenvolvimento neste repositório de teste. A aprovação de outra pessoa deixa de ser requisito nesse fork; as validações técnicas e autorizações de publicação/integração continuam aplicáveis. Essa exceção não altera regras nem autoriza escrita em `VitorSoaresGoncalves/Athen`, que permanece somente leitura.
+
 ## Nomes e regras de código
 
 | Arquivo ou diretório | Padrão |

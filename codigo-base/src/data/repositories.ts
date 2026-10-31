@@ -750,6 +750,13 @@ export const concluiRepository = {
       .single();
     if (error) return null;
     return data;
+  },
+
+  // Conclui uma aula SEM questões (0 XP). O servidor grava a conclusão, garante
+  // a matrícula e recalcula o progresso (migration 0022).
+  async concluirAulaSemQuestoes(idAula: string): Promise<void> {
+    const { error } = await supabase.rpc('complete_empty_lesson', { p_lesson_id: idAula });
+    if (error) throw new Error(`Erro ao concluir aula sem questões: ${error.message}`);
   }
 };
 

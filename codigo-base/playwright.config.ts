@@ -14,7 +14,8 @@ export default defineConfig({
     command:
       'cross-env VITE_SUPABASE_URL=https://example.supabase.co VITE_SUPABASE_ANON_KEY=test-anon-key npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
-    reuseExistingServer: !process.env.CI,
+    // Evita validar um preview externo com build ou variáveis de outro ambiente.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   projects: [
