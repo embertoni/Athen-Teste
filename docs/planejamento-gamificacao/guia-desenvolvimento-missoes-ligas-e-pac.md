@@ -916,7 +916,22 @@ As seções anteriores descrevem intenção e sequência, exceto estados explici
 
 **Estado final do ambiente:** containers exclusivos parados com sucesso após os testes, usando stop sem --no-backup; banco preservado para retomada. Mudanças de cache do CLI produzidas pelo ensaio removidas, preservando o valor inicial versionado. Conferência final: YAML válido nos três jobs, Node compatível, diff sem erros de whitespace, links dos artefatos existentes e respostas/propostas preservadas por SHA-256.
 
-**Encaminhamento preparado após nova solicitação de continuar:** estado/branch/base reconferidos, alterações locais preservadas e [rascunho de PR/escopo de commits](../../.scratch/gamificacao/pr-infraestrutura.md) preparado com a skill `pr`. Trajeto: versionar a entrega revisável na branch da issue → publicar PR para sprint04 no fork → obter CI/revisão humana independente → integrar quando autorizado → iniciar a branch dependente da sessão 02 a partir da sprint atualizada. **Commits necessários foram posteriormente autorizados pelo usuário e estão em execução. Push e publicação de PR ainda aguardam autorização.** Merge não será presumido pela autorização de publicar.
+**Encaminhamento preparado após nova solicitação de continuar:** estado/branch/base reconferidos, alterações locais preservadas e [rascunho de PR/escopo de commits](../../.scratch/gamificacao/pr-infraestrutura.md) preparado com a skill `pr`. Trajeto: versionar a entrega revisável na branch da issue → publicar PR para sprint04 no fork → obter CI/revisão humana independente → integrar quando autorizado → iniciar a branch dependente da sessão 02 a partir da sprint atualizada. **Commits necessários foram posteriormente autorizados e criados conforme o registro abaixo. Push e publicação de PR ainda aguardam autorização.** Merge não será presumido pela autorização de publicar.
+
+### Versionamento local autorizado — issue 42
+
+**Autorização recebida:** realizar qualquer commit necessário em embertoni/Athen-Teste. Branch preservada `issue/42-testes-banco-gamificacao`, base `2c3d19dd6b92a44967c950d5bc03b5cb19f42e02`; nenhum commit direto em sprint04/develop/main. A autorização não foi estendida por suposição a push, publicação de PR, merge ou implantação.
+
+| Commit efetivo | Escopo | Validação no fechamento |
+| --- | --- | --- |
+| `a5e199befeb263a95d65c0aa225f618b185a9ec9` | Planejamento aprovado, fontes literais, spec/contratos/tickets, glossário, ADR, índice e proposta de PR | Fontes conferidas por SHA-256 no disco; conteúdo do index equivalente considerando normalização Git CRLF/LF; hook executado sem arquivos JS/TS aplicáveis |
+| `5b7a210eac7093f0ba701d954ea08b1be75d51b2` | Harness SQL/testes/configuração local, tipos pg/comandos, Node/CI e documentação de execução | Index com 15 arquivos explícitos, sem .env/estado local/artefatos; diff --check aprovado; hook lint-staged executou eslint --fix nos cinco TS e passou |
+
+**Registro final:** commit documental `docs: registra commits da infraestrutura de gamificacao` contém este registro e os hashes acima. Os dois commits da entrega estão na mesma branch, sem integração na sprint. A comparação com o index salvo pelo hook confirmou que o segundo commit não introduziu alteração de código durante a execução do ESLint; por isso as validações funcionais registradas na sessão anterior continuam aplicáveis, sem repetição desnecessária da suíte.
+
+**Preservação:** o primeiro diff completo sinalizou espaços finais de quebras de linha Markdown em documentos novos do planejamento. Essas quebras e as fontes literais foram preservadas. Nenhuma alteração em bancos, credenciais ou tipos gerados durante o versionamento. A árvore ficou limpa após os dois commits principais; somente este fechamento documental foi alterado em seguida.
+
+**Próxima ação, dependente de input:** autorizar push da branch para origin (embertoni/Athen-Teste) e abertura do PR para sprint04, para executar CI remota e obter revisão humana independente. Aguardar a resposta antes dessas ações. Ainda não iniciar a sessão 02 como se a infraestrutura estivesse integrada.
 
 Usar o modelo abaixo por sessão e repetir a subseção para cada página/área, incluindo banco, acesso compartilhado, testes e operação. Em renomeação/exclusão, registrar destino e consumidores. Integração upstream usa mudanças cumulativas e sequência de migrações, sem tratar cópia de componente como instalação da funcionalidade.
 

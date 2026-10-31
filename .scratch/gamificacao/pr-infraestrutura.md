@@ -1,6 +1,6 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: proposta de PR preparada. Commits locais autorizados pelo usuário e em execução; push, publicação de PR e merge ainda aguardam autorização própria.
+Estado: proposta de PR preparada, com documentação e infraestrutura commitadas localmente. Push, publicação de PR e merge ainda aguardam autorização própria.
 
 **Destino:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Integração no upstream é posterior e não faz parte deste encaminhamento.
 
@@ -8,13 +8,13 @@ Estado: proposta de PR preparada. Commits locais autorizados pelo usuário e em 
 
 **Sequência de commits locais autorizada:**
 
-1. `docs: registra planejamento aprovado da gamificacao` — quatro documentos de planejamento preservando as respostas, spec/contratos/tickets locais, glossário, ADR e índice documental.
-2. `test: prepara infraestrutura SQL e CI para gamificacao` — scripts/harness/configuração de ensaio, tipagem e comandos, dependência de tipos pg, CI e referências de execução/testes/banco.
+1. **a5e199befeb263a95d65c0aa225f618b185a9ec9** — `docs: registra planejamento aprovado da gamificacao`: quatro documentos de planejamento preservando as respostas, spec/contratos/tickets locais, glossário, ADR e índice documental.
+2. **5b7a210eac7093f0ba701d954ea08b1be75d51b2** — `test: prepara infraestrutura SQL e CI para gamificacao`: scripts/harness/configuração de ensaio, tipagem e comandos, dependência de tipos pg, CI e referências de execução/testes/banco.
 3. `docs: registra commits da infraestrutura de gamificacao` — referências efetivas dos dois commits e estado de encaminhamento.
 
-Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento já existiam sem versionamento; serão adicionados preservando seu conteúdo, incluindo os hashes conferidos das respostas e propostas. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entra nos commits.
+Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento que existiam sem versionamento foram adicionados; as respostas e propostas tiveram conteúdo literal e hashes dos arquivos locais conferidos. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entrou nos commits.
 
-**Sequência:** criar os commits acima na branch da issue. Após nova autorização para push/PR, reconferir remotos/base, publicar essa branch no fork, abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis dentro do mesmo escopo. O merge depende da aprovação de outra pessoa conforme Convenções e de autorização própria. Só depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
+**Sequência:** commits locais da entrega concluídos; registro documental final nesta alteração. Após nova autorização para push/PR, reconferir remotos/base, publicar essa branch no fork, abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis dentro do mesmo escopo. O merge depende da aprovação de outra pessoa conforme Convenções e de autorização própria. Só depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
 
 ---
 
