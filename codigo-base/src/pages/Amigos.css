@@ -1,0 +1,51 @@
+@reference "../index.css";
+
+/* ==========================================================================
+   Página Amigos — mesmo esqueleto visual de Catálogo/Salas, com os tokens
+   globais de design (index.css): canvas · surface · ink · muted · line · gold.
+   ========================================================================== */
+
+/* ---------- Base ---------- */
+.amigos {
+  @apply flex min-h-svh w-full overflow-hidden bg-canvas font-body text-ink;
+  line-height: normal;
+}
+
+.amigos,
+.amigos *,
+.amigos *::before,
+.amigos *::after {
+  box-sizing: border-box;
+}
+
+:where(.amigos) :where(h1, h2, h3, p) { margin: 0; }
+:where(.amigos) :where(h1, h2, h3) { font-weight: 400; }
+
+/* O deslocamento da SidebarLeft é responsabilidade do PageLayout. */
+.amigos__main {
+  @apply relative isolate min-h-svh min-w-0 flex-1 px-[56px] pt-[42px] pb-[48px];
+}
+
+.amigos__brilho {
+  @apply pointer-events-none fixed top-[-200px] right-[-120px] h-[560px] w-[700px];
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(164, 134, 213, 0.18), rgba(14, 8, 32, 0) 68%);
+}
+
+/* ---------- Cabeçalho (padrão compartilhado entre as páginas) ---------- */
+.amigos__cabecalho { @apply mb-[32px] flex items-end justify-between gap-[16px]; }
+.amigos__caminho {
+  @apply mb-[10px] text-[10px] tracking-[1.4px] text-muted;
+  font-weight: 700;
+}
+.amigos__caminho span { @apply text-gold; }
+.amigos__titulo { @apply font-display text-[46px] leading-[1.05] tracking-[-0.8px] text-ink; }
+.amigos__subtitulo { @apply mt-[9px] text-[14px] text-muted; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 760px) {
+  .amigos__main { @apply px-[20px] pt-[28px]; }
+  .amigos__cabecalho { @apply flex-col items-start gap-[14px]; }
+  .amigos__titulo { @apply text-[36px]; }
+}

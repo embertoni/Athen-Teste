@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './components/SupabaseConnect'
 import { CrudConsole } from './pages/CrudConsole'
 import {LoginPage} from './pages/LoginPage'
@@ -28,7 +28,7 @@ export default function Hub() {
         <Route path="/crud" element={<ProtectedRoute><CrudConsole /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/salas" element={<ProtectedRoute><Salas /></ProtectedRoute>} />
-        {/* <Route path="/ranking" element={<ProtectedRoute><Ranking /></ProtectedRoute>} /> */}
+        <Route path="/ranking" element={<ProtectedRoute><Navigate to="/ligas" replace /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/configuracoes" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
         <Route path="/amigos" element={<ProtectedRoute><Amigos /></ProtectedRoute>} />

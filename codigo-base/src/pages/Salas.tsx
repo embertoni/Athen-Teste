@@ -7,6 +7,7 @@ import {
   avisoRepository,
   concluiRepository,
   cursoRepository,
+  missaoRepository,
   moduloRepository,
   participaRepository,
   salaRepository,
@@ -547,6 +548,18 @@ function SalaModal({ sala, usuarioId, aulaAberta, onFechar, onAbrirAula, onAtual
   const [erro, setErro] = useState("");
   const [tituloAviso, setTituloAviso] = useState("");
   const [textoAviso, setTextoAviso] = useState("");
+  const [missoes, setMissoes] = useState<Database["public"]["Tables"]["missions"]["Row"][] | null>(null);
+  const [erroMissoes, setErroMissoes] = useState("");
+
+  useEffect(() => {
+    let cancelado = false;
+    void missaoRepository.listarPorSala(sala.id).then(lista => {
+      if (!cancelado) setMissoes(lista.filter(missao => missao.status === "published"));
+    }).catch(() => {
+      if (!cancelado) setErroMissoes("Não foi possível carregar as missões da sala.");
+    });
+    return () => { cancelado = true; };
+  }, [sala.id]);
 
   // Enquanto uma aula está aberta por cima, o Esc fecha só a aula.
   useTravarModal(() => {
@@ -805,6 +818,21 @@ function SalaModal({ sala, usuarioId, aulaAberta, onFechar, onAbrirAula, onAtual
                     ? <RankingPodium players={jogadores} compact width="compact" ariaLabel="Top 5 da sala" />
                     : <p className="salas__vazio-painel">Ainda não há alunos no ranking.</p>}
                 </div>
+
+                <section aria-label="Missões da sala">
+                  <h3 className="salas__mural-titulo">Missões publicadas</h3>
+                  {erroMissoes ? <p role="alert">{erroMissoes}</p> : missoes === null ? (
+                    <p className="salas__vazio-painel">Carregando missões...</p>
+                  ) : missoes.length === 0 ? (
+                    <p className="salas__vazio-painel">Nenhuma missão publicada nesta sala.</p>
+                  ) : missoes.map(missao => (
+                    <article className="salas__aviso" key={missao.id}>
+                      <strong className="salas__aviso-titulo">{missao.title}</strong>
+                      {missao.description && <p className="salas__aviso-texto">{missao.description}</p>}
+                      <small>Recompensa anunciada: {missao.reward_xp} XP</small>
+                    </article>
+                  ))}
+                </section>
 
                 <div className="salas__mural-cabecalho">
                   <div>

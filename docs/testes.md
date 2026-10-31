@@ -30,11 +30,13 @@ Para mudanças visuais ou de navegação, execute também:
 npm run test:e2e
 ```
 
-A [configuração Playwright](../codigo-base/playwright.config.ts) usa Chromium e prepara um build/preview em `127.0.0.1:4173`, com variáveis Supabase fictícias. Ela pode reutilizar um servidor existente fora da CI: confira o processo ao interpretar os resultados. Se faltar o navegador, instale-o com `npx playwright install chromium`.
+A [configuração Playwright](../codigo-base/playwright.config.ts) usa Chromium e prepara um build/preview exclusivo em `127.0.0.1:4173`, com variáveis Supabase fictícias; falha se a porta já estiver ocupada. Execute o pipeline geral antes do E2E, em sequência: outro build simultâneo sobrescreve `dist/` e invalida o ambiente do preview. Se faltar o navegador, instale-o com `npx playwright install chromium`.
 
 O teste existente verifica título e cabeçalho da página inicial. Não testa login real nem os fluxos autenticados de curso, aula, sala ou perfil. Os valores fictícios usados pelo E2E não servem para acesso funcional ao banco.
 
 `tests/e2e/dashboard.spec.ts` também exercita o dashboard com sessão e respostas HTTP controladas: conclusão sem questões, falhas da leitura e da RPC, parâmetros das consultas do TopDown, navegação do carrossel e geometria em 1280, 1440 e 1920px. As capturas de dashboard e seletor ficam em `test-results/`. Esses testes não validam autenticação real, aplicação da migração `0022` ou políticas RLS de um banco remoto.
+
+`tests/e2e/sprint04-reconciliation.spec.ts` cobre a compatibilidade de `/ranking` com `/ligas`, busca sem acentos na estante, perfil/medalhas de amigos e missões publicadas junto das aulas de sala, incluindo falha de leitura. Sessão e HTTP são fictícios; não comprovam políticas de banco nem o futuro mecanismo de gamificação. Capturas da conciliação ficam em `test-results/`.
 
 ## Cobertura existente
 

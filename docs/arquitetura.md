@@ -29,7 +29,7 @@ Caminhos abaixo são relativos a `codigo-base/`.
 | Perfil e configuração | `src/pages/profile/Profile.tsx`, `src/pages/ConfigPage.tsx` | Edição de perfil, preferências e operações de conta |
 | Perfil compartilhado | `src/components/sidebar/SidebarLeft.tsx` | Cache próprio, assinantes e evento de atualização de perfil |
 | Caderno | `src/pages/Notebook.tsx`, `src/components/notebook/CursoNotebook.tsx` | Anotações e caderno associado ao curso |
-| Social | `src/pages/Amigos.tsx`, `src/pages/Notificacoes.tsx`, `src/pages/Ranking.tsx` | Amizades, notificações e apresentação de classificação |
+| Social | `src/pages/Amigos.tsx`, `src/pages/Notificacoes.tsx`, `src/pages/Ligas.tsx` | Amizades, notificações e apresentação de classificação; `/ranking` redireciona para `/ligas` |
 | Layout e tema | `src/components/layout/PageLayout.tsx`, `src/index.css` | Estrutura comum e tokens; regras no [guia de estilos](estilo-padrao.md) |
 | Regras persistidas | `supabase/migrations/` | RLS, tentativas, XP, conclusões, rankings e demais regras SQL |
 

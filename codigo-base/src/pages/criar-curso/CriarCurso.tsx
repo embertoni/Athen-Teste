@@ -9,7 +9,7 @@ import {
 } from "../../data/repositories";
 import { supabase } from "../../lib/supabase";
 import type { Database } from "../../types/database";
-import { EditorConfigQuestao } from "./EditarConfigQuestao";
+import { EditorConfigQuestao } from "./EditorConfigQuestao";
 import {
   configVaziaPara,
   gerarSlug,
