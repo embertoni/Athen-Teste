@@ -62,7 +62,9 @@ Conferência visual das capturas: estante desktop, Amigos e modal de sala mantê
 
 As capturas reproduzíveis ficam em `codigo-base/test-results/`; evidências selecionadas versionadas: [estante desktop](evidencias/sincronizacao-sprint04/estante-desktop.png), [perfil do amigo](evidencias/sincronizacao-sprint04/amigo-perfil.png), [missões da sala](evidencias/sincronizacao-sprint04/sala-missoes.png) e [limitação móvel preexistente](evidencias/sincronizacao-sprint04/estante-mobile-limitacao.png). A rodada final, após completar a fixture de PAC e ajustar a rolagem da captura, também passou nos 19 testes (20,8s); lint e tipagem de testes foram repetidos e aprovados.
 
-CI remota ainda pendente de envio do commit; não confundir os resultados locais com aprovação remota.
+Commit de conciliação **`d29bc2d2fc1bdff6b5a798651413316caafc5631`** criado com o hook pre-commit aprovado, sem alterações adicionais do hook, e enviado exclusivamente à branch do PR #2 no Athen-Teste. Os dois pais são os hashes registrados acima; a árvore ficou limpa. Após o envio, o GitHub confirmou **`mergeable=true`** e base ainda em `59bfd13`; nenhuma integração foi executada.
+
+A comparação do PR passou de 195 para **60 arquivos**, 65 commits de histórico/conciliação, 5.948 adições e 1.474 remoções, antes deste complemento documental. O corpo do PR foi atualizado com decisões, evidências e limites. Consultas repetidas à API do GitHub após o envio retornaram **nenhuma execução de workflow associada a `d29bc2d`**; o motivo não foi confirmado. Isso não é CI aprovada. Verificar a habilitação/execução de Actions no fork antes de integrar; o conector disponível permite consultar e repetir jobs existentes, mas não habilitar workflows.
 
 ## Pendências para integração e retomada
 
