@@ -51,7 +51,7 @@ O TopDown usa `friends_course_pac` com o curso ativo, `missions` publicadas e se
 
 - Identifique o ambiente e o esquema já aplicado, incluindo as migrações posteriores que redefinem funções e políticas.
 - Confira se a mudança exige migração incremental e atualização das chamadas e dos tipos gerados.
-- O checkout não fornece `supabase/config.toml` nem um procedimento validado de bootstrap completo. A presença do pacote CLI não garante que `supabase start` ou um reset seja um setup pronto deste projeto.
+- A aplicação continua sem `supabase/config.toml`. Para ensaio, existe uma configuração separada em `codigo-base/tests/db/supabase/config.toml` e um bootstrap explícito do SQL numerado: seguir [Banco SQL descartável](../../codigo-base/README.md#banco-sql-descartável). Esse projeto local exclusivo não representa configuração ou aplicação de SQL num ambiente remoto.
 - Os seeds em [0013](../../codigo-base/supabase/migrations/0013_seed.sql) e [seed.sql](../../codigo-base/supabase/seed.sql) precisam ser lidos no contexto do ambiente de teste antes da execução; esta referência não instrui a aplicá-los sobre dados existentes.
 - Regenere `src/types/database.ts` a partir do esquema-alvo correspondente após a mudança. Não edite o arquivo à mão. O alvo e o comando de geração devem acompanhar a entrega; não há script de geração em `package.json` atualmente.
 - Confira no ambiente os recursos de Storage usados pelo [perfil](../../codigo-base/src/pages/profile/Profile.tsx); tabelas e RPCs não descrevem por si só as políticas do bucket.

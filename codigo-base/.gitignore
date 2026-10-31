@@ -33,3 +33,6 @@ test-results/
 
 # Supabase CLI local state (project ref, versions, etc.)
 supabase/.temp/
+
+# Exclusive disposable Supabase project for database tests
+.supabase-test/

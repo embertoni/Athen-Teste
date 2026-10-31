@@ -19,6 +19,46 @@ permissions:
   contents: read
 
 jobs:
+  database:
+    name: database
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: codigo-base
+    env:
+      # Disposable local database only; no repository/environment secrets.
+      ATHEN_TEST_DB_URL: postgresql://postgres:postgres@127.0.0.1:55432/postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: codigo-base/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Prepare isolated project
+        run: npm run test:db:prepare
+      - name: Start isolated Supabase
+        run: npx --no-install supabase start --workdir .supabase-test -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor > .supabase-test/start.log 2>&1
+      - name: Bootstrap numbered schema
+        run: npm run test:db:bootstrap
+      - name: Database harness typecheck
+        run: npm run test:db:check
+      - name: Student sanity
+        run: npm run test:db:run
+      - name: Concurrent students and rollback
+        run: npm run test:db:concurrency
+      - name: Stop isolated project
+        if: always()
+        run: |
+          if [ -f .supabase-test/supabase/config.toml ]; then
+            npx --no-install supabase stop --workdir .supabase-test
+          fi
+
   quality:
     name: quality
     runs-on: ubuntu-latest
@@ -31,7 +71,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.12.x
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: codigo-base/package-lock.json
       - name: Install dependencies
@@ -60,7 +100,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.12.x
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: codigo-base/package-lock.json
       - name: Install dependencies
