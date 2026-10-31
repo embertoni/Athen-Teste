@@ -322,6 +322,7 @@ export function CrudConsole() {
       let config: Json
       try { config = JSON.parse(fQuestao.config) as Json }
       catch { throw new Error('A configuração (config) não é um JSON válido.') }
+      if (config === null) throw new Error('A configuração (config) não pode ser nula.')
 
       const payload = {
         lesson_id: fQuestao.lesson_id,

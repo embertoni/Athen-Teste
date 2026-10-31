@@ -15,6 +15,8 @@
     "test:db:bootstrap": "tsx scripts/bootstrap-db-tests.ts",
     "test:db:run": "tsx scripts/run-db-tests.ts",
     "test:db:concurrency": "tsx scripts/run-db-tests.ts --concurrency",
+    "test:db:learning": "tsx scripts/run-db-tests.ts --learning",
+    "test:db:learning:concurrency": "tsx scripts/run-db-tests.ts --learning-concurrency",
     "test:db:check": "tsc -p tsconfig.db.json --noEmit",
     "test:check": "tsc -p tsconfig.test.json --noEmit",
     "test:e2e": "playwright test",

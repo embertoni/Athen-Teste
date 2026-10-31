@@ -1,8 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
 
-// ATENÇÃO: os tipos abaixo dependem do `database.ts` regenerado a partir do banco novo
-// (npx supabase gen types typescript --project-id <id> > src/types/database.ts).
+// Tipos gerados do esquema aplicado; alvo e comando local em docs/banco-de-dados/documentacao-bd.md.
 
 type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
@@ -38,11 +37,12 @@ type CreateMatriculaInput = TablesInsert<'enrollments'>;
 type StatusMatricula = Enums<'enrollment_status'>;
 
 type Tentativa = Tables<'attempts'>;
-type CreateTentativaInput = TablesInsert<'attempts'>;
+type CreateTentativaInput = Pick<TablesInsert<'attempts'>, 'id' | 'user_id' | 'lesson_id' | 'course_id' | 'room_id'>;
 type ResultadoTentativa = FunctionReturn<'finalize_attempt'>[number];
+type ConfirmacaoTentativa = FunctionReturn<'get_attempt_confirmation'>[number];
 
 type Resposta = Tables<'answers'>;
-type CreateRespostaInput = TablesInsert<'answers'>;
+type CreateRespostaInput = Pick<TablesInsert<'answers'>, 'id' | 'attempt_id' | 'question_id' | 'submitted'>;
 type ResultadoCorrecao = FunctionReturn<'grade_answer'>[number];
 
 type Aviso = Tables<'announcements'>;
@@ -631,17 +631,30 @@ export const tentativaRepository = {
     });
   },
 
-  // Corrige todas as respostas no servidor, aplica XP/progresso/medalhas e retorna os totais.
+  async obterConfirmacao(idTentativa: string): Promise<ConfirmacaoTentativa | null> {
+    const { data, error } = await supabase.rpc('get_attempt_confirmation', { p_attempt_id: idTentativa });
+    if (error) throw new Error(`Erro ao consultar confirmação: ${error.message}`);
+    return data[0] ?? null;
+  },
+
+  // Só confirma sucesso com resultado oficial; retorno perdido não exige novo pagamento.
   async finalizar(idTentativa: string): Promise<ResultadoTentativa> {
-    const { data, error } = await supabase.rpc('finalize_attempt', { p_attempt_id: idTentativa });
-    if (error) throw new Error(`Erro ao finalizar tentativa: ${error.message}`);
-    const resultado = Array.isArray(data) ? data[0] : data;
-    if (!resultado) throw new Error('Erro ao finalizar tentativa: resposta vazia.');
-    return resultado;
+    try {
+      const { data, error } = await supabase.rpc('finalize_attempt', { p_attempt_id: idTentativa });
+      if (error) throw new Error(`Erro ao finalizar tentativa: ${error.message}`);
+      const resultado = Array.isArray(data) ? data[0] : data;
+      if (!resultado) throw new Error('Erro ao finalizar tentativa: resposta vazia.');
+      return resultado;
+    } catch (error) {
+      // Se a leitura também falhar, manter a falha original, nunca inventar zero/sucesso.
+      const confirmacao = await tentativaRepository.obterConfirmacao(idTentativa).catch(() => null);
+      if (!confirmacao) throw error;
+      return { correct_count: confirmacao.correct_count, total_count: confirmacao.total_count, xp_earned: confirmacao.xp_earned };
+    }
   }
 };
 
-// answers. is_correct e xp_earned enviados pelo cliente são sobrescritos pela correção do servidor.
+// answers. Campos oficiais são exclusivos do servidor; respostas encerradas não podem ser alteradas.
 // Formatos de `submitted` por tipo de questão:
 //   match: { pairs: [{ left, right }] }   multiple_choice: { selected: ['a', 'c'] }
 //   fill_blank: { text: '...' }           sum_alternatives: { sum: 7 }
@@ -689,15 +702,17 @@ export const respostaRepository = {
     return data || [];
   },
 
-  // Cria ou substitui a resposta da questão dentro da tentativa (única por tentativa + questão).
-  async salvar(dados: CreateRespostaInput): Promise<Resposta> {
-    const { data, error } = await supabase
-      .from('answers')
-      .upsert(dados, { onConflict: 'attempt_id,question_id' })
-      .select()
-      .single();
+  // Cria ou substitui antes da finalização; primeiro envio imutável vem em outra fatia.
+  async salvar(dados: Omit<CreateRespostaInput, 'id'>): Promise<Resposta> {
+    const { data, error } = await supabase.rpc('save_attempt_answer', {
+      p_attempt_id: dados.attempt_id,
+      p_question_id: dados.question_id,
+      p_submitted: dados.submitted ?? {},
+    });
     if (error) throw new Error(`Erro ao salvar resposta: ${error.message}`);
-    return data;
+    const resposta = data[0];
+    if (!resposta) throw new Error('Erro ao salvar resposta: resposta vazia.');
+    return resposta;
   }
 };
 
