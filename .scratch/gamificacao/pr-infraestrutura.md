@@ -1,6 +1,6 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) integrado pelo usuário em `2d55fd3e6999ccbbd09655e1939f66eabcc00624`. Infraestrutura conciliada contra essa sprint04 e publicada no [PR #3](https://github.com/embertoni/Athen-Teste/pull/3), com primeira CI Linux aprovada nos três jobs. Aprovação humana adicional dispensada expressamente pelo usuário neste fork. Merge do PR #3 ainda requer autorização própria.
+Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) integrado em `2d55fd3`. Infraestrutura publicada no [PR #3](https://github.com/embertoni/Athen-Teste/pull/3), com CI Linux aprovada nos três jobs, inclusive no fechamento `39f5c34`. **Merge do PR #3 expressamente autorizado pelo usuário, seguido de pausa do desenvolvimento.** Este registro final acompanha o próprio PR; sua incorporação na sprint é confirmada pelo estado merged no GitHub. Revisão adicional dispensada neste fork; ticket 04 não será iniciado durante o fechamento.
 
 **Base atual e limite da evidência:** origin/sprint04 em `2d55fd3`, incorporada na branch de infraestrutura por merge `45d6385`, preservando os commits anteriores. Único conflito no README resolvido mantendo setup da aplicação e banco isolado; nenhum diff de páginas, Playwright ou E2E contra a sprint integrada. Após a abertura do PR, API passou a listar CI ativo e execução `41173674697` aprovada. Gatilhos de push incluem sprints; main e a branch padrão não foram alteradas.
 
@@ -16,7 +16,7 @@ Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) 
 
 Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento que existiam sem versionamento foram adicionados; as respostas e propostas tiveram conteúdo literal e hashes dos arquivos locais conferidos. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entrou nos commits.
 
-**Sequência:** publicação e validações local/Linux concluídas. Atualizar o registro documental no mesmo PR e integrá-lo quando autorizado. A revisão humana adicional foi dispensada pelo usuário, conforme exceção em Convenções. Depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
+**Sequência de fechamento autorizada:** incluir o registro da pausa no mesmo PR, conferir a CI, integrar em sprint04 e atualizar a referência local por fast-forward. Preservar branches e volume do banco local, com containers parados. Na retomada solicitada pelo usuário, criar a próxima branch da sprint atualizada conforme checklist do guia; não iniciar o núcleo agora.
 
 ---
 

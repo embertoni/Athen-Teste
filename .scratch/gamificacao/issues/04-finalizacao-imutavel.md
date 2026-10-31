@@ -8,6 +8,8 @@ Status: ready-for-agent
 
 **Blocked by:** 01 e 03, integrados conforme convenções antes da branch dependente. O restante da sessão 02 será dividido antes de implementar.
 
+**Pausa em 31/10/2026:** merge do PR #3 autorizado para integrar essas dependências. Antes de retomar, confirmar o estado merged e buscar a sprint04 resultante. O usuário solicitou pausar após o fechamento; nenhuma implementação, teste novo ou branch do ticket 04 foi iniciada. Seguir o checklist de retomada da seção 7 do guia somente após nova solicitação.
+
 **Origem:** guia sessão 02/3.5; Q007/Q053–Q054/Q059/Q081/Q091–Q094/Q098/Q126/Q142.
 
 - [ ] Primeiro teste vermelho demonstra a diferença de comportamento por entrada pública em Postgres real, sem falha artificial de setup.
