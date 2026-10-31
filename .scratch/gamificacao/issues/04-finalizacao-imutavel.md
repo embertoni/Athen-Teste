@@ -1,12 +1,14 @@
 # 04: Recuperar a mesma confirmação de aula individual sem crédito duplicado
 
-Status: ready-for-agent
+Status: claimed
 
 **Issue de equipe:** 42; sprint04; Em andamento confirmado pelo usuário. Início funcional aguarda a integração das dependências indicada abaixo.
 
 **What to build:** aluno conclui uma execução individual completa, recebe resultado oficial e, após retorno perdido ou reenvio, recupera a mesma confirmação e o mesmo crédito.
 
 **Blocked by:** 01 e 03, integrados conforme convenções antes da branch dependente. O restante da sessão 02 será dividido antes de implementar.
+
+**Retomada:** PR #3 confirmado merged em `1ab3f9f`; dependências integradas. Primeira fatia em [04.1](04-1-confirmacao-finalizada-estavel.md), sem marcar o ticket principal resolvido antes de livro/ordinal/snapshot e demais critérios.
 
 **Pausa em 31/10/2026:** merge do PR #3 autorizado para integrar essas dependências. Antes de retomar, confirmar o estado merged e buscar a sprint04 resultante. O usuário solicitou pausar após o fechamento; nenhuma implementação, teste novo ou branch do ticket 04 foi iniciada. Seguir o checklist de retomada da seção 7 do guia somente após nova solicitação.
 

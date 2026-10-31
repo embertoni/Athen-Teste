@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0022` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0023` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -19,7 +19,7 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 | Perfil | `profiles` (identidade de acesso em `auth.users`) |
 | Curso, módulo, aula e questão | `courses`, `modules`, `lessons`, `questions` |
 | Matrícula | `enrollments` |
-| Tentativa, resposta e conclusão | `attempts`, `answers`, `completions` |
+| Tentativa, resposta, conclusão e confirmação | `attempts`, `answers`, `completions`, `learning_results` |
 | Sala e participação | `rooms`, `room_members` |
 | Avisos, missões e progresso | `announcements`, `missions`, `mission_progress` |
 | Amizade e notificação | `friendships`, `notifications` |
@@ -33,7 +33,7 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 | Assunto | Comportamento no SQL | Fonte |
 | --- | --- | --- |
 | Questões | Tipos `match`, `multiple_choice`, `fill_blank` e `sum_alternatives` | [0001](../../codigo-base/supabase/migrations/0001_extensions_and_enums.sql) e [0010](../../codigo-base/supabase/migrations/0010_domain_functions.sql) |
-| Finalização de tentativa | Corrige respostas e aplica efeitos de conclusão no servidor; repetição da finalização não reaplica os efeitos | [0018](../../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql) redefine `finalize_attempt` |
+| Finalização de tentativa | Exige conta ativa, autoria/acesso e completude; confirma uma vez e recupera o mesmo resultado no reenvio | [0023](../../codigo-base/supabase/migrations/0023_persist_attempt_confirmations.sql) encapsula 0018 em schema privado |
 | XP | Curso credita XP global; sala usa métricas internas. Questão já acertada em tentativa anterior finalizada não rende novo XP | [0018](../../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql) |
 | Aula sem questões | `complete_empty_lesson` conclui no contexto de curso com zero XP e recalcula progresso | [0022](../../codigo-base/supabase/migrations/0022_complete_empty_lesson.sql) |
 | Ranking | Global por XP acumulado; amigos por PAC no curso; pontuação de sala separada. Sem reset semanal | [0015](../../codigo-base/supabase/migrations/0015_rankings.sql) |
@@ -42,6 +42,16 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 | Metadados de conteúdo | Ícone de módulo, explicação de questão e duração calculada do curso | [0021](../../codigo-base/supabase/migrations/0021_module_icon_question_explanation_course_duration.sql) |
 
 `grade_answer` fornece feedback sem persistir os efeitos oficiais da tentativa. O cliente não deve substituir a finalização do servidor por cálculos de XP na tela.
+
+### Confirmação persistida — fatia 04.1
+
+0023 preserva a assinatura de `finalize_attempt(uuid)` e o pagamento inteiro legado. O finalizador anterior passa a `athen_private`, sem execução pelo cliente. A entrada pública bloqueia a tentativa e grava `learning_results` na mesma transação dos efeitos. Reenvio retorna o registro sem recorreção, mesmo depois de editar a questão. `get_attempt_confirmation` recupera a confirmação própria de conta ativa; desconhecida/alheia não vira resultado zero. Tentativas antigas encerradas são copiadas com `legacy=true`, sem pagamento ou recorreção; isso não certifica retroativamente sua completude.
+
+Campos oficiais de tentativa/confirmação não aceitam escrita autenticada direta. Respostas encerradas são protegidas; a alteração usada pelo cliente passa por `save_attempt_answer`, que bloqueia a tentativa antes da resposta. UPDATE direto de answers foi retirado para evitar inversão de locks. Insert legítimo de tentativa/respostas continua sujeito a GRANT/RLS/trigger; a edição de nome do perfil permanece funcionando.
+
+Snapshot no início, primeiro envio/ordinal, livro decimal, unicidade entre tentativas diferentes e novas métricas continuam pendentes no ticket 04. O fechamento dos demais contadores de profiles/enrollments também pertence à continuação; os privilégios alterados nesta fatia são de attempts, answers e learning_results. O defeito legado de room_members permanece no ticket 05; finalização em sala não foi homologada por estes testes.
+
+**Tipos gerados:** schema public do projeto local `athen-gamificacao-test`, SQL 0001–0023, Supabase CLI instalado no projeto. Comando executado: `npx --no-install supabase gen types typescript --db-url 'postgresql://postgres:postgres@127.0.0.1:55432/postgres?sslmode=disable' --schema public`. Trata-se da senha fictícia do ensaio local, sem banco remoto. O gerador recusou TLS inicialmente; a opção foi limitada a esse endpoint. Resultado salvo como UTF-8 sem BOM, com remoção automática de espaços ao fim das linhas, sem editar tipos manualmente. O arquivo anterior era UTF-16LE, por isso o Git pode mostrar diferença binária. O gerador passou a refletir JSON não nulo do esquema; CrudConsole agora rejeita explicitamente config nula.
 
 No modal, aulas de curso sem questões oferecem **Marcar como concluída**, que chama `complete_empty_lesson` por `dominioRepository.concluirAulaSemQuestoes`. A ação só é habilitada depois de carregar as questões com sucesso; falha de consulta não é interpretada como aula vazia. A conclusão só aparece após sucesso da RPC, sem tentativa ou XP fictícios. Esse fluxo exige a migração `0022` aplicada e não conclui aulas no contexto de sala, que a RPC atual não atende.
 

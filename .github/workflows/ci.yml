@@ -54,6 +54,10 @@ jobs:
         run: npm run test:db:run
       - name: Concurrent students and rollback
         run: npm run test:db:concurrency
+      - name: Stable learning confirmation and rollback
+        run: npm run test:db:learning
+      - name: Concurrent finalization of the same attempt
+        run: npm run test:db:learning:concurrency
       - name: Stop isolated project
         if: always()
         run: |
