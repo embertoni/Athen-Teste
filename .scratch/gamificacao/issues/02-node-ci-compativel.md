@@ -18,6 +18,6 @@ Status: resolved
 
 **Ponto de teste:** comandos reais de validação; não criar teste que apenas compara a string da versão no YAML.
 
-**Retomada em 31/10/2026:** PR #2 já incorporou Node 24.19.0 em quality/e2e na sprint04. A infraestrutura preserva essa versão também em database. Pipeline e 19 E2E passaram após conciliação; nenhum pacote foi atualizado nesta retomada. A API lista zero workflows no fork; execução remota continua sem evidência, sem bloquear ensaios locais nem alegar CI aprovada.
+**Retomada em 31/10/2026:** PR #2 já incorporou Node 24.19.0 em quality/e2e na sprint04. A infraestrutura preserva essa versão também em database. Pipeline e 19 E2E passaram após conciliação; nenhum pacote foi atualizado nesta retomada. Antes da publicação, a API listava zero workflows; após abrir PR #3, CI foi cadastrada como ativa e a execução Linux `41173674697` passou nos três jobs com Node 24.19.0. Integração da infraestrutura ainda pendente.
 
 **Evidência para fechar:** engines conferidas, pipeline/ambiente e diff. Mudança remota de workflow só ocorrerá após autorização de publicação.

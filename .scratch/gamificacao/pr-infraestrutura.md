@@ -1,8 +1,8 @@
 # Proposta de encaminhamento — issue 42
 
-Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) integrado pelo usuário em `2d55fd3e6999ccbbd09655e1939f66eabcc00624`. Infraestrutura conciliada contra essa sprint04 e revalidada localmente. Push e criação deste PR já autorizados; aprovação humana adicional dispensada expressamente pelo usuário neste fork. Merge deste novo PR ainda requer autorização própria.
+Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) integrado pelo usuário em `2d55fd3e6999ccbbd09655e1939f66eabcc00624`. Infraestrutura conciliada contra essa sprint04 e publicada no [PR #3](https://github.com/embertoni/Athen-Teste/pull/3), com primeira CI Linux aprovada nos três jobs. Aprovação humana adicional dispensada expressamente pelo usuário neste fork. Merge do PR #3 ainda requer autorização própria.
 
-**Base atual e limite da evidência:** origin/sprint04 em `2d55fd3`, incorporada na branch de infraestrutura por merge preservando os commits anteriores. Único conflito no README resolvido mantendo setup da aplicação e banco isolado; nenhum diff de páginas, Playwright ou E2E contra a sprint integrada. A API do fork lista zero workflows; arquivo ci.yml está na sprint, mas não em main (branch padrão). Gatilhos de push passam a incluir sprints; CI remota só será declarada após execução real.
+**Base atual e limite da evidência:** origin/sprint04 em `2d55fd3`, incorporada na branch de infraestrutura por merge `45d6385`, preservando os commits anteriores. Único conflito no README resolvido mantendo setup da aplicação e banco isolado; nenhum diff de páginas, Playwright ou E2E contra a sprint integrada. Após a abertura do PR, API passou a listar CI ativo e execução `41173674697` aprovada. Gatilhos de push incluem sprints; main e a branch padrão não foram alteradas.
 
 **Único destino de escrita:** `embertoni/Athen-Teste`, branch `issue/42-testes-banco-gamificacao` → `sprint04`. Por instrução explícita de 31/10/2026, **VitorSoaresGoncalves/Athen permanece somente leitura**, inclusive após esta entrega. Não criar PR, branch, commit, comentário ou alteração de configuração no original. A sincronização usa o original apenas como fonte de leitura e tem o fork como destino; resolução dos conflitos e merge do PR #2 já autorizados.
 
@@ -16,7 +16,7 @@ Estado: [PR #2 no Athen-Teste](https://github.com/embertoni/Athen-Teste/pull/2) 
 
 Este arquivo é versionado como proposta para revisão, preservando o link do guia. Os quatro documentos de planejamento que existiam sem versionamento foram adicionados; as respostas e propostas tiveram conteúdo literal e hashes dos arquivos locais conferidos. Nenhum arquivo .env, estado .supabase-test, credencial ou artefato de execução entrou nos commits.
 
-**Sequência:** base integrada, conciliação e validação local concluídas; publicar a infraestrutura no fork e abrir PR para sprint04, acompanhar CI e corrigir falhas demonstráveis no mesmo escopo. A revisão humana adicional foi dispensada pelo usuário, conforme exceção em Convenções. Depois de autorizado e integrado este PR, criar a branch dependente do núcleo a partir da sprint atualizada.
+**Sequência:** publicação e validações local/Linux concluídas. Atualizar o registro documental no mesmo PR e integrá-lo quando autorizado. A revisão humana adicional foi dispensada pelo usuário, conforme exceção em Convenções. Depois de integrado, criar a branch dependente do núcleo a partir da sprint atualizada.
 
 ---
 
@@ -44,8 +44,9 @@ Inclui o planejamento aprovado e seus contratos/tickets, preservando as fontes l
 - Falha intencional retorna 1; repetição normal retorna 0. URL ausente/remota e configuração alterada são recusadas.
 - Pipeline após conciliação aprovado: lint, typecheck, test:run (2/2), test:check, build e test:db:check. Chromium: **19/19, saída 0, 28,2s**, com dois workers, preview fictício exclusivo e build sequencial. Bootstrap reconheceu manifesto sem reaplicar SQL; sanidade e concorrência retornaram 0.
 - Revisão técnica final contra a sprint integrada: Padrões sem achados materiais; Spec sem defeito funcional, com dois estados documentais obsoletos corrigidos antes da publicação. Revisão humana adicional dispensada pelo usuário. Respostas e propostas preservadas por SHA-256 (3/3).
+- CI Linux do commit `45d6385`: **quality, database e e2e aprovados** na [execução 41173674697](https://github.com/embertoni/Athen-Teste/actions/runs/41173674697). Job SQL confirmou projeto/container/porta locais no runner e passou bootstrap, sanidade, concorrência e parada. Workflow agora listado como ativo; nenhum ajuste remoto de Actions ou da branch padrão foi necessário.
 
-Ambiente validado: Windows, Node 24.19.0, Docker 29.9.2 Linux, Supabase CLI 2.121.0 e imagem Postgres 17.11.0.004. Container confirmado `0a25183e82e6`, label athen-gamificacao-test e banco em 127.0.0.1:55432; parado com volume preservado. **A API lista zero workflows no fork; execução remota ainda não comprovada.** Os E2E usam respostas HTTP controladas; não comprovam login real ou as regras futuras. A limitação preexistente da sidebar em 360px e o trigger room_members.updated_at continuam registrados, sem correção neste escopo.
+Ambiente local validado: Windows, Node 24.19.0, Docker 29.9.2 Linux, Supabase CLI 2.121.0 e imagem Postgres 17.11.0.004. Container confirmado `0a25183e82e6`, label athen-gamificacao-test e banco em 127.0.0.1:55432; parado com volume preservado. CI Linux também aprovada, com container descartável próprio `9092a189a3a8`. Os E2E usam respostas HTTP controladas; não comprovam login real ou as regras futuras. A limitação preexistente da sidebar em 360px e o trigger room_members.updated_at continuam registrados, sem correção neste escopo.
 
 ## Merge Danger
 
@@ -55,7 +56,7 @@ Configuração e infraestrutura de ensaio reversíveis; nenhuma migração de pr
 
 **Blast Radius:** validação
 
-Afeta jobs de CI, ferramentas de teste e documentação. O novo job depende de Docker/download de imagens no runner; sua execução remota precisa ser confirmada. Aviso de bundle grande, seção inbucket obsoleta e vulnerabilidades reportadas pelas dependências permanecem registrados no guia, sem atualização de escopo automática.
+Afeta jobs de CI, ferramentas de teste e documentação. O novo job depende de Docker/download de imagens no runner; a primeira execução Linux passou. Aviso de bundle grande, seção inbucket obsoleta e vulnerabilidades reportadas pelas dependências permanecem registrados no guia, sem atualização de escopo automática.
 
 O ensaio encontrou defeito preexistente no reingresso em salas: trigger tenta atualizar coluna inexistente em room_members. Ticket local 05 registra a reprodução; esta entrega não corrige nem declara esse caminho homologado. O teste concorrente cobre ingresso novo.
 
