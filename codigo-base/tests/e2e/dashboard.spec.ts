@@ -5,7 +5,7 @@ const courseId = '22222222-2222-4222-8222-222222222222'
 const lessonId = '33333333-3333-4333-8333-333333333333'
 const moduleId = '44444444-4444-4444-8444-444444444444'
 
-async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean } = {}) {
+async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean; confirmation?: 'lost' | 'unknown' } = {}) {
   const requests: { path: string; query: URLSearchParams; body: unknown }[] = []
   let completed = false
   const user = { id: userId, aud: 'authenticated', role: 'authenticated', email: 'aluno@example.test', user_metadata: {}, app_metadata: {} }
@@ -32,6 +32,19 @@ async function prepareDashboard(page: Page, options: { questionsFail?: boolean; 
     if (path === 'modules') data = Array.from({ length: options.moduleCount ?? 1 }, (_, index) => ({ id: index === 0 ? moduleId : `module-${index}`, course_id: courseId, title: index === 0 ? 'Módulo inicial' : `Módulo ${index + 1}`, position: index, color: '#06b6d4', icon: '📘' }))
     if (path === 'lessons' && url.searchParams.get('module_id') === 'eq.' + moduleId) data = [{ id: lessonId, module_id: moduleId, title: 'Leitura introdutória', content: 'Leia este material antes de continuar.', position: 0 }]
     if (path === 'completions' && completed) data = [{ user_id: userId, lesson_id: lessonId, context: 'course' }]
+    if (options.confirmation) {
+      if (path === 'questions') data = [{ id: 'question-test', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Escolha A', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }] } }]
+      if (path === 'attempts') data = { id: 'attempt-test', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null }
+      if (path === 'answers') data = { id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }
+      if (path === 'save_attempt_answer') data = [{ id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }]
+      if (path === 'grade_answer') data = [{ is_correct: true, xp: 4 }]
+      if (path === 'finalize_attempt') {
+        completed = options.confirmation === 'lost'
+        status = 503
+        data = { message: 'Retorno da finalização perdido' }
+      }
+      if (path === 'get_attempt_confirmation' && completed) data = [{ attempt_id: 'attempt-test', confirmed_at: '2026-10-31T12:00:00Z', correct_count: 1, total_count: 1, xp_earned: 4, legacy: false }]
+    }
     if (path === 'complete_empty_lesson') {
       status = options.completionFail ? 400 : 204
       completed = !options.completionFail
@@ -110,6 +123,32 @@ test('TopDown consulta o curso e usuário corretos e expõe falha de progresso',
   expect(missions?.query.get('limit')).toBe('3')
   expect(missions?.query.get('or')).toContain('deadline.is.null,deadline.gte.')
   expect(requests.find(r => r.path === 'mission_progress')?.query.get('user_id')).toBe('eq.' + userId)
+})
+
+test('recupera a confirmação oficial quando o retorno da finalização se perde', async ({ page }, testInfo) => {
+  const requests = await prepareDashboard(page, { confirmation: 'lost' })
+  await page.getByRole('button', { name: 'Aula Leitura introdutória' }).click()
+  await page.getByRole('button', { name: 'Começar atividade', exact: true }).click()
+  await page.getByRole('checkbox', { name: 'Resposta A' }).click()
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+  await page.getByRole('button', { name: 'Finalizar aula', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Aula concluída!' })).toBeVisible()
+  await expect(page.locator('.lesson-modal__numeros')).toContainText('1/1')
+  await expect(page.locator('.lesson-modal__numeros')).toContainText('+4')
+  expect(requests.filter(r => r.path === 'finalize_attempt')).toHaveLength(1)
+  expect(requests.find(r => r.path === 'get_attempt_confirmation')?.body).toEqual({ p_attempt_id: 'attempt-test' })
+  await page.screenshot({ path: testInfo.outputPath('confirmacao-recuperada.png'), animations: 'disabled' })
+})
+
+test('sem confirmação persistida mantém a falha e não anuncia conclusão', async ({ page }) => {
+  await prepareDashboard(page, { confirmation: 'unknown' })
+  await page.getByRole('button', { name: 'Aula Leitura introdutória' }).click()
+  await page.getByRole('button', { name: 'Começar atividade', exact: true }).click()
+  await page.getByRole('checkbox', { name: 'Resposta A' }).click()
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+  await page.getByRole('button', { name: 'Finalizar aula', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Retorno da finalização perdido')
+  await expect(page.getByRole('heading', { name: 'Aula concluída!' })).toHaveCount(0)
 })
 
 for (const count of [2, 3]) {

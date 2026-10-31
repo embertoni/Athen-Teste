@@ -40,6 +40,8 @@ O teste existente verifica título e cabeçalho da página inicial. Não testa l
 
 `tests/e2e/sprint04-reconciliation.spec.ts` cobre a compatibilidade de `/ranking` com `/ligas`, busca sem acentos na estante, perfil/medalhas de amigos e missões publicadas junto das aulas de sala, incluindo falha de leitura. Sessão e HTTP são fictícios; não comprovam políticas de banco nem o futuro mecanismo de gamificação. Capturas da conciliação ficam em `test-results/`.
 
+Dashboard também cobre retorno perdido da finalização: a reconsulta recupera a confirmação de 1/1 e 4 XP; sem confirmação, a tela mantém erro e não anuncia conclusão. A captura `confirmacao-recuperada.png` fica em test-results. Esse HTTP controlado não prova persistência ou RLS; a prova SQL usa os comandos abaixo.
+
 ## Cobertura existente
 
 Conferência em 2026-10-23: os testes Vitest existentes são exemplos de [soma](../codigo-base/tests/unit/sum.test.ts) e [contador](../codigo-base/tests/components/ExampleCounter.test.tsx). O [E2E](../codigo-base/tests/e2e/home-page.spec.ts) cobre a página inicial. Aprovação dessas verificações não comprova correção dos fluxos de domínio ou permissões do banco.
@@ -53,6 +55,8 @@ O novo harness não interativo é independente do comando legado: veja [Banco SQ
 O caso de concorrência usa duas conexões de alunos em duas salas, observa ambos aguardando locks antes de liberar a barreira e verifica audiência, privado, ingresso sem matrícula e rollback após falha SQL. Fixtures compartilhadas são confirmadas para as conexões e eliminadas ao final por seus UUIDs exclusivos. Não comprova login HTTP, unicidade de crédito concorrente ou missões/ligas/PAC novos. O job `database` está configurado no [workflow](../.github/workflows/ci.yml), incluindo parada em `always()`; resultados locais e Linux efetivamente executados estão na seção 7 do [guia](planejamento-gamificacao/guia-desenvolvimento-missoes-ligas-e-pac.md).
 
 `npm run test:db` aponta para [run-testes.ts](../codigo-base/supabase/testes/run-testes.ts). É um menu interativo que usa `SUPABASE_DB_URL` do ambiente do processo e executa SQL de criação, atualização e exclusão.
+
+`npm run test:db:learning` executa `tests/db/learning.sql` em transação descartada: confirmação estável após edição posterior, permissões, incompletude, legado e falha injetada com rollback. `npm run test:db:learning:concurrency` coordena dois PIDs reais bloqueados antes da liberação; verifica duas finalizações da mesma tentativa e a corrida resposta/finalização, com uma confirmação e 4 XP. Fixtures compartilhadas usam UUIDs exclusivos e são removidas após os workers. Ambos integram o job database. Não provam unicidade entre tentativas distintas, ordinal ou livro decimal.
 
 Limitações encontradas na leitura:
 
