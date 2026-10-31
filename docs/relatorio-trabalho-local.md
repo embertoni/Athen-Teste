@@ -1,5 +1,7 @@
 # Histórico do trabalho local — Athen-Teste
 
+> Registro histórico. A autorização vigente de 31/10/2026 restringe toda escrita a `embertoni/Athen-Teste`; referências abaixo à reprodução no original não autorizam alterações em `VitorSoaresGoncalves/Athen`. Consulte o [registro da conciliação](relatorio-sincronizacao-sprint04.md).
+
 Este repositório, `embertoni/Athen-Teste`, é um ambiente de teste para mudanças que poderão ser reproduzidas manualmente no projeto original, `VitorSoaresGoncalves/Athen`. Este relatório registra o que mudou, em quais branches, quais arquivos finais precisam ser levados ao upstream e qual validação foi de fato realizada.
 
 O ponto de comparação histórico é `c4dcdfa` (merge do PR #32), identificado no registro original. As partes são cumulativas: quando um mesmo caminho aparece em mais de uma, use a versão final mais recente deste repositório ao reproduzir o trabalho. As partes 1 e 2 preservam registros anteriores; a parte 3 registra esta sessão do Codex, iniciada sobre `e8746ae`.

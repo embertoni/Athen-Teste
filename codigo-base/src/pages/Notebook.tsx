@@ -34,6 +34,10 @@ function dataFormatada(data: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(data));
 }
 
+function normalizarBusca(texto: string) {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
+}
+
 function NotebookCard({ item, onOpen }: { item: NotebookComCurso; onOpen: () => void }) {
   const { notebook, curso } = item;
   return (
@@ -78,9 +82,9 @@ export default function NotebookPage() {
 
   // A pesquisa procura pelo nome do notebook ou pelo curso.
   const notebooksVisiveis = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase();
+    const term = normalizarBusca(search.trim());
     if (!term) return notebooks;
-    return notebooks.filter(({ notebook, curso }) => `${notebook.title} ${curso?.title ?? ""}`.toLocaleLowerCase().includes(term));
+    return notebooks.filter(({ notebook, curso }) => normalizarBusca(`${notebook.title} ${curso?.title ?? ""}`).includes(term));
   }, [notebooks, search]);
 
   useEffect(() => {

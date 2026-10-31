@@ -1,4 +1,4 @@
-﻿/* Pop-up de aula. A cor do m├│dulo chega pela vari├ível --lesson-accent. */
+/* Pop-up de aula. A cor do módulo chega pela variável --lesson-accent. */
 .lesson-modal__camada {
   position: fixed;
   inset: 0;
@@ -149,7 +149,7 @@
   border-radius: 10px;
 }
 
-/* ---------- Quest├Áes ---------- */
+/* ---------- Questões ---------- */
 .lesson-modal__cabecalho-questao {
   display: flex;
   align-items: center;
@@ -309,7 +309,7 @@
 .lesson-modal__numeros strong { color: var(--lesson-accent); font-size: 24px; }
 .lesson-modal__numeros span { color: rgba(216, 201, 242, 0.7); font-size: 12px; }
 
-/* ---------- Rodap├® ---------- */
+/* ---------- Rodapé ---------- */
 .lesson-modal__rodape {
   display: flex;
   flex: 0 0 auto;

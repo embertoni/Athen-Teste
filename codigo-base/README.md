@@ -4,7 +4,7 @@ Cliente web React/TypeScript servido pelo Vite, com Supabase para autenticação
 
 ## Executar localmente
 
-A CI usa Node 22.12.x; consulte o [workflow](../.github/workflows/ci.yml) ao alinhar o ambiente. Use npm com o lockfile versionado.
+Use a versão de Node definida no [workflow](../.github/workflows/ci.yml), compatível com as engines do lockfile. Use npm com o lockfile versionado.
 
 Na raiz do repositório:
 
