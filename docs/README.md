@@ -19,6 +19,8 @@ Use este índice para escolher a referência da tarefa. As referências técnica
 | Tipos de questão atuais e ideias de expansão | [Tipos de questão](tipos-de-questao.md) | Quatro tipos implementados, regras de correção e propostas futuras separadas |
 | Apresentar a sprint04 com duas contas novas | [Roteiro de demo](roteiro-demo-sprint04.md) | Percursos de educador/estudante, dados e gabaritos; limites conferidos nas fontes da sprint04 |
 | Trabalho das skills | [Tracker local](agents/issue-tracker.md), [triagem](agents/triage-labels.md), [domínio](agents/domain.md) | Convenções específicas do repositório |
+| Desenvolvimento de missões, ligas e PAC | [Guia e registro de execução](planejamento-gamificacao/guia-desenvolvimento-missoes-ligas-e-pac.md), [spec local](../.scratch/gamificacao/spec.md) | Plano aprovado; seção 7 distingue execução efetiva de trabalho futuro |
+| Decisão transacional da gamificação | [ADR 0001](adr/0001-gamificacao-transacional.md) | Desenho aceito; implementação e validação ainda pendentes |
 
 ## Visão de produto e material histórico
 
