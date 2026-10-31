@@ -1,5 +1,7 @@
 # Conciliação da sprint04 no Athen-Teste
 
+**Atualização em 31/10/2026:** PR #2 integrado pelo usuário no GitHub, confirmado no commit `2d55fd3e6999ccbbd09655e1939f66eabcc00624`. A dispensa posterior de revisão adicional aplica-se somente ao Athen-Teste, conforme [Convenções](convencoes.md). O texto abaixo preserva o estado da conciliação antes dessa integração; a retomada da infraestrutura está registrada no [guia](planejamento-gamificacao/guia-desenvolvimento-missoes-ligas-e-pac.md).
+
 Registro de execução de 31/10/2026, issue YouTrack **42**, atribuída ao solicitante e confirmada por ele como **Em andamento**. Escopo autorizado: conciliar os históricos divergentes, testar, commitar e atualizar o [PR de rascunho #2](https://github.com/embertoni/Athen-Teste/pull/2), exclusivamente no fork. A integração na `sprint04` continua pendente de revisão humana independente e autorização.
 
 ## Históricos e limite de escrita
