@@ -39,14 +39,14 @@ isOneToOne: false
                   ]
                 },"answers": {
                   Row: {
-                    "attempt_id": string,"created_at": string,"id": string,"is_correct": boolean,"question_id": string,"submitted": NonNullable<Json>,"xp_earned": number
+                    "attempt_id": string,"created_at": string,"first_submitted_at": string | null,"id": string,"is_correct": boolean,"question_id": string,"submitted": NonNullable<Json>,"xp_earned": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempt_id": string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"question_id": string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
+                    "attempt_id": string,"created_at"?: string,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id": string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
                   }
                   Update: {
-                    "attempt_id"?: string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"question_id"?: string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
+                    "attempt_id"?: string,"created_at"?: string,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id"?: string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
                   }
                   Relationships: [
                     {
@@ -791,6 +791,7 @@ isOneToOne: false
 { Args: { "p_attempt_id": string,"p_question_id": string,"p_submitted": Json }; Returns: {
               "attempt_id": string,
 "created_at": string,
+"first_submitted_at": string | null,
 "id": string,
 "is_correct": boolean,
 "question_id": string,

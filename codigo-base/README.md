@@ -44,6 +44,7 @@ npm run test:db:run
 npm run test:db:concurrency
 npm run test:db:learning
 npm run test:db:learning:concurrency
+npm run test:db:first-submissions
 npm run test:db:permissions
 npm run test:db:seed
 npm run test:db:check

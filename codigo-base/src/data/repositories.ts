@@ -692,7 +692,7 @@ export const respostaRepository = {
     return data || [];
   },
 
-  // Cria ou substitui antes da finalização; primeiro envio imutável vem em outra fatia.
+  // Registra a primeira resposta ou recupera a mesma, sem substituir no reenvio.
   async salvar(dados: Omit<CreateRespostaInput, 'id'>): Promise<Resposta> {
     const { data, error } = await supabase.rpc('save_attempt_answer', {
       p_attempt_id: dados.attempt_id,

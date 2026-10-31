@@ -5,9 +5,10 @@ const courseId = '22222222-2222-4222-8222-222222222222'
 const lessonId = '33333333-3333-4333-8333-333333333333'
 const moduleId = '44444444-4444-4444-8444-444444444444'
 
-async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean; confirmation?: 'lost' | 'unknown' } = {}) {
+async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean; confirmation?: 'lost' | 'unknown'; firstSubmission?: boolean } = {}) {
   const requests: { path: string; query: URLSearchParams; body: unknown }[] = []
   let completed = false
+  let firstSave = true
   const user = { id: userId, aud: 'authenticated', role: 'authenticated', email: 'aluno@example.test', user_metadata: {}, app_metadata: {} }
   await page.addInitScript(({ user }) => {
     localStorage.setItem('sb-example-auth-token', JSON.stringify({
@@ -32,12 +33,24 @@ async function prepareDashboard(page: Page, options: { questionsFail?: boolean; 
     if (path === 'modules') data = Array.from({ length: options.moduleCount ?? 1 }, (_, index) => ({ id: index === 0 ? moduleId : `module-${index}`, course_id: courseId, title: index === 0 ? 'Módulo inicial' : `Módulo ${index + 1}`, position: index, color: '#06b6d4', icon: '📘' }))
     if (path === 'lessons' && url.searchParams.get('module_id') === 'eq.' + moduleId) data = [{ id: lessonId, module_id: moduleId, title: 'Leitura introdutória', content: 'Leia este material antes de continuar.', position: 0 }]
     if (path === 'completions' && completed) data = [{ user_id: userId, lesson_id: lessonId, context: 'course' }]
-    if (options.confirmation) {
-      if (path === 'questions') data = [{ id: 'question-test', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Escolha A', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }] } }]
+    if (options.confirmation || options.firstSubmission) {
+      if (path === 'questions') data = [{ id: 'question-test', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Escolha A', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }, { id: 'b', text: 'Resposta B', correct: false }] } }]
       if (path === 'attempts') data = { id: 'attempt-test', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null }
       if (path === 'answers') data = { id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }
       if (path === 'save_attempt_answer') data = [{ id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }]
       if (path === 'grade_answer') data = [{ is_correct: true, xp: 4 }]
+      if (options.firstSubmission && path === 'save_attempt_answer') {
+        status = firstSave ? 503 : 200
+        data = firstSave ? { message: 'Retorno do envio perdido' }
+          : [{ id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test',
+            submitted: { selected: ['b'] }, first_submitted_at: '2026-10-31T12:00:00Z' }]
+        firstSave = false
+      }
+      if (options.firstSubmission && path === 'grade_answer') {
+        const body: { p_submitted: { selected: string[] } } = request.postDataJSON()
+        const correct = body.p_submitted.selected.includes('a')
+        data = [{ is_correct: correct, xp: correct ? 4 : 0 }]
+      }
       if (path === 'finalize_attempt') {
         completed = options.confirmation === 'lost'
         status = 503
@@ -150,6 +163,60 @@ test('sem confirmação persistida mantém a falha e não anuncia conclusão', a
   await expect(page.getByRole('alert')).toContainText('Retorno da finalização perdido')
   await expect(page.getByRole('heading', { name: 'Aula concluída!' })).toHaveCount(0)
 })
+
+test('após retorno perdido o feedback usa a primeira resposta preservada', async ({ page }, testInfo) => {
+  const requests = await prepareDashboard(page, { firstSubmission: true })
+  await page.getByRole('button', { name: 'Aula Leitura introdutória' }).click()
+  await page.getByRole('button', { name: 'Começar atividade' }).click()
+  await page.getByRole('checkbox', { name: 'Resposta B', exact: true }).check()
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Retorno do envio perdido')
+  expect(requests.some(r => r.path === 'grade_answer')).toBe(false)
+  await page.getByRole('checkbox', { name: /Resposta B$/ }).uncheck()
+  await page.getByRole('checkbox', { name: 'Resposta A', exact: true }).check()
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+  await expect(page.getByText('Não foi dessa vez.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Resposta registrada: Resposta B', { exact: true })).toBeVisible()
+  expect(requests.filter(r => r.path === 'grade_answer').map(r => r.body)).toEqual([
+    expect.objectContaining({ p_submitted: { selected: ['b'] } }),
+  ])
+  await page.screenshot({ path: testInfo.outputPath('primeiro-envio-preservado.png'), animations: 'disabled' })
+})
+
+const preservedExamples = [
+  { type: 'fill_blank', config: { answers: ['A'] }, saved: { text: 'B' }, summary: 'B' },
+  { type: 'sum_alternatives', config: { statements: [{ value: 1, text: 'A', correct: true }, { value: 2, text: 'B', correct: false }] }, saved: { sum: 2 }, summary: '2' },
+  { type: 'match', config: { pairs: [{ left: 'Um', right: 'A' }, { left: 'Dois', right: 'B' }] }, saved: { pairs: [{ left: 'Um', right: 'B' }, { left: 'Dois', right: 'A' }] }, summary: 'Um → B; Dois → A' },
+]
+
+for (const example of preservedExamples) {
+  test(`feedback mostra o envio registrado de ${example.type}`, async ({ page }) => {
+    await prepareDashboard(page, { confirmation: 'unknown' })
+    await page.route('**/rest/v1/questions?*', route => route.fulfill({ json: [
+      { id: 'question-test', lesson_id: lessonId, type: example.type, prompt: 'Exemplo de envio', xp_value: 4, config: example.config },
+    ] }))
+    await page.route('**/rest/v1/rpc/save_attempt_answer', route => route.fulfill({ json: [
+      { id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: example.saved },
+    ] }))
+    const feedbackInputs: unknown[] = []
+    await page.route('**/rest/v1/rpc/grade_answer', route => {
+      const body: { p_submitted: unknown } = route.request().postDataJSON()
+      feedbackInputs.push(body.p_submitted)
+      return route.fulfill({ json: [{ is_correct: false, xp: 0 }] })
+    })
+    await page.getByRole('button', { name: 'Aula Leitura introdutória' }).click()
+    await page.getByRole('button', { name: 'Começar atividade' }).click()
+    if (example.type === 'fill_blank') await page.getByPlaceholder('Digite sua resposta').fill('A')
+    if (example.type === 'sum_alternatives') await page.getByRole('checkbox', { name: /A$/ }).check()
+    if (example.type === 'match') {
+      await page.getByRole('combobox', { name: /^Um/ }).selectOption('A')
+      await page.getByRole('combobox', { name: /^Dois/ }).selectOption('B')
+    }
+    await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+    await expect(page.getByText(`Resposta registrada: ${example.summary}`, { exact: true })).toBeVisible()
+    expect(feedbackInputs).toEqual([example.saved])
+  })
+}
 
 for (const count of [2, 3]) {
   test(`carrossel mantém o módulo atual no centro com ${count} módulos`, async ({ page }) => {

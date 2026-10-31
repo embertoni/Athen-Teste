@@ -56,11 +56,13 @@ jobs:
         run: npm run test:db:concurrency
       - name: Stable learning confirmation and rollback
         run: npm run test:db:learning
+      - name: First answer survives replay and transport loss
+        run: npm run test:db:first-submissions
       - name: Protected profile fields and legitimate edits
         run: npm run test:db:permissions
       - name: Demo seed roles and replay in rollback transaction
         run: npm run test:db:seed
-      - name: Concurrent finalization of the same attempt
+      - name: Concurrent finalization and first submissions of the same attempt
         run: npm run test:db:learning:concurrency
       - name: Stop isolated project
         if: always()
