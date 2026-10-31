@@ -42,6 +42,8 @@ O teste existente verifica título e cabeçalho da página inicial. Não testa l
 
 Dashboard também cobre retorno perdido da finalização: a reconsulta recupera a confirmação de 1/1 e 4 XP; sem confirmação, a tela mantém erro e não anuncia conclusão. A captura `confirmacao-recuperada.png` fica em test-results. Esse HTTP controlado não prova persistência ou RLS; a prova SQL usa os comandos abaixo.
 
+`tests/e2e/profile-permissions.spec.ts` cobre edição pessoal em Perfil, identidade/preferências em Configurações e edição sem exclusão direta na lista de perfis do CRUD. Confere payloads sem campos oficiais e feedback após salvar, usando sessão/HTTP fictícios. Não testa upload real nem políticas de Storage; a autorização SQL é verificada separadamente.
+
 ## Cobertura existente
 
 Conferência em 2026-10-23: os testes Vitest existentes são exemplos de [soma](../codigo-base/tests/unit/sum.test.ts) e [contador](../codigo-base/tests/components/ExampleCounter.test.tsx). O [E2E](../codigo-base/tests/e2e/home-page.spec.ts) cobre a página inicial. Aprovação dessas verificações não comprova correção dos fluxos de domínio ou permissões do banco.
@@ -57,6 +59,8 @@ O caso de concorrência usa duas conexões de alunos em duas salas, observa ambo
 `npm run test:db` aponta para [run-testes.ts](../codigo-base/supabase/testes/run-testes.ts). É um menu interativo que usa `SUPABASE_DB_URL` do ambiente do processo e executa SQL de criação, atualização e exclusão.
 
 `npm run test:db:learning` executa `tests/db/learning.sql` em transação descartada: confirmação estável após edição posterior, permissões, incompletude, legado e falha injetada com rollback. `npm run test:db:learning:concurrency` coordena dois PIDs reais bloqueados antes da liberação; verifica duas finalizações da mesma tentativa e a corrida resposta/finalização, com uma confirmação e 4 XP. Fixtures compartilhadas usam UUIDs exclusivos e são removidas após os workers. Ambos integram o job database. Não provam unicidade entre tentativas distintas, ordinal ou livro decimal.
+
+`npm run test:db:permissions` executa `tests/db/permissions.sql`, com rollback das fixtures. Sob aluno, administrador autenticado e anon, verifica negação de campos oficiais, INSERT/DELETE/TRUNCATE e helpers internos; preserva edição pessoal e isolamento, cadastro de aluno/educador, provisionamento administrativo por service_role confiável, estudo/streak/medalha e desativação. `npm run test:db:seed` executa o seed fictício real duas vezes na transação revertida, conferindo papéis e reaplicação. Ambos usam o mesmo guard de projeto/URL/marker e integram o job database. Isso não aplica SQL remoto, não popula o banco de uso da aplicação e não homologa o ciclo completo de conta, salas ou demais contadores.
 
 Limitações encontradas na leitura:
 

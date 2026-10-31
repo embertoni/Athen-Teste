@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0023` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0024` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -49,9 +49,19 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 
 Campos oficiais de tentativa/confirmação não aceitam escrita autenticada direta. Respostas encerradas são protegidas; a alteração usada pelo cliente passa por `save_attempt_answer`, que bloqueia a tentativa antes da resposta. UPDATE direto de answers foi retirado para evitar inversão de locks. Insert legítimo de tentativa/respostas continua sujeito a GRANT/RLS/trigger; a edição de nome do perfil permanece funcionando.
 
-Snapshot no início, primeiro envio/ordinal, livro decimal, unicidade entre tentativas diferentes e novas métricas continuam pendentes no ticket 04. O fechamento dos demais contadores de profiles/enrollments também pertence à continuação; os privilégios alterados nesta fatia são de attempts, answers e learning_results. O defeito legado de room_members permanece no ticket 05; finalização em sala não foi homologada por estes testes.
+Snapshot no início, primeiro envio/ordinal, livro decimal, unicidade entre tentativas diferentes e novas métricas continuam pendentes no ticket 04. Os privilégios alterados em 04.1 são de attempts, answers e learning_results; perfis recebem a proteção de 04.2 abaixo, enquanto matrícula/progresso continuam pendentes. O defeito legado de room_members permanece no ticket 05; finalização em sala não foi homologada por estes testes.
 
 **Tipos gerados:** schema public do projeto local `athen-gamificacao-test`, SQL 0001–0023, Supabase CLI instalado no projeto. Comando executado: `npx --no-install supabase gen types typescript --db-url 'postgresql://postgres:postgres@127.0.0.1:55432/postgres?sslmode=disable' --schema public`. Trata-se da senha fictícia do ensaio local, sem banco remoto. O gerador recusou TLS inicialmente; a opção foi limitada a esse endpoint. Resultado salvo como UTF-8 sem BOM, com remoção automática de espaços ao fim das linhas, sem editar tipos manualmente. O arquivo anterior era UTF-16LE, por isso o Git pode mostrar diferença binária. O gerador passou a refletir JSON não nulo do esquema; CrudConsole agora rejeita explicitamente config nula.
+
+### Campos oficiais de perfil — fatia 04.2
+
+[0024](../../codigo-base/supabase/migrations/0024_protect_profile_fields.sql) mantém SELECT autenticado e permite UPDATE apenas de username, display_name, bio, avatar_url, banner_url e notification_preferences, ainda sujeito às políticas RLS existentes. XP, nível, streak, data de estudo, cargo, estado da conta, id e timestamps não aceitam escrita do browser, inclusive de administrador autenticado. INSERT/DELETE e demais privilégios amplos de profiles também são retirados: apagar e recriar permitiria resetar defaults oficiais e perder histórico por cascata. Criação continua pelo trigger de Auth; desativação própria continua por deactivate_account. A lista de perfis do CRUD oferece edição, sem exclusão direta.
+
+touch_streak e grant_medals são internos, sem EXECUTE para PUBLIC/anon/authenticated. Os comandos privilegiados de estudo continuam chamando essas funções como seu proprietário, preservando efeitos e reenvio. O cadastro aceita student/educator; metadata admin ou inválida produz student. Cargo administrativo exige provisionamento confiável, como service_role no backend; esse papel não deve ser usado no browser. O trigger antigo que silenciosamente restaurava role foi retirado; grants passam a negar a escrita, enquanto a operação confiável pode provisionar o cargo.
+
+Nenhuma coluna ou assinatura pública de dados foi alterada por 0024. Tipos gerados de 04.1 permanecem aplicáveis, sem regeneração desnecessária; o adapter restringe o payload de edição às colunas permitidas. Os testes exercitam as permissões reais, além de payload/feedback dos consumidores em HTTP fictício. Não é uma auditoria completa de todas as projeções, políticas de conta ou Storage.
+
+O seed manual foi inspecionado e adaptado para conceder cargos da sua lista fictícia fixa por escrita privilegiada, sem voltar a confiar em metadata. `test:db:seed` executa esse arquivo duas vezes em transação revertida, exclusivamente no projeto local verificado. O bootstrap continua excluindo seed.sql; esse ensaio separado não popula a aplicação nem autoriza uso em dados reais.
 
 No modal, aulas de curso sem questões oferecem **Marcar como concluída**, que chama `complete_empty_lesson` por `dominioRepository.concluirAulaSemQuestoes`. A ação só é habilitada depois de carregar as questões com sucesso; falha de consulta não é interpretada como aula vazia. A conclusão só aparece após sucesso da RPC, sem tentativa ou XP fictícios. Esse fluxo exige a migração `0022` aplicada e não conclui aulas no contexto de sala, que a RPC atual não atende.
 

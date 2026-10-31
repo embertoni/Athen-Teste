@@ -47,6 +47,8 @@ O build produz assets estáticos em `codigo-base/dist/`. Vercel é o destino cit
 
 O perfil usa o bucket `avatars` para avatar e banner. A existência do bucket e suas políticas precisam ser verificadas no ambiente; a chamada no cliente não garante o provisionamento do recurso.
 
+Na edição de perfil, `usuarioRepository.atualizar` aceita somente os campos pessoais permitidos por 0024; o SQL impõe a restrição mesmo fora da interface. Perfil e Configurações preservam edição de identidade, imagens e preferências. No CRUD, criação segue Auth e a lista de perfis oferece apenas edição; INSERT/DELETE diretos foram retirados. XP/nível/streak continuam sob os comandos de estudo, e cadastro por metadata não provisiona administrador. Detalhes e limites em [Banco de dados](banco-de-dados/documentacao-bd.md#campos-oficiais-de-perfil--fatia-042).
+
 No diagrama, `Resend SMTP` representa o envio de e-mails de autenticação e a entrega ao Gmail do destinatário. Google OAuth representa autenticação com uma conta Google, enquanto `SMS provider (OTP)` representa o envio de códigos por SMS.
 
 `Edge Functions` representa a execução de funções no backend, com acesso ao banco e envio de e-mails por meio do Resend SMTP.

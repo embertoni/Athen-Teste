@@ -11,7 +11,8 @@
 -- Observações importantes:
 --   * As contas são inseridas direto em auth.users + auth.identities com a senha
 --     em hash (bcrypt). O gatilho handle_new_user cria o profile a partir do
---     raw_user_meta_data (username / display_name / role).
+--     raw_user_meta_data (username / display_name e cargo student/educator).
+--     Cargo admin é provisionado abaixo por escrita privilegiada, nunca pela metadata.
 --   * courses.duration_minutes é calculado pelos gatilhos da migration 0021;
 --     não é definido aqui.
 --   * UUIDs são fixos para manter FKs estáveis e permitir reexecução segura.
@@ -68,6 +69,9 @@ begin
         'email', now(), now(), now()
       );
     end if;
+    -- Lista fictícia fixa deste script confiável, não metadados do cliente.
+    -- Requer o backend/operador privilegiado; browsers não podem alterar role.
+    update public.profiles set role=(v_user->>'role')::public.user_role where id=v_id;
   end loop;
 end
 $$;
@@ -242,9 +246,10 @@ insert into public.room_members (room_id, user_id, status, progress, xp_internal
 on conflict (room_id, user_id) do nothing;
 
 -- ===========================================================================
--- Como rodar (a partir de codigo-base):
---   supabase db execute --file supabase/seed.sql
--- (ou cole o conteúdo no SQL Editor do painel do Supabase e execute)
+-- Ensaio isolado (a partir de codigo-base, após o setup do README):
+--   npm run test:db:seed
+-- O harness confirma athen-gamificacao-test em 127.0.0.1:55432 e reverte tudo.
+-- Não executar este seed em bancos compartilhados ou com dados reais.
 --
 -- Login de teste: qualquer e-mail acima + senha "test123!".
 -- ===========================================================================

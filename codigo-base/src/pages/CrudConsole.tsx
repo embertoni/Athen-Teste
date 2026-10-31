@@ -430,7 +430,6 @@ export function CrudConsole() {
     catch (error) { notify(errMsg(error, `Erro ao excluir ${label}.`), true) }
     finally { setLoading(false) }
   }
-  const removeUsuario = (id: string) => remove('usuário', 'este', () => usuarioRepository.deletar(id), loadUsuarios)
   const removeCurso = (id: string) => remove('curso', 'este', () => cursoRepository.deletar(id), loadCursos)
   const removeModulo = (id: string) => remove('módulo', 'este', () => moduloRepository.deletar(id), loadModulos)
   const removeAula = (id: string) => remove('aula', 'esta', () => aulaRepository.deletar(id), loadAulas)
@@ -489,7 +488,7 @@ export function CrudConsole() {
 
       <section className="crud-card list-card">
         <ListToolbar title="Usuários" onRefresh={() => void loadUsuarios()} loading={loading} />
-        <UserTable usuarios={usuarios} loading={loading} onEdit={editUsuario} onDelete={(id) => void removeUsuario(id)} />
+        <UserTable usuarios={usuarios} loading={loading} onEdit={editUsuario} />
       </section>
     </>
     : activeTab === 'cursos' ? <>
@@ -710,11 +709,11 @@ export function CrudConsole() {
   </main>
 }
 
-function RowActions({ onEdit, onDelete, editLabel = 'Alterar' }: { onEdit: () => void; onDelete: () => void; editLabel?: string }) {
+function RowActions({ onEdit, onDelete, editLabel = 'Alterar' }: { onEdit: () => void; onDelete?: () => void; editLabel?: string }) {
   return (
     <td className="row-actions">
       <button className="link-button" onClick={onEdit}>{editLabel}</button>
-      <button className="link-button danger" onClick={onDelete}>Apagar</button>
+      {onDelete && <button className="link-button danger" onClick={onDelete}>Apagar</button>}
     </td>
   )
 }
@@ -723,7 +722,7 @@ function EmptyRow({ colSpan, loading, text }: { colSpan: number; loading: boolea
   return <tr><td className="empty" colSpan={colSpan}>{loading ? 'Carregando...' : text}</td></tr>
 }
 
-function UserTable({ usuarios, loading, onEdit, onDelete }: { usuarios: Usuario[]; loading: boolean; onEdit: (usuario: Usuario) => void; onDelete: (id: string) => void }) {
+function UserTable({ usuarios, loading, onEdit }: { usuarios: Usuario[]; loading: boolean; onEdit: (usuario: Usuario) => void }) {
   return <div className="table-wrap">
     <table>
       <thead>
@@ -739,7 +738,7 @@ function UserTable({ usuarios, loading, onEdit, onDelete }: { usuarios: Usuario[
             <td>{usuario.level}</td>
             <td>{usuario.xp_global}</td>
             <td>{usuario.bio || '—'}</td>
-            <RowActions onEdit={() => onEdit(usuario)} onDelete={() => onDelete(usuario.id)} />
+            <RowActions onEdit={() => onEdit(usuario)} />
           </tr>)}
         {usuarios.length === 0 && <EmptyRow colSpan={8} loading={loading} text="Nenhum usuário visível para a sessão atual." />}
       </tbody>

@@ -13,7 +13,8 @@ type Json = Database['public']['Tables']['questions']['Row']['config'];
 // entidades do banco
 
 type Usuario = Tables<'profiles'>;
-type CreateUsuarioInput = TablesInsert<'profiles'>;
+type UpdateUsuarioInput = Pick<Database['public']['Tables']['profiles']['Update'],
+  'username' | 'display_name' | 'bio' | 'avatar_url' | 'banner_url' | 'notification_preferences'>;
 type BuscaUsuario = FunctionReturn<'search_profiles'>[number];
 
 type Curso = Tables<'courses'>;
@@ -142,13 +143,7 @@ export const usuarioRepository = {
     return data ?? null;
   },
 
-  async criar(dados: CreateUsuarioInput): Promise<Usuario> {
-    const { data, error } = await supabase.from('profiles').insert(dados).select().single();
-    if (error) throw new Error(`Erro ao criar usuário: ${error.message}`);
-    return data;
-  },
-
-  async atualizar(id: string, dados: Partial<CreateUsuarioInput>): Promise<Usuario> {
+  async atualizar(id: string, dados: UpdateUsuarioInput): Promise<Usuario> {
     const { data, error } = await supabase.from('profiles').update(dados).eq('id', id).select().single();
     if (error) throw new Error(`Erro ao atualizar usuário: ${error.message}`);
     return data;
@@ -170,11 +165,6 @@ export const usuarioRepository = {
   async desativarConta(): Promise<void> {
     const { error } = await supabase.rpc('deactivate_account');
     if (error) throw new Error(`Erro ao desativar conta: ${error.message}`);
-  },
-
-  async deletar(id: string): Promise<void> {
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
-    if (error) throw new Error(`Erro ao deletar usuário: ${error.message}`);
   }
 };
 
