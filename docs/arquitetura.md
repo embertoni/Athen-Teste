@@ -37,7 +37,7 @@ A implementação atual concentra muita composição de dados nas telas. Não h�
 
 ## Aula, conclusão e XP
 
-`LessonModal` carrega questões e inicia uma tentativa ao começar a atividade. Salva cada resposta por `save_attempt_answer`, solicita feedback opcional e finaliza por `finalize_attempt`. O resultado oficial fica em `learning_results`. Quando o retorno da finalização falha, o adapter consulta `get_attempt_confirmation`: somente uma confirmação oficial permite mostrar sucesso; ausência ou falha de leitura preserva o erro. Para aula sem questões em curso, usa `complete_empty_lesson`, com zero XP. Versões no início e o livro decimal continuam planejados na sessão 02.
+`LessonModal` carrega questões e inicia uma tentativa ao começar a atividade. Salva cada resposta por `save_attempt_answer`, que preserva o primeiro conteúdo gravado e seu instante de recebimento; reenvio devolve a mesma linha. O modal usa o conteúdo retornado no resumo e no feedback opcional, inclusive após retorno perdido, e finaliza por `finalize_attempt`. O resultado oficial fica em `learning_results`. Quando o retorno da finalização falha, o adapter consulta `get_attempt_confirmation`: somente uma confirmação oficial permite mostrar sucesso; ausência ou falha de leitura preserva o erro. Para aula sem questões em curso, usa `complete_empty_lesson`, com zero XP. Versões no início, ordinal e o livro decimal continuam planejados na sessão 02; recebimentos legados sem história certificada têm instante nulo.
 
 Curso e Sala são contextos diferentes de execução e pontuação. Consulte as fontes e os detalhes de idempotência, autorização e progresso em [Banco de dados](banco-de-dados/documentacao-bd.md); uma implementação de teste em memória não comprova essas regras SQL.
 

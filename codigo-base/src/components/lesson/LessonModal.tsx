@@ -137,6 +137,26 @@ function montarResposta(questao: Questao, entrada: Entrada) {
   }
 }
 
+// Apresenta o conteúdo retornado pelo servidor, inclusive no reenvio após erro.
+// Somatória preserva a soma enviada; não tenta reconstruir escolhas ambíguas.
+function resumoRespostaRegistrada(questao: Questao, submitted: unknown): string {
+  const resposta = comoObjeto(submitted);
+  switch (questao.type) {
+    case "multiple_choice": {
+      const opcoes = lerOpcoes(questao);
+      return comoLista(resposta.selected).map((id) =>
+        opcoes.find((opcao) => opcao.id === comoTexto(id))?.texto ?? comoTexto(id),
+      ).join(", ") || "Nenhuma alternativa";
+    }
+    case "fill_blank": return comoTexto(resposta.text) || "Resposta vazia";
+    case "sum_alternatives": return String(comoNumero(resposta.sum));
+    case "match": return comoLista(resposta.pairs).map((item) => {
+      const par = comoObjeto(item);
+      return `${comoTexto(par.left)} → ${comoTexto(par.right)}`;
+    }).join("; ") || "Nenhuma associação";
+  }
+}
+
 // Texto mostrado quando o aluno erra.
 function respostaEsperada(questao: Questao): string {
   const config = comoObjeto(questao.config);
@@ -306,6 +326,7 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
   const [tentativaId, setTentativaId] = useState<string | null>(null);
   const [correcao, setCorrecao] = useState<Correcao | null>(null);
   const [verificada, setVerificada] = useState(false);
+  const [respostaRegistrada, setRespostaRegistrada] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [resultado, setResultado] = useState<ResultadoTentativa | null>(null);
@@ -362,6 +383,7 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
     setIndice(posicao);
     setEntrada(questoes[posicao] ? entradaVazia(questoes[posicao]) : null);
     setVerificada(false);
+    setRespostaRegistrada("");
     setCorrecao(null);
   }
 
@@ -400,7 +422,7 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
     }
   }
 
-  // Salva a resposta e mostra se acertou (correção simulada, sem gravar nada).
+  // O recebimento é persistido antes do feedback, que usa o envio preservado.
   async function verificar() {
     if (!questao || !entrada || !tentativaId || !entradaCompleta(questao, entrada)) return;
     setOcupado(true);
@@ -409,10 +431,11 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
     const resposta = montarResposta(questao, entrada);
 
     try {
-      await respostaRepository.salvar({ attempt_id: tentativaId, question_id: questao.id, submitted: resposta });
+      const salva = await respostaRepository.salvar({ attempt_id: tentativaId, question_id: questao.id, submitted: resposta });
+      setRespostaRegistrada(resumoRespostaRegistrada(questao, salva.submitted));
 
       try {
-        const corrigida = await dominioRepository.corrigirResposta(questao.type, questao.config, resposta, questao.xp_value);
+        const corrigida = await dominioRepository.corrigirResposta(questao.type, questao.config, salva.submitted, questao.xp_value);
         setCorrecao({ is_correct: corrigida.is_correct, xp: corrigida.xp });
       } catch {
         // O feedback imediato é só um bônus: a correção oficial acontece ao finalizar.
@@ -507,20 +530,21 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
               <h3 className="lesson-modal__enunciado">{questao.prompt}</h3>
               <p className="lesson-modal__dica">{DICA_TIPO[questao.type]}</p>
 
-              <CamposQuestao
+              {!verificada && <CamposQuestao
                 key={questao.id}
                 questao={questao}
                 entrada={entrada}
                 bloqueado={verificada || ocupado}
                 onChange={setEntrada}
                 onEnviar={() => void verificar()}
-              />
+              />}
 
               {verificada && (
                 <div
                   className={`lesson-modal__feedback${correcao ? (correcao.is_correct ? " lesson-modal__feedback--certo" : " lesson-modal__feedback--errado") : ""}`}
                   role="status"
                 >
+                  <span>Resposta registrada: {respostaRegistrada}</span>
                   {correcao === null && <strong>Resposta salva.</strong>}
                   {correcao?.is_correct && <strong>Correto! +{correcao.xp} XP</strong>}
                   {correcao && !correcao.is_correct && (

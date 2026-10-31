@@ -15,7 +15,9 @@ async function cleanFixtures(admin: Client, course: string, users: string[]) {
   }
 }
 
-export async function testConcurrentFinalization(admin: Client, answerRace = false) {
+export async function testConcurrentLearning(admin: Client, mode: 'finalize' | 'answer' | 'first-submission' = 'finalize') {
+  const answerRace = mode === 'answer';
+  const firstSubmissionRace = mode === 'first-submission';
   const student = randomUUID();
   const author = randomUUID();
   const course = randomUUID();
@@ -38,11 +40,13 @@ export async function testConcurrentFinalization(admin: Client, answerRace = fal
     await admin.query('insert into public.modules(id,course_id,title) values($1,$2,\'Modulo\')', [module, course]);
     await admin.query(`insert into public.lessons(id,module_id,title,status) values($1,$2,'Aula','published')`, [lesson, module]);
     await admin.query(`insert into public.questions(id,lesson_id,type,prompt,config,xp_value)
-      values($1,$2,'multiple_choice','Escolha A',$3,4)`, [question, lesson, { options: [{ id: 'a', correct: true }] }]);
+      values($1,$2,'multiple_choice','Escolha A',$3,4)`, [question, lesson, { options: [{ id: 'a', correct: true }, { id: 'b', correct: false }] }]);
     await admin.query('insert into public.attempts(id,user_id,lesson_id,course_id) values($1,$2,$3,$4)',
       [attempt, student, lesson, course]);
-    await admin.query('insert into public.answers(attempt_id,question_id,submitted) values($1,$2,$3)',
-      [attempt, question, { selected: ['a'] }]);
+    if (!firstSubmissionRace) {
+      await admin.query('insert into public.answers(attempt_id,question_id,submitted) values($1,$2,$3)',
+        [attempt, question, { selected: ['a'] }]);
+    }
     await admin.query('commit');
     transaction = false;
     await Promise.all(clients.map(async client => { await client.connect(); await verifyMarker(client); }));
@@ -59,6 +63,12 @@ export async function testConcurrentFinalization(admin: Client, answerRace = fal
         await client.query("select set_config('request.jwt.claim.sub',$1,true)", [student]);
         await client.query("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({ sub: student, role: 'authenticated' })]);
         await client.query("set local statement_timeout='10s'");
+        if (firstSubmissionRace) {
+          const receipt = (await client.query('select * from public.save_attempt_answer($1,$2,$3)',
+            [attempt, question, { selected: [index === 0 ? 'a' : 'b'] }])).rows[0];
+          await client.query('commit');
+          return receipt;
+        }
         if (answerRace && index === 1) {
           try {
             await client.query('select * from public.save_attempt_answer($1,$2,$3)', [attempt, question, { selected: ['a'] }]);
@@ -86,7 +96,7 @@ export async function testConcurrentFinalization(admin: Client, answerRace = fal
       waiting = (await admin.query<{ n: number }>(`select count(distinct pid)::int as n from pg_locks
         where pid=any($1::int[]) and not granted`, [pids])).rows[0].n;
     }
-    assert.equal(waiting, 2, 'Duas finalizacoes precisam estar bloqueadas simultaneamente');
+    assert.equal(waiting, 2, 'Dois comandos de aprendizagem precisam estar bloqueados simultaneamente');
     await admin.query('commit');
     transaction = false;
     const receipts: unknown[] = [];
@@ -95,6 +105,15 @@ export async function testConcurrentFinalization(admin: Client, answerRace = fal
       receipts.push(worker.value);
     }
     if (!answerRace) assert.deepEqual(receipts[0], receipts[1], 'Ambas precisam receber o mesmo instante e resultado');
+    if (firstSubmissionRace) {
+      const answers = await admin.query('select first_submitted_at from public.answers where attempt_id=$1', [attempt]);
+      assert.equal(answers.rows.length, 1);
+      assert.ok(answers.rows[0].first_submitted_at instanceof Date);
+      assert.equal((await admin.query('select xp_global from public.profiles where id=$1', [student])).rows[0].xp_global, 0);
+      assert.equal((await admin.query('select count(*)::int as n from public.learning_results where attempt_id=$1', [attempt])).rows[0].n, 0);
+      console.warn('Primeiros envios concorrentes aprovados: dois PIDs em locks, uma resposta e mesmo instante, sem XP ou resultado de conclusao.');
+      return;
+    }
     assert.equal((await admin.query('select xp_global from public.profiles where id=$1', [student])).rows[0].xp_global, 4);
     assert.equal((await admin.query('select count(*)::int as n from public.learning_results where attempt_id=$1', [attempt])).rows[0].n, 1);
     console.warn(answerRace ? 'Resposta/finalizacao concorrentes aprovadas: ordem de locks consistente, uma confirmacao e 4 XP.'

@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0024` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0025` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -49,7 +49,7 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 
 Campos oficiais de tentativa/confirmação não aceitam escrita autenticada direta. Respostas encerradas são protegidas; a alteração usada pelo cliente passa por `save_attempt_answer`, que bloqueia a tentativa antes da resposta. UPDATE direto de answers foi retirado para evitar inversão de locks. Insert legítimo de tentativa/respostas continua sujeito a GRANT/RLS/trigger; a edição de nome do perfil permanece funcionando.
 
-Snapshot no início, primeiro envio/ordinal, livro decimal, unicidade entre tentativas diferentes e novas métricas continuam pendentes no ticket 04. Os privilégios alterados em 04.1 são de attempts, answers e learning_results; perfis recebem a proteção de 04.2 abaixo, enquanto matrícula/progresso continuam pendentes. O defeito legado de room_members permanece no ticket 05; finalização em sala não foi homologada por estes testes.
+Snapshot no início, ordinal, livro decimal, unicidade entre tentativas diferentes e novas métricas continuam pendentes no ticket 04. A preservação do primeiro envio gravado é implementada em 04.3 abaixo. Os privilégios alterados em 04.1 são de attempts, answers e learning_results; perfis recebem a proteção de 04.2, enquanto matrícula/progresso continuam pendentes. O defeito legado de room_members permanece no ticket 05; finalização em sala não foi homologada por estes testes.
 
 **Tipos gerados:** schema public do projeto local `athen-gamificacao-test`, SQL 0001–0023, Supabase CLI instalado no projeto. Comando executado: `npx --no-install supabase gen types typescript --db-url 'postgresql://postgres:postgres@127.0.0.1:55432/postgres?sslmode=disable' --schema public`. Trata-se da senha fictícia do ensaio local, sem banco remoto. O gerador recusou TLS inicialmente; a opção foi limitada a esse endpoint. Resultado salvo como UTF-8 sem BOM, com remoção automática de espaços ao fim das linhas, sem editar tipos manualmente. O arquivo anterior era UTF-16LE, por isso o Git pode mostrar diferença binária. O gerador passou a refletir JSON não nulo do esquema; CrudConsole agora rejeita explicitamente config nula.
 
@@ -62,6 +62,16 @@ touch_streak e grant_medals são internos, sem EXECUTE para PUBLIC/anon/authenti
 Nenhuma coluna ou assinatura pública de dados foi alterada por 0024. Tipos gerados de 04.1 permanecem aplicáveis, sem regeneração desnecessária; o adapter restringe o payload de edição às colunas permitidas. Os testes exercitam as permissões reais, além de payload/feedback dos consumidores em HTTP fictício. Não é uma auditoria completa de todas as projeções, políticas de conta ou Storage.
 
 O seed manual foi inspecionado e adaptado para conceder cargos da sua lista fictícia fixa por escrita privilegiada, sem voltar a confiar em metadata. `test:db:seed` executa esse arquivo duas vezes em transação revertida, exclusivamente no projeto local verificado. O bootstrap continua excluindo seed.sql; esse ensaio separado não popula a aplicação nem autoriza uso em dados reais.
+
+### Primeiro envio preservado — fatia 04.3
+
+[0025](../../codigo-base/supabase/migrations/0025_preserve_first_submission.sql) faz save_attempt_answer devolver a resposta existente sem substituí-la. A tentativa é bloqueada antes de consultar/inserir; dois envios concorrentes recebem a mesma linha. O trigger protege identidade, submitted e first_submitted_at, mantendo a correção de is_correct/xp_earned pelo finalizador. Conta inativa também é recusada no INSERT direto de resposta. Encerrada a tentativa, novo envio continua sendo recusado; nova tentativa admite novo primeiro envio.
+
+first_submitted_at é acrescentado sem backfill e depois recebe default clock_timestamp para novos registros. NULL identifica histórico legado desconhecido; a migração não recupera conteúdo sobrescrito antes do corte nem inventa horário do primeiro envio. Esse recebimento não é confirmação de conclusão, ordinal ou versão de conteúdo. A finalização continua pelo mesmo mecanismo inteiro legado, usando a resposta preservada; livro decimal, ordinal e snapshot permanecem pendentes.
+
+LessonModal usa salva.submitted no feedback e apresenta a resposta registrada em vez de manter escolhas locais divergentes após o reenvio. O feedback não é um novo crédito. O resumo de somatória mostra a soma recebida, sem reconstruir uma seleção que pode ser ambígua. Erro sem recebimento confirmado mantém a tela de envio, sem feedback fictício.
+
+**Tipos de 04.3:** regenerados pelo Supabase CLI 2.121.0 do schema public local 0001–0025, usando o mesmo comando local com sslmode=disable documentado acima. Saída do terminal decodificada de UTF-16 e normalizada automaticamente para UTF-8 sem BOM/espaços finais; nenhuma edição manual. Diff acrescenta somente first_submitted_at nullable na tabela e no retorno da RPC. Não há autorização de SQL remoto.
 
 No modal, aulas de curso sem questões oferecem **Marcar como concluída**, que chama `complete_empty_lesson` por `dominioRepository.concluirAulaSemQuestoes`. A ação só é habilitada depois de carregar as questões com sucesso; falha de consulta não é interpretada como aula vazia. A conclusão só aparece após sucesso da RPC, sem tentativa ou XP fictícios. Esse fluxo exige a migração `0022` aplicada e não conclui aulas no contexto de sala, que a RPC atual não atende.
 

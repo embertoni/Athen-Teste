@@ -154,7 +154,7 @@ insert into public.attempts (id,user_id,lesson_id,course_id) values
 select * from public.save_attempt_answer('42100000-0000-4000-a000-000000000018',
  '42100000-0000-4000-a000-000000000013','{"selected":["b"]}');
 select * from public.save_attempt_answer('42100000-0000-4000-a000-000000000018',
- '42100000-0000-4000-a000-000000000017','{"selected":["b"]}');
+ '42100000-0000-4000-a000-000000000017','{"selected":["a"]}');
 select * from public.save_attempt_answer('42100000-0000-4000-a000-000000000018',
  '42100000-0000-4000-a000-000000000017','{"selected":["a"]}');
 do $$ begin

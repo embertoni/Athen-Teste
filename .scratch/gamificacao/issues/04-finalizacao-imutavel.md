@@ -12,6 +12,8 @@ Status: claimed
 
 **Continuação após PR #4:** 04.1 integrada em `da23867`, merge confirmado no GitHub e na sprint local. [04.2](04-2-proteger-campos-oficiais-perfil.md) protege os campos oficiais de perfil e preserva edição/cadastro/estudo legítimos. Branch `issue/42-protege-campos-perfil`; não declarar livro/ordinal/snapshot, demais contadores ou o ticket principal concluídos.
 
+**Continuação após PR #5:** 04.2 integrada em `40016e7`, merge manual confirmado no GitHub e fetch de origin. [04.3](04-3-preservar-primeiro-envio.md) preserva a primeira resposta gravada e usa esse conteúdo no feedback; branch `issue/42-primeiro-envio`. Ordinal, snapshot/publicação, autorização completa de início/contexto, livro decimal e demais contadores continuam pendentes; primeiro recebimento não é conclusão ou crédito.
+
 **Pausa em 31/10/2026:** merge do PR #3 autorizado para integrar essas dependências. Antes de retomar, confirmar o estado merged e buscar a sprint04 resultante. O usuário solicitou pausar após o fechamento; nenhuma implementação, teste novo ou branch do ticket 04 foi iniciada. Seguir o checklist de retomada da seção 7 do guia somente após nova solicitação.
 
 **Origem:** guia sessão 02/3.5; Q007/Q053–Q054/Q059/Q081/Q091–Q094/Q098/Q126/Q142.
