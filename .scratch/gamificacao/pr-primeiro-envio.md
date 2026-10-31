@@ -1,6 +1,6 @@
 # Encaminhamento da fatia 04.3 — issue 42
 
-Branch issue/42-primeiro-envio, base sprint04 40016e7 (PR #5 integrado). Implementado e validado localmente; publicação/CI exclusivamente no Athen-Teste ainda pendentes. Merge futuro exige autorização própria. Ticket 04 continua parcial.
+Branch issue/42-primeiro-envio, base sprint04 40016e7 (PR #5 integrado). Commit cbb8892, [PR #6](https://github.com/embertoni/Athen-Teste/pull/6) publicado somente no fork, validado localmente e na CI. Merge futuro exige autorização própria. Ticket 04 continua parcial.
 
 ## Summary
 
@@ -22,7 +22,8 @@ O trigger protege conteúdo, identidade e instante, permitindo a correção ofic
 - Dois PIDs reais bloqueados antes da liberação enviam respostas diferentes: ambos recebem a mesma linha/instante, uma resposta, nenhum XP ou confirmação de conclusão só por enviar. Regressões das outras duas corridas e de rollback passaram.
 - SQL 0001–0025: primeiro envio, legado desconhecido, timestamp forjado, conta inativa/alheia, aprendizagem, sanidade, perfil, seed revertido e concorrência anterior aprovados. Projeto local athen-gamificacao-test em 127.0.0.1:55432; container c44595dd01c1, parado com banco preservado.
 - Lint, typecheck, Vitest 2/2, test:check, build e test:db:check aprovados; **28 E2E Chromium (31,6s)**, incluindo múltipla escolha, texto, soma e associação. HTTP fictício separado da prova SQL/RLS.
-- Tipos regenerados pelo CLI do schema local, sem edição manual. Fontes literais preservadas. Padrões e Spec sem achados materiais. [Captura do feedback](https://github.com/embertoni/Athen-Teste/blob/issue/42-primeiro-envio/docs/evidencias/primeiro-envio/primeiro-envio-preservado.png). CI remota ainda a conferir após publicação.
+- Tipos regenerados pelo CLI do schema local, sem edição manual. Fontes literais preservadas. Padrões e Spec sem achados materiais. [Captura do feedback](https://github.com/embertoni/Athen-Teste/blob/issue/42-primeiro-envio/docs/evidencias/primeiro-envio/primeiro-envio-preservado.png).
+- [CI 41237327029](https://github.com/embertoni/Athen-Teste/actions/runs/41237327029), commit cbb8892: quality, database e e2e aprovados. Logs conferidos para migração 0025, primeiro envio, regressões e três corridas; **28 E2E (22,5s)**. Descrição remota conferida com acentos íntegros e sem U+FFFD.
 
 ## Merge Danger
 

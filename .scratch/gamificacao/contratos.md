@@ -1,6 +1,6 @@
 # Contratos executivos — primeira etapa
 
-Estado: contrato alvo da sessão 02, implementado incrementalmente. 04.1 materializa confirmação persistida e escrita serializada na migração 0023, integrada pelo PR #4. 04.2 protege campos oficiais de perfil na migração 0024, integrada pelo PR #5. 04.3 preserva o primeiro conteúdo gravado por tentativa/questão e seu recebimento na migração 0025, em validação local, sem ativar ordinal nem alterar a política inteira legada. Snapshot no início, autorização completa de início/contexto e livro decimal continuam previstos, sem alegar implementação. Fonte: [spec](spec.md), guia 2.2–2.4/3.4 e Q007/Q053–Q060/Q091–Q094/Q126/Q142.
+Estado: contrato alvo da sessão 02, implementado incrementalmente. 04.1 materializa confirmação persistida e escrita serializada na migração 0023, integrada pelo PR #4. 04.2 protege campos oficiais de perfil na migração 0024, integrada pelo PR #5. 04.3 preserva o primeiro conteúdo gravado por tentativa/questão e seu recebimento na migração 0025, validada localmente e na CI do PR #6 ainda não integrado, sem ativar ordinal nem alterar a política inteira legada. Snapshot no início, autorização completa de início/contexto e livro decimal continuam previstos, sem alegar implementação. Fonte: [spec](spec.md), guia 2.2–2.4/3.4 e Q007/Q053–Q060/Q091–Q094/Q126/Q142.
 
 ## Aprendizagem
 
