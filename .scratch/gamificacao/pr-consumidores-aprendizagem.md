@@ -36,6 +36,7 @@ A retomada reusa a mesma tentativa, então herda o `lesson_version_id` fixado no
 - **Perfil:** `profile-permissions.spec.ts` novo caso — o saldo "1,3333 créditos" aparece em leitura; a carga de escrita do perfil continua `{display_name, username, bio}` e nunca inclui `xp_credits`/`xp_global`/`level` (whitelist garantida em tempo de compilação pelo tipo `UpdateUsuarioInput`).
 - **Pipeline:** lint, typecheck, test:run (2/2), test:check, build — aprovados.
 - **E2E Chromium:** 30 passed (28 anteriores + 2 novos).
+- **CI do PR #11:** [run 41326258402](https://github.com/embertoni/Athen-Teste/actions/runs/41326258402) — quality, database e e2e **SUCCESS**.
 - **Revisão em dois eixos (Padrões/Spec)** por subagentes de leitura: ambos SATISFIED, sem achado de alta severidade. Correções aplicadas: seletor acessível no lugar de `data-testid`; comentários do caso "todas respondidas" e do numeric-como-string do PostgREST; atualização de `testes.md`/`arquitetura.md`.
 
 ## Merge Danger
