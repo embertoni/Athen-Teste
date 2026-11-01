@@ -115,6 +115,12 @@ async function salvarCurso(input: {
           xp_value: questao.xp,
         });
       }
+
+      // Curso publicado congela uma versão avaliável inicial de cada aula com
+      // questões. Rascunho não publica versão; aula sem questões não congela nada.
+      if (input.status === "published" && aula.questoes.length > 0) {
+        await aulaRepository.publicarVersao(aulaCriada.id);
+      }
     }
   }
 

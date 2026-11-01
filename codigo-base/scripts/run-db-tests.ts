@@ -24,7 +24,8 @@ try {
       await client.query(seed);
       await client.query(seed);
     }
-    const file = process.argv.includes('--start-attempt') ? 'start-attempt.sql'
+    const file = process.argv.includes('--lesson-versions') ? 'lesson-versions.sql'
+      : process.argv.includes('--start-attempt') ? 'start-attempt.sql'
       : process.argv.includes('--first-submissions') ? 'first-submissions.sql'
       : process.argv.includes('--seed') ? 'seed.sql'
       : process.argv.includes('--permissions') ? 'permissions.sql'
@@ -35,7 +36,8 @@ try {
     await client.query("do $$ begin raise exception 'Falha intencional do harness'; end $$");
   }
   if (!concurrent) {
-    console.warn(process.argv.includes('--start-attempt') ? 'Inicio autorizado aprovado: usuario e contexto validados no servidor.'
+    console.warn(process.argv.includes('--lesson-versions') ? 'Versoes de aula aprovadas: snapshot congelado, edicao nao altera versao, tentativa registra versao.'
+      : process.argv.includes('--start-attempt') ? 'Inicio autorizado aprovado: usuario e contexto validados no servidor.'
       : process.argv.includes('--first-submissions') ? 'Primeiro envio aprovado: resposta preservada no reenvio.'
       : process.argv.includes('--seed') ? 'Seed ficticio aprovado em transacao descartada: papeis e reaplicacao.'
       : process.argv.includes('--permissions') ? 'Permissoes aprovadas: campos oficiais e edicao legitima do perfil.'

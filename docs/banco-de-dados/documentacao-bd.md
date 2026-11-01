@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0026` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0027` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -33,6 +33,7 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 | Assunto | Comportamento no SQL | Fonte |
 | --- | --- | --- |
 | Questões | Tipos `match`, `multiple_choice`, `fill_blank` e `sum_alternatives` | [0001](../../codigo-base/supabase/migrations/0001_extensions_and_enums.sql) e [0010](../../codigo-base/supabase/migrations/0010_domain_functions.sql) |
+| Versão avaliável da aula | `publish_lesson_version` congela questões/config num snapshot imutável; `start_attempt` registra a versão corrente e o resultado a preserva. Edição de texto não altera versão já publicada | [0027](../../codigo-base/supabase/migrations/0027_lesson_versions.sql) |
 | Início de tentativa | `start_attempt` deriva o usuário de `auth.uid()`, valida conta ativa, deriva o curso da aula e verifica a coerência e o acesso ao contexto antes de criar; INSERT direto do cliente foi retirado | [0026](../../codigo-base/supabase/migrations/0026_authorized_attempt_start.sql) |
 | Finalização de tentativa | Exige conta ativa, autoria/acesso e completude; confirma uma vez e recupera o mesmo resultado no reenvio | [0023](../../codigo-base/supabase/migrations/0023_persist_attempt_confirmations.sql) encapsula 0018 em schema privado |
 | XP | Curso credita XP global; sala usa métricas internas. Questão já acertada em tentativa anterior finalizada não rende novo XP | [0018](../../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql) |
@@ -85,6 +86,16 @@ O TopDown usa `friends_course_pac` com o curso ativo, `missions` publicadas e se
 O cliente migra em `tentativaRepository.iniciar`, que agora chama a RPC sem enviar `user_id`; o método `criar` por INSERT direto foi removido. `finalize_attempt`, `save_attempt_answer` e a recuperação de confirmação permanecem inalterados: uma tentativa iniciada pelo servidor finaliza como antes. Diferente de `finalize_attempt`, `start_attempt` não bloqueia linhas de aula/curso nem congela o conjunto de questões — snapshot/versão no início, ordinal histórico, livro decimal e segunda autoridade de pagamento continuam pendentes no ticket 04 e não foram implementados aqui.
 
 **Tipos de 04.4:** regenerados pelo Supabase CLI do schema public local 0001–0026, pelo mesmo comando local com sslmode=disable documentado acima; saída normalizada para UTF-8 sem BOM, sem edição manual. O diff acrescenta somente a função `start_attempt` (retorno da linha de `attempts`). Não há autorização de SQL remoto.
+
+### Versões avaliáveis da aula — fatia 04.5 (F1 da Sessão 02)
+
+[0027](../../codigo-base/supabase/migrations/0027_lesson_versions.sql) cria `public.lesson_versions`: um snapshot imutável e publicado do conjunto de questões de uma aula (id/tipo/prompt/posição/config/xp_value), capturado no instante da publicação. `publish_lesson_version(p_lesson_id)` (SECURITY DEFINER; só criador do curso ou admin) congela a versão corrente e incrementa `version_number` por aula, serializando publicações concorrentes pelo lock da aula. Edição de texto nas questões vivas não altera um snapshot já congelado nem renova identidade; uma nova versão só surge por nova publicação explícita (Q142).
+
+`attempts` e `learning_results` ganham `lesson_version_id` (nullable; NULL = legado/versão desconhecida). `start_attempt` passa a registrar a versão corrente no início da tentativa, e essa versão fica fixada ali: publicar uma nova versão durante a tentativa não muda a versão que o resultado preserva. O `finalize_attempt` público apenas transporta `a.lesson_version_id` para `learning_results`; o cálculo/pagamento inteiro legado em `athen_private` permanece byte a byte idêntico — nenhum crédito decimal, ordinal, PAC ou segunda autoridade de pagamento foi implementado nesta fatia. RLS de `lesson_versions` espelha a legibilidade do curso (criador/admin ou publicado+público).
+
+O cliente ganha `aulaRepository.publicarVersao` (RPC `publish_lesson_version`); `CriarCurso` publica uma versão inicial de cada aula com questões quando o curso é criado como `published` (rascunho e aula vazia não congelam). O editor/retomada de versão na UI e o livro decimal (F2+) continuam pendentes.
+
+**Tipos de 04.5:** regenerados pelo Supabase CLI do schema public local 0001–0027, mesmo comando com sslmode=disable; UTF-8 sem BOM, sem edição manual. O diff acrescenta `lesson_versions`, as colunas `lesson_version_id` e as funções `publish_lesson_version`/`current_lesson_version`. Sem SQL remoto.
 
 ## Antes de alterar ou preparar um banco
 
