@@ -56,6 +56,7 @@ O teste focal prova comportamento, não forma: ordinal 1/2/3 entre tentativas di
 - **Regressão:** run, learning, first-submissions, start-attempt, lesson-versions, permissions, seed, concurrency, learning:concurrency — todos aprovados; `--prove-failure` encerra com código 1.
 - **Pipeline:** lint, typecheck, test:run (2/2), test:check, test:db:check, build — aprovados.
 - **E2E Chromium:** 28 passed.
+- **CI do PR #9:** [run 41313860815](https://github.com/embertoni/Athen-Teste/actions/runs/41313860815) — quality, database e e2e **SUCCESS**.
 - **Revisão em dois eixos (Padrões/Spec)** por subagentes de leitura: sem achado de alta severidade. Aplicadas as correções apontadas: cabeçalho da 0028 e docs do ticket 05 declaram a correção do defeito; teste ganhou o caso de anti-regrind entre tentativas e a asserção de que os inteiros legados não mudam.
 
 ## Merge Danger
