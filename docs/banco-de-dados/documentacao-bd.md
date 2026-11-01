@@ -97,6 +97,22 @@ O cliente ganha `aulaRepository.publicarVersao` (RPC `publish_lesson_version`); 
 
 **Tipos de 04.5:** regenerados pelo Supabase CLI do schema public local 0001–0027, mesmo comando com sslmode=disable; UTF-8 sem BOM, sem edição manual. O diff acrescenta `lesson_versions`, as colunas `lesson_version_id` e as funções `publish_lesson_version`/`current_lesson_version`. Sem SQL remoto.
 
+### Ordinal do primeiro envio e livro de créditos decimal — fatia 04.6 (F2 da Sessão 02)
+
+[0028](../../codigo-base/supabase/migrations/0028_first_submission_ordinal_and_credit_book.sql) materializa o **ordinal histórico do primeiro envio** e o **livro de créditos decimal** sobre a máquina de primeiro envio da 0025.
+
+`answers` ganha `first_submission_ordinal integer` (nullable). `save_attempt_answer` passa a atribuir o ordinal no primeiro envio de cada questão, na mesma serialização do lock da tentativa já usado em 0025: ordinal = `1 + max(ordinais anteriores do mesmo usuário para a mesma questão no mesmo contexto)`, com o contexto chaveado por `attempts.room_id` (`is not distinct from`: curso = NULL, sala = id da sala). Envio legado com `first_submitted_at` nulo permanece com ordinal nulo e nunca entra no livro (Q081–Q084, "não inventar ordinais passados"); a migração não faz backfill. `guard_answer_write` passa a congelar também o ordinal na edição.
+
+`public.learning_credits` é o livro decimal: uma linha por crédito base, `amount numeric(12,4)` = `round(xp_value / ordinal, 4)` (base 4, ordinal 3 → 1,3333). A unicidade por contexto é imposta por dois índices parciais únicos — `(user_id, question_id) where room_id is null` (curso) e `(user_id, question_id, room_id) where room_id is not null` (sala) — de modo que a mesma questão rende um crédito individual e um por sala, nunca duplicado no mesmo contexto. RLS de leitura espelha `learning_results` (dono + conta ativa).
+
+Saldos decimais novos em paralelo aos inteiros legados, que ficam intactos: `profiles.xp_credits` (vitalício individual) e `room_members.credits_internal` (sala), ambos `numeric(12,4) not null default 0 check (>= 0)`. `public.level_for_credits(numeric)` lê o saldo decimal pelos mesmos limiares inteiros de `level_for_xp` (99,9999 → 1; 100 → 2). O livro e os saldos são escritos só pelo `finalize_attempt` público, via `athen_private.grant_learning_credits`, na mesma transação do resultado imutável; o cálculo inteiro legado em `athen_private.finalize_attempt` continua byte a byte. Replay (resultado já persistido) retorna antes do crédito; anti-regrind entre tentativas distintas é garantido pelos índices únicos + `on conflict do nothing`. Cópias legadas (`was_legacy`) nunca recebem crédito decimal.
+
+Correção de pré-requisito dobrada nesta fatia: o **defeito do trigger `room_members.updated_at` do ticket 05** é resolvido aqui (0005 não declara a coluna; 0012 instalava `set_updated_at` na tabela), porque o caminho de crédito de sala atualiza `room_members` e de outra forma falharia. A correção remove o trigger órfão; o caminho legado de finalização em sala (`update room_members set xp_internal = ...`) e a reativação de vínculo por `join_room`, que também disparavam o defeito, passam a funcionar em tempo de execução.
+
+O cliente ganha `creditoRepository` (somente leitura: `listarPorUsuario`/`listarPorSala`); a escrita do livro é exclusiva do servidor. Bônus (concessão/afinidade), PAC/eficiência (Sessão 03), temporadas e missões continuam fora desta fatia.
+
+**Tipos de 04.6:** regenerados pelo Supabase CLI do schema public local 0001–0028, mesmo comando com sslmode=disable; UTF-8 sem BOM, sem edição manual. O diff acrescenta `learning_credits`, as colunas `answers.first_submission_ordinal`, `profiles.xp_credits`, `room_members.credits_internal` e a função `level_for_credits`. Sem SQL remoto.
+
 ## Antes de alterar ou preparar um banco
 
 - Identifique o ambiente e o esquema já aplicado, incluindo as migrações posteriores que redefinem funções e políticas.
