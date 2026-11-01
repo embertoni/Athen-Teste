@@ -5,7 +5,7 @@ const courseId = '22222222-2222-4222-8222-222222222222'
 const lessonId = '33333333-3333-4333-8333-333333333333'
 const moduleId = '44444444-4444-4444-8444-444444444444'
 
-async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean; confirmation?: 'lost' | 'unknown'; firstSubmission?: boolean } = {}) {
+async function prepareDashboard(page: Page, options: { questionsFail?: boolean; completionFail?: boolean; progressFail?: boolean; moduleCount?: number; noEnrollment?: boolean; roomOnly?: boolean; confirmation?: 'lost' | 'unknown'; firstSubmission?: boolean; resume?: boolean } = {}) {
   const requests: { path: string; query: URLSearchParams; body: unknown }[] = []
   let completed = false
   let firstSave = true
@@ -33,6 +33,20 @@ async function prepareDashboard(page: Page, options: { questionsFail?: boolean; 
     if (path === 'modules') data = Array.from({ length: options.moduleCount ?? 1 }, (_, index) => ({ id: index === 0 ? moduleId : `module-${index}`, course_id: courseId, title: index === 0 ? 'Módulo inicial' : `Módulo ${index + 1}`, position: index, color: '#06b6d4', icon: '📘' }))
     if (path === 'lessons' && url.searchParams.get('module_id') === 'eq.' + moduleId) data = [{ id: lessonId, module_id: moduleId, title: 'Leitura introdutória', content: 'Leia este material antes de continuar.', position: 0 }]
     if (path === 'completions' && completed) data = [{ user_id: userId, lesson_id: lessonId, context: 'course' }]
+    if (options.resume) {
+      // Two questions; an attempt already in progress with the first answered.
+      if (path === 'questions') data = [
+        { id: 'question-1', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Primeira', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }, { id: 'b', text: 'Resposta B', correct: false }] } },
+        { id: 'question-2', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Segunda', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }, { id: 'b', text: 'Resposta B', correct: false }] } },
+      ]
+      // The in-progress attempt lookup (finished_at is null) returns the open attempt.
+      if (path === 'attempts') data = [{ id: 'attempt-aberta', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null, lesson_version_id: 'version-1', started_at: '2026-10-31T12:00:00Z', finished_at: null, correct_count: 0, total_count: 0, xp_earned: 0 }]
+      // The first question already has a preserved submission.
+      if (path === 'answers') data = [{ id: 'answer-1', attempt_id: 'attempt-aberta', question_id: 'question-1', submitted: { selected: ['a'] }, first_submitted_at: '2026-10-31T12:00:00Z', first_submission_ordinal: 1 }]
+      if (path === 'save_attempt_answer') data = [{ id: 'answer-2', attempt_id: 'attempt-aberta', question_id: 'question-2', submitted: { selected: ['a'] }, first_submitted_at: '2026-10-31T12:05:00Z', first_submission_ordinal: 1 }]
+      if (path === 'grade_answer') data = [{ is_correct: true, xp: 4 }]
+      if (path === 'finalize_attempt') data = { correct_count: 2, total_count: 2, xp_earned: 8 }
+    }
     if (options.confirmation || options.firstSubmission) {
       if (path === 'questions') data = [{ id: 'question-test', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Escolha A', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }, { id: 'b', text: 'Resposta B', correct: false }] } }]
       if (path === 'attempts') data = { id: 'attempt-test', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null }
@@ -182,6 +196,37 @@ test('após retorno perdido o feedback usa a primeira resposta preservada', asyn
     expect.objectContaining({ p_submitted: { selected: ['b'] } }),
   ])
   await page.screenshot({ path: testInfo.outputPath('primeiro-envio-preservado.png'), animations: 'disabled' })
+})
+
+test('retoma a tentativa em aberto na mesma versão sem recomeçar', async ({ page }) => {
+  const requests = await prepareDashboard(page, { resume: true })
+  // Respostas explícitas para a retomada, no padrão das rotas específicas por teste.
+  await page.route('**/rest/v1/attempts?*', route => {
+    const url = new URL(route.request().url())
+    requests.push({ path: 'attempts', query: url.searchParams, body: route.request().postDataJSON() })
+    return route.fulfill({ json: [{ id: 'attempt-aberta', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null, lesson_version_id: 'version-1', started_at: '2026-10-31T12:00:00Z', finished_at: null, correct_count: 0, total_count: 0, xp_earned: 0 }] })
+  })
+  await page.route('**/rest/v1/answers?*', route => {
+    const url = new URL(route.request().url())
+    requests.push({ path: 'answers', query: url.searchParams, body: route.request().postDataJSON() })
+    return route.fulfill({ json: [{ id: 'answer-1', attempt_id: 'attempt-aberta', question_id: 'question-1', submitted: { selected: ['a'] }, first_submitted_at: '2026-10-31T12:00:00Z', first_submission_ordinal: 1 }] })
+  })
+  await page.getByRole('button', { name: 'Aula Leitura introdutória' }).click()
+  await page.getByRole('button', { name: 'Começar atividade', exact: true }).click()
+  // Retomou a tentativa em aberto: NAO criou tentativa nova (start_attempt),
+  // consultou os envios ja gravados e posicionou na primeira questao sem resposta.
+  await expect(page.getByText('Questão 2 de 2', { exact: true })).toBeVisible()
+  expect(requests.some(r => r.path === 'start_attempt')).toBe(false)
+  const abertas = requests.filter(r => r.path === 'attempts')
+  expect(abertas.length).toBeGreaterThan(0)
+  expect(abertas.every(r => r.query.get('finished_at') === 'is.null')).toBe(true)
+  expect(requests.some(r => r.path === 'answers')).toBe(true)
+  // Finaliza a tentativa retomada (mesma, sem recomeçar) e confirma o resultado.
+  await page.getByRole('checkbox', { name: 'Resposta A', exact: true }).check()
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click()
+  await page.getByRole('button', { name: 'Finalizar aula', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Aula concluída!' })).toBeVisible()
+  expect(requests.filter(r => r.path === 'start_attempt')).toHaveLength(0)
 })
 
 const preservedExamples = [

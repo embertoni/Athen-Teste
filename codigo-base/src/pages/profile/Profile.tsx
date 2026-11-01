@@ -426,6 +426,9 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
   // XP, nível e streak vêm do servidor.
   const totalXp = profile?.xp_global ?? 0;
   const level = profile?.level ?? 1;
+  // Saldo decimal de créditos (livro novo), somente leitura — paralelo ao XP inteiro.
+  // PostgREST devolve numeric como string; o Number() normaliza antes de formatar.
+  const creditos = Number(profile?.xp_credits ?? 0);
   const studiedToday = profile?.last_study_date === localDay();
   // A sequência só continua viva se a última aula foi hoje ou ontem.
   const streakAlive = studiedToday || profile?.last_study_date === localDay(-1);
@@ -905,6 +908,10 @@ export default function Profile({ onOpenCourse }: ProfileProps) {
               </div>
               <div className="font-display text-3xl text-ink">{totalXp.toLocaleString("pt-BR")} XP</div>
               <div className="mt-1 font-ui text-xs text-muted">Experiência total acumulada</div>
+              <div className="mt-2 font-ui text-sm text-ink">
+                {creditos.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} créditos
+              </div>
+              <div className="mt-1 font-ui text-xs text-muted">Créditos de aprendizagem (saldo decimal)</div>
             </div>
 
             <div className="rounded-3xl border border-line bg-surface p-5">
