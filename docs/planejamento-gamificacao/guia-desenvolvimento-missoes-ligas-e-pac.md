@@ -1221,6 +1221,26 @@ Validações executadas: TDD real em Postgres local `athen-gamificacao-test` (00
 
 Evidências e limitações: o cálculo inteiro legado em `athen_private` permanece byte a byte; a base continua escrita só pelo finalizador, e agora `open_legacy_credit` é a segunda autoridade (admin) da conta decimal, sem varrer legado. Graduação-contra-snapshot, bônus de concessão/afinidade, PAC/eficiência (Sessão 03), temporadas (04A) e missões (05) continuam fora. Estado: validado localmente e **publicado no PR [#10](https://github.com/embertoni/Athen-Teste/pull/10) contra sprint04, CI verde** ([run 41319302262](https://github.com/embertoni/Athen-Teste/actions/runs/41319302262): quality/database/e2e SUCCESS). Próxima ação: **integração exige autorização própria do usuário**; não há merge/deploy/SQL remoto nesta entrega.
 
+### Sessão 02 — fatia 04.8: consumidores (retomada, saldo decimal e regressão)
+
+Data/responsável: 01/11/2026, Kiro CLI; solicitante responsável pela issue 42, sprint04, Em andamento.
+
+PR #10 (fatia 04.7) foi **integrado** pelo usuário (merge `b01504f`). Ticket local [04.8](../../.scratch/gamificacao/issues/04-8-consumidores-aprendizagem.md) (F4 do ticket 04.5). Fatia de UI/consumidor, sem migração. Skills: `implement`, `tdd`, `code-review` (dois eixos por subagentes de leitura), `pr`. Base: sprint04 `b01504f`; branch `issue/42-consumidores-aprendizagem`.
+
+| Arquivo final | Operação | O que mudou de fato |
+| --- | --- | --- |
+| `codigo-base/src/data/repositories.ts` | alterado | `tentativaRepository.obterEmAberto(idAula, contexto)`: tentativa em aberto (finished_at nulo) do contexto, leitura restrita ao dono por RLS |
+| `codigo-base/src/components/lesson/LessonModal.tsx` | alterado | `comecar()` retoma a tentativa em aberto (mesma, mesma versão fixada), restaura os primeiros envios e posiciona na primeira questão sem resposta; refazer aula concluída inicia nova |
+| `codigo-base/src/pages/profile/Profile.tsx` | alterado | saldo decimal `xp_credits` exibido apenas como leitura, ao lado do XP inteiro |
+| `codigo-base/tests/e2e/dashboard.spec.ts`, `tests/e2e/profile-permissions.spec.ts` | alterado | retomada sem recomeçar; saldo decimal read-only + carga de escrita sem campos oficiais |
+| `docs/testes.md`, `docs/arquitetura.md` | alterado | registro dos novos casos e do fluxo de retomada/saldo decimal |
+
+Validações executadas: lint, typecheck, test:run (2/2), test:check, build — aprovados. E2E Chromium: **30 passed** (28 anteriores + retomada + saldo decimal). Revisão em dois eixos por subagentes de leitura: ambos SATISFIED, sem achado de alta severidade; aplicadas as correções (seletor acessível no lugar de `data-testid`, comentário do caso "todas respondidas" na retomada, comentário do numeric-como-string do PostgREST, atualização de testes.md/arquitetura.md).
+
+Evidências e limitações: sem migração nova; o "reenvio sem crédito" é comportamento do servidor, exercido pela UI. A republicação de versão para curso já criado foi deixada como pendência opcional (o cliente lê o conjunto vivo de questões; o finalizador valida contra a versão fixada). Snapshot-grading, bônus, PAC/eficiência (Sessão 03), temporadas (04A) e missões (05) continuam fora. Estado: validado localmente, publicação/PR/CI a registrar. Próxima ação: abrir PR no fork contra sprint04 e conferir a CI real; **integração exige autorização própria do usuário**.
+
+
+
 
 
 Usar o modelo abaixo por sessão e repetir a subseção para cada página/área, incluindo banco, acesso compartilhado, testes e operação. Em renomeação/exclusão, registrar destino e consumidores. Integração no fork usa mudanças cumulativas e sequência de migrações, sem tratar cópia de componente como instalação da funcionalidade.

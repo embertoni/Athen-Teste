@@ -387,16 +387,32 @@ export function LessonModal({ aula, moduloTitulo, cursoId, salaId, cor, jaConclu
     setCorrecao(null);
   }
 
-  // A tentativa só é criada quando o aluno decide começar a atividade.
+  // A tentativa só é criada quando o aluno decide começar a atividade. Ao reabrir
+  // uma aula com tentativa em aberto (abandono anterior), retoma a MESMA tentativa
+  // — e a mesma versão fixada no início — restaurando os primeiros envios já
+  // gravados e posicionando na primeira questão ainda não respondida. Refazer uma
+  // aula já concluída inicia uma tentativa nova (execução nova).
   async function comecar() {
     if (questoes.length === 0) return;
     setOcupado(true);
     setErro("");
 
     try {
-      const tentativa = await tentativaRepository.iniciar(aula.id, { idCurso: cursoId, idSala: salaId });
-      setTentativaId(tentativa.id);
-      irParaQuestao(0);
+      const contexto = { idCurso: cursoId, idSala: salaId };
+      const emAberto = jaConcluida ? null : await tentativaRepository.obterEmAberto(aula.id, contexto);
+      if (emAberto) {
+        setTentativaId(emAberto.id);
+        const respostas = await respostaRepository.listarPorTentativa(emAberto.id);
+        const respondidas = new Set(respostas.map((r) => r.question_id));
+        // Primeira questão ainda sem resposta; se todas já têm envio preservado,
+        // posiciona na última (a tentativa ainda não foi finalizada).
+        const proxima = questoes.findIndex((q) => !respondidas.has(q.id));
+        irParaQuestao(proxima === -1 ? questoes.length - 1 : proxima);
+      } else {
+        const tentativa = await tentativaRepository.iniciar(aula.id, contexto);
+        setTentativaId(tentativa.id);
+        irParaQuestao(0);
+      }
       setFase("questoes");
     } catch (error) {
       setErro(mensagemDoErro(error));

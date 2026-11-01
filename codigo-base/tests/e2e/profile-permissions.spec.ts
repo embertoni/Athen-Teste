@@ -7,7 +7,7 @@ const userId = '42200000-0000-4000-a000-000000000001'
 async function prepareProfile(page: Page) {
   const user = { id: userId, aud: 'authenticated', role: 'authenticated', email: 'aluno@example.test', user_metadata: {}, app_metadata: {} }
   let profile = { id: userId, username: 'aluno', display_name: 'Aluno', role: 'student', bio: 'Bio inicial',
-    avatar_url: null, banner_url: null, xp_global: 4, level: 1, streak_count: 1,
+    avatar_url: null, banner_url: null, xp_global: 4, level: 1, xp_credits: '1.3333', streak_count: 1,
     last_study_date: '2026-10-31', account_status: 'active', notification_preferences: {} }
   const writes: unknown[] = []
   await page.addInitScript(({ user }) => {
@@ -43,6 +43,24 @@ test('perfil salva dados pessoais sem reenviar campos oficiais', async ({ page }
   await expect(page.getByText('Nome editado', { exact: true }).first()).toBeVisible()
   expect(writes).toEqual([{ display_name: 'Nome editado', username: 'aluno-editado', bio: 'Bio editada' }])
   await page.screenshot({ path: testInfo.outputPath('perfil-editado.png'), animations: 'disabled' })
+})
+
+test('perfil mostra o saldo decimal de créditos como leitura, sem escrevê-lo', async ({ page }) => {
+  const writes = await prepareProfile(page)
+  await page.goto('/profile')
+  // O saldo decimal (livro novo) aparece em leitura, ao lado do XP inteiro legado.
+  await expect(page.getByText('1,3333 créditos', { exact: true })).toBeVisible()
+  // Editar o perfil não inclui o saldo decimal nem qualquer campo oficial na carga.
+  await page.getByRole('button', { name: 'Editar perfil', exact: true }).click()
+  await page.getByLabel(/Bio/).fill('Bio nova')
+  await page.getByRole('button', { name: 'Salvar', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Editar perfil', exact: true })).toBeVisible()
+  expect(writes).toEqual([{ display_name: 'Aluno', username: 'aluno', bio: 'Bio nova' }])
+  for (const payload of writes) {
+    expect(Object.keys(payload as object)).not.toContain('xp_credits')
+    expect(Object.keys(payload as object)).not.toContain('xp_global')
+    expect(Object.keys(payload as object)).not.toContain('level')
+  }
 })
 
 test('configurações salvam identidade e preferências sem campos oficiais', async ({ page }) => {

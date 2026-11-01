@@ -42,9 +42,9 @@ O teste existente verifica título e cabeçalho da página inicial. Não testa l
 
 Dashboard também cobre retorno perdido da finalização: a reconsulta recupera a confirmação de 1/1 e 4 XP; sem confirmação, a tela mantém erro e não anuncia conclusão. A captura `confirmacao-recuperada.png` fica em test-results. Esse HTTP controlado não prova persistência ou RLS; a prova SQL usa os comandos abaixo.
 
-Dashboard cobre também retorno perdido do envio: primeiro salva B, o cliente tenta A no reenvio, e o feedback/resumo usam B preservado pelo servidor. Outros três casos verificam a apresentação da resposta recebida de texto, soma e associação. A captura primeiro-envio-preservado.png registra o estado de feedback. HTTP fictício não prova imutabilidade no banco, verificada pelo SQL.
+Dashboard cobre também retorno perdido do envio: primeiro salva B, o cliente tenta A no reenvio, e o feedback/resumo usam B preservado pelo servidor. Outros três casos verificam a apresentação da resposta recebida de texto, soma e associação. A captura primeiro-envio-preservado.png registra o estado de feedback. HTTP fictício não prova imutabilidade no banco, verificada pelo SQL. Há ainda a retomada de tentativa em aberto: ao reabrir uma aula com tentativa não finalizada, o cliente consulta `attempts` com `finished_at is null`, retoma a MESMA tentativa (sem chamar `start_attempt`), restaura os primeiros envios e posiciona na primeira questão sem resposta.
 
-`tests/e2e/profile-permissions.spec.ts` cobre edição pessoal em Perfil, identidade/preferências em Configurações e edição sem exclusão direta na lista de perfis do CRUD. Confere payloads sem campos oficiais e feedback após salvar, usando sessão/HTTP fictícios. Não testa upload real nem políticas de Storage; a autorização SQL é verificada separadamente.
+`tests/e2e/profile-permissions.spec.ts` cobre edição pessoal em Perfil, identidade/preferências em Configurações e edição sem exclusão direta na lista de perfis do CRUD. Confere payloads sem campos oficiais e feedback após salvar, usando sessão/HTTP fictícios. Um caso verifica que o Perfil exibe o saldo decimal de créditos (`xp_credits`) apenas como leitura e que a carga de escrita nunca inclui `xp_credits`/`xp_global`/`level`. Não testa upload real nem políticas de Storage; a autorização SQL é verificada separadamente.
 
 ## Cobertura existente
 

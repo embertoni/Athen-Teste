@@ -619,6 +619,25 @@ export const tentativaRepository = {
     return data;
   },
 
+  // Tentativa em aberto (finished_at nulo) do usuário logado para a aula e o
+  // contexto (curso OU sala), mais recente. Permite retomar a MESMA tentativa —
+  // e a mesma versão fixada no início — sem recomeçar o esforço após abandono.
+  // A leitura já é restrita ao dono pela RLS (attempts_select_own); não é preciso
+  // filtrar por user_id no cliente. Retorna null quando não há tentativa em aberto.
+  async obterEmAberto(idAula: string, contexto: { idCurso?: string; idSala?: string } = {}): Promise<Tentativa | null> {
+    let consulta = supabase
+      .from('attempts')
+      .select('*')
+      .eq('lesson_id', idAula)
+      .is('finished_at', null);
+    consulta = contexto.idSala
+      ? consulta.eq('room_id', contexto.idSala)
+      : consulta.is('room_id', null);
+    const { data, error } = await consulta.order('started_at', { ascending: false }).limit(1);
+    if (error) throw new Error(`Erro ao consultar tentativa em aberto: ${error.message}`);
+    return data?.[0] ?? null;
+  },
+
   // Inicia uma tentativa do usuário logado (curso OU sala). O servidor deriva o usuário
   // de auth.uid() e valida a coerência e a autorização do contexto antes de criar.
   async iniciar(idAula: string, contexto: { idCurso?: string; idSala?: string } = {}): Promise<Tentativa> {
