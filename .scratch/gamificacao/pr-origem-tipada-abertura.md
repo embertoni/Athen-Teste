@@ -46,6 +46,7 @@ O teste focal prova invariantes por restrição real, não por forma: base tague
 - **Regressão:** ordinal-credits, run, learning, first-submissions, start-attempt, lesson-versions, permissions, seed, concurrency, learning:concurrency — todos aprovados; `--prove-failure` encerra com código 1.
 - **Pipeline:** lint, typecheck, test:run (2/2), test:check, test:db:check, build — aprovados.
 - **E2E Chromium:** 28 passed.
+- **CI do PR #10:** [run 41319302262](https://github.com/embertoni/Athen-Teste/actions/runs/41319302262) — quality, database e e2e **SUCCESS**.
 - **Revisão em dois eixos (Padrões/Spec)** por subagentes de leitura: sem achado de alta severidade de correção. Correções aplicadas: grant de `room_members` preservando insert/delete do educador (não só status/removed_at); comentário dos dois escritores da conta decimal; nota de auditoria persistida; guarda de vínculo inexistente na abertura de sala; teste do caminho positivo do educador; catch estrito do `check_violation`.
 
 ## Merge Danger
