@@ -36,6 +36,7 @@ async function prepareDashboard(page: Page, options: { questionsFail?: boolean; 
     if (options.confirmation || options.firstSubmission) {
       if (path === 'questions') data = [{ id: 'question-test', lesson_id: lessonId, type: 'multiple_choice', prompt: 'Escolha A', xp_value: 4, config: { options: [{ id: 'a', text: 'Resposta A', correct: true }, { id: 'b', text: 'Resposta B', correct: false }] } }]
       if (path === 'attempts') data = { id: 'attempt-test', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null }
+      if (path === 'start_attempt') data = { id: 'attempt-test', user_id: userId, lesson_id: lessonId, course_id: courseId, room_id: null, started_at: '2026-10-31T12:00:00Z', finished_at: null, correct_count: 0, total_count: 0, xp_earned: 0 }
       if (path === 'answers') data = { id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }
       if (path === 'save_attempt_answer') data = [{ id: 'answer-test', attempt_id: 'attempt-test', question_id: 'question-test', submitted: { selected: ['a'] } }]
       if (path === 'grade_answer') data = [{ is_correct: true, xp: 4 }]

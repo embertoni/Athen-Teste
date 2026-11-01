@@ -812,6 +812,25 @@ isOneToOne: false
 "send_study_reminder":
 { Args: { "p_friend_id": string }; Returns: string
                            },
+"start_attempt":
+{ Args: { "p_course_id"?: string,"p_lesson_id": string,"p_room_id"?: string }; Returns: {
+              "correct_count": number,
+"course_id": string | null,
+"finished_at": string | null,
+"id": string,
+"lesson_id": string,
+"room_id": string | null,
+"started_at": string,
+"total_count": number,
+"user_id": string,
+"xp_earned": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "attempts"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "touch_streak":
 { Args: { "p_user_id": string }; Returns: undefined
                            },
