@@ -87,3 +87,43 @@ test('CRUD mantém edição de perfil sem oferecer exclusão direta', async ({ p
   await expect(row.getByRole('button', { name: 'Apagar', exact: true })).toHaveCount(0)
   await page.getByRole('table').screenshot({ path: testInfo.outputPath('crud-perfis.png'), animations: 'disabled' })
 })
+
+test('CRUD republica a versão de uma aula pela ação por linha', async ({ page }) => {
+  const lessonId = '42200000-0000-4000-a000-000000000050'
+  const moduleId = '42200000-0000-4000-a000-000000000040'
+  const rpcCalls: unknown[] = []
+  const user = { id: userId, aud: 'authenticated', role: 'authenticated', email: 'educador@example.test', user_metadata: {}, app_metadata: {} }
+  await page.addInitScript(({ user }) => {
+    localStorage.setItem('sb-example-auth-token', JSON.stringify({
+      access_token: 'test-token', refresh_token: 'test-refresh', token_type: 'bearer',
+      expires_at: Math.floor(Date.now() / 1000) + 3600, user,
+    }))
+  }, { user })
+  await page.route('https://example.supabase.co/**', async route => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const path = url.pathname.split('/').at(-1)
+    let data: unknown = []
+    if (path === 'user') data = user
+    if (path === 'modules') data = [{ id: moduleId, course_id: 'curso-x', title: 'Módulo', description: null, color: null, position: 0 }]
+    if (path === 'lessons') data = [{ id: lessonId, module_id: moduleId, title: 'Aula com questões', content: null, position: 0, status: 'published' }]
+    if (path === 'lesson_versions') data = [{ id: 'v1', lesson_id: lessonId, version_number: 1, snapshot: {}, published_by: userId, published_at: '2026-10-31T12:00:00Z' }]
+    if (path === 'publish_lesson_version') {
+      rpcCalls.push(request.postDataJSON())
+      data = { id: 'versao-nova', lesson_id: lessonId, version_number: 2, snapshot: {}, published_by: userId, published_at: '2026-11-01T12:00:00Z' }
+    }
+    // Respeita a distinção objeto vs array que o cliente usa em .single().
+    const body = request.headers()['accept']?.includes('object') && Array.isArray(data) ? data[0] ?? {} : data
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.goto('/crud')
+  await page.getByRole('button', { name: 'Aulas', exact: true }).click()
+  const row = page.getByRole('row').filter({ hasText: 'Aula com questões' })
+  await expect(row).toBeVisible()
+  // A versão corrente da aula aparece na lista (lida por listarVersoes).
+  await expect(row.getByText('v1', { exact: true })).toBeVisible()
+  await row.getByRole('button', { name: 'Republicar versão', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Versão 2 publicada')
+  // A ação chamou publish_lesson_version para a aula correta, uma vez.
+  expect(rpcCalls).toEqual([{ p_lesson_id: lessonId }])
+})

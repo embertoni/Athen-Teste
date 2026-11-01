@@ -440,6 +440,52 @@ export const aulaRepository = {
     const versao = Array.isArray(data) ? data[0] : data;
     if (!versao) throw new Error('Erro ao publicar versão da aula: resposta vazia.');
     return versao;
+  },
+
+  // Versões publicadas de uma aula, da mais recente para a mais antiga.
+  // RLS (lesson_versions_select) restringe a leitura a quem pode ler o curso.
+  async listarVersoes(idAula: string): Promise<VersaoAula[]> {
+    const { data, error } = await supabase
+      .from('lesson_versions')
+      .select('*')
+      .eq('lesson_id', idAula)
+      .order('version_number', { ascending: false });
+    if (error) throw new Error(`Erro ao listar versões da aula: ${error.message}`);
+    return data || [];
+  },
+
+  // Congela uma versão de cada aula do curso que tenha questões — mesma regra
+  // usada na criação (curso publicado). Aula sem questões não congela nada.
+  // Reutilizado por CriarCurso e pela (re)publicação do curso no CrudConsole.
+  async publicarVersoesDoCurso(idCurso: string): Promise<number> {
+    // Aulas do curso: lessons -> modules do curso.
+    const { data: modulos, error: erroModulos } = await supabase
+      .from('modules').select('id').eq('course_id', idCurso);
+    if (erroModulos) throw new Error(`Erro ao listar módulos do curso: ${erroModulos.message}`);
+    const idsModulos = (modulos ?? []).map((m) => m.id);
+    if (idsModulos.length === 0) return 0;
+
+    const { data: aulas, error: erroAulas } = await supabase
+      .from('lessons').select('id').in('module_id', idsModulos);
+    if (erroAulas) throw new Error(`Erro ao listar aulas do curso: ${erroAulas.message}`);
+    const idsAulas = (aulas ?? []).map((a) => a.id);
+    if (idsAulas.length === 0) return 0;
+
+    // Uma única consulta descobre quais aulas têm questões (sem N+1).
+    const { data: questoes, error: erroQuestoes } = await supabase
+      .from('questions').select('lesson_id').in('lesson_id', idsAulas);
+    if (erroQuestoes) throw new Error(`Erro ao listar questões das aulas: ${erroQuestoes.message}`);
+    const comQuestoes = new Set((questoes ?? []).map((q) => q.lesson_id));
+
+    let publicadas = 0;
+    for (const id of idsAulas) {
+      // Só congela quem tem questões; aula vazia não gera versão avaliável.
+      if (comQuestoes.has(id)) {
+        await aulaRepository.publicarVersao(id);
+        publicadas += 1;
+      }
+    }
+    return publicadas;
   }
 };
 

@@ -1239,6 +1239,26 @@ Validações executadas: lint, typecheck, test:run (2/2), test:check, build — 
 
 Evidências e limitações: sem migração nova; o "reenvio sem crédito" é comportamento do servidor, exercido pela UI. A republicação de versão para curso já criado foi deixada como pendência opcional (o cliente lê o conjunto vivo de questões; o finalizador valida contra a versão fixada). Snapshot-grading, bônus, PAC/eficiência (Sessão 03), temporadas (04A) e missões (05) continuam fora. Estado: validado localmente e **publicado no PR [#11](https://github.com/embertoni/Athen-Teste/pull/11) contra sprint04, CI verde** ([run 41326258402](https://github.com/embertoni/Athen-Teste/actions/runs/41326258402): quality/database/e2e SUCCESS). Próxima ação: **integração exige autorização própria do usuário**; não há merge/deploy/SQL remoto nesta entrega.
 
+### Sessão 02 — fatia 04.9: republicação de versão de aula
+
+Data/responsável: 01/11/2026, Kiro CLI; solicitante responsável pela issue 42, sprint04, Em andamento.
+
+PR #11 (fatia 04.8) foi **integrado** pelo usuário (merge `b4d21ce`). Ticket local [04.9](../../.scratch/gamificacao/issues/04-9-republicar-versao.md) — fecha o item opcional de F4 que ficou pendente. UI/consumidor, sem migração. Skills: `implement`, `tdd`, `code-review` (dois eixos por subagentes de leitura), `pr`. Base: sprint04 `b4d21ce`; branch `issue/42-republicar-versao`.
+
+| Arquivo final | Operação | O que mudou de fato |
+| --- | --- | --- |
+| `codigo-base/src/data/repositories.ts` | alterado | `aulaRepository.listarVersoes` (versões da aula) e `publicarVersoesDoCurso` (congela versão de cada aula com questões, consulta única sem N+1) |
+| `codigo-base/src/pages/criar-curso/CriarCurso.tsx` | alterado | reutiliza `publicarVersoesDoCurso` (regra de criação preservada) |
+| `codigo-base/src/pages/CrudConsole.tsx` | alterado | publica versões na transição draft→published; coluna "Versão" e botão "Republicar versão" por aula; recarrega após republicar |
+| `codigo-base/tests/e2e/profile-permissions.spec.ts` | alterado | versão corrente na lista + ação de republicar chama `publish_lesson_version` |
+| `docs/testes.md`, `docs/arquitetura.md` | alterado | registro do caso e do fluxo de (re)publicação |
+
+Validações executadas: lint, typecheck, test:run (2/2), test:check, build — aprovados. E2E Chromium: **31 passed** (30 anteriores + republicação). Revisão em dois eixos por subagentes de leitura: SATISFIED com ajustes aplicados — consulta única no lugar do N+1, `listarVersoes` passou a ser usado (coluna "Versão"), ramo objeto/array no mock do teste, recarga após republicar e `type="button"` nos botões da aba Aulas.
+
+Evidências e limitações: sem migração; comportamento de criação preservado (refatoração para helper reutilizável). O gatilho de publicação é a transição draft→published (significativo pela RLS 0019, que só deixa o criador editar questões em rascunho); o botão por aula atende admin e aulas de módulo novo. Graduação-contra-snapshot continua fora (decisão do usuário). **Ticket 04 / Sessão 02 agora completo** no que foi planejado; próximos arcos são Sessão 03 (PAC/eficiência), temporadas (04A) e missões (05). Estado: validado localmente e **publicado no PR [#12](https://github.com/embertoni/Athen-Teste/pull/12) contra sprint04, CI verde** ([run 41330418837](https://github.com/embertoni/Athen-Teste/actions/runs/41330418837): quality/database/e2e SUCCESS). Próxima ação: **integração exige autorização própria do usuário**; não há merge/deploy/SQL remoto nesta entrega.
+
+
+
 
 
 

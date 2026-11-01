@@ -119,6 +119,7 @@ export function CrudConsole() {
   const [cursos, setCursos] = useState<Curso[]>([])
   const [modulos, setModulos] = useState<Modulo[]>([])
   const [aulas, setAulas] = useState<Aula[]>([])
+  const [versoesPorAula, setVersoesPorAula] = useState<Record<string, number>>({})
   const [questoes, setQuestoes] = useState<Questao[]>([])
   const [salas, setSalas] = useState<Sala[]>([])
   const [matriculas, setMatriculas] = useState<Matricula[]>([])
@@ -144,7 +145,18 @@ export function CrudConsole() {
   const loadUsuarios = useCallback(async () => { try { setUsuarios(await usuarioRepository.listar()) } catch (error) { notify(`Erro ao carregar usuários: ${errMsg(error)}`, true) } }, [notify])
   const loadCursos = useCallback(async () => { try { setCursos(await cursoRepository.listar()) } catch (error) { notify(`Erro ao carregar cursos: ${errMsg(error)}`, true) } }, [notify])
   const loadModulos = useCallback(async () => { try { setModulos(await moduloRepository.listar()) } catch (error) { notify(`Erro ao carregar módulos: ${errMsg(error)}`, true) } }, [notify])
-  const loadAulas = useCallback(async () => { try { setAulas(await aulaRepository.listar()) } catch (error) { notify(`Erro ao carregar aulas: ${errMsg(error)}`, true) } }, [notify])
+  const loadAulas = useCallback(async () => {
+    try {
+      const lista = await aulaRepository.listar()
+      setAulas(lista)
+      // Versão corrente de cada aula (maior version_number), para exibir na lista.
+      const pares = await Promise.all(lista.map(async (aula) => {
+        const versoes = await aulaRepository.listarVersoes(aula.id).catch(() => [])
+        return [aula.id, versoes[0]?.version_number ?? 0] as const
+      }))
+      setVersoesPorAula(Object.fromEntries(pares))
+    } catch (error) { notify(`Erro ao carregar aulas: ${errMsg(error)}`, true) }
+  }, [notify])
   const loadQuestoes = useCallback(async () => { try { setQuestoes(await questaoRepository.listar()) } catch (error) { notify(`Erro ao carregar questões: ${errMsg(error)}`, true) } }, [notify])
   const loadSalas = useCallback(async () => { try { setSalas(await salaRepository.listar()) } catch (error) { notify(`Erro ao carregar salas: ${errMsg(error)}`, true) } }, [notify])
   const loadMatriculas = useCallback(async () => {
@@ -248,8 +260,16 @@ export function CrudConsole() {
         visibility: fCurso.visibility,
       }
       if (editingCursoId) {
+        const anterior = cursos.find((curso) => curso.id === editingCursoId)?.status
         await cursoRepository.atualizar(editingCursoId, payload)
-        notify('Curso atualizado com sucesso.')
+        // Transição para publicado congela uma versão avaliável de cada aula com
+        // questões — mesma regra da criação (CriarCurso). Sem transição não publica.
+        if (payload.status === 'published' && anterior !== 'published') {
+          const n = await aulaRepository.publicarVersoesDoCurso(editingCursoId)
+          notify(`Curso publicado; ${n} ${n === 1 ? 'versão congelada' : 'versões congeladas'}.`)
+        } else {
+          notify('Curso atualizado com sucesso.')
+        }
       } else {
         await cursoRepository.criar(payload)
         notify('Curso criado com sucesso.')
@@ -405,6 +425,15 @@ export function CrudConsole() {
   const editCurso = (curso: Curso) => { setFCurso({ title: curso.title, slug: curso.slug, description: curso.description ?? '', category: curso.category ?? '', tags: curso.tags.join(', '), cover_url: curso.cover_url ?? '', status: curso.status, visibility: curso.visibility }); setEditingCursoId(curso.id); scrollTop() }
   const editModulo = (modulo: Modulo) => { setFModulo({ course_id: modulo.course_id, title: modulo.title, description: modulo.description ?? '', color: modulo.color ?? '#ffffff', position: String(modulo.position) }); setEditingModuloId(modulo.id); scrollTop() }
   const editAula = (aula: Aula) => { setFAula({ module_id: aula.module_id, title: aula.title, content: aula.content ?? '', position: String(aula.position), status: aula.status }); setEditingAulaId(aula.id); scrollTop() }
+  const republicarAula = async (aula: Aula) => {
+    setStatusMsg(null); setLoading(true)
+    try {
+      const versao = await aulaRepository.publicarVersao(aula.id)
+      notify(`Versão ${versao.version_number} publicada para a aula "${aula.title}".`)
+      await loadAulas()
+    } catch (error) { notify(errMsg(error, 'Erro ao republicar versão da aula.'), true) }
+    finally { setLoading(false) }
+  }
   const editQuestao = (questao: Questao) => { setFQuestao({ lesson_id: questao.lesson_id, prompt: questao.prompt, type: questao.type, xp_value: String(questao.xp_value), position: String(questao.position), config: configToText(questao.config) }); setEditingQuestaoId(questao.id); scrollTop() }
   const editSala = (sala: Sala) => { setFSala({ name: sala.name, access_code: sala.access_code, course_id: sala.course_id ?? '' }); setEditingSalaId(sala.id); scrollTop() }
   const editMatricula = (matricula: Matricula) => {
@@ -603,7 +632,7 @@ export function CrudConsole() {
 
       <section className="crud-card list-card">
         <ListToolbar title="Aulas" onRefresh={() => void loadAulas()} loading={loading} />
-        <AulaTable aulas={aulas} modulos={modulos} loading={loading} onEdit={editAula} onDelete={(id) => void removeAula(id)} />
+        <AulaTable aulas={aulas} modulos={modulos} versoes={versoesPorAula} loading={loading} onEdit={editAula} onDelete={(id) => void removeAula(id)} onRepublish={(aula) => void republicarAula(aula)} />
       </section>
     </>
     : activeTab === 'questao' ? <>
@@ -792,11 +821,11 @@ function ModuloTable({ modulos, cursos, loading, onEdit, onDelete }: { modulos: 
   </div>
 }
 
-function AulaTable({ aulas, modulos, loading, onEdit, onDelete }: { aulas: Aula[]; modulos: Modulo[]; loading: boolean; onEdit: (aula: Aula) => void; onDelete: (id: string) => void }) {
+function AulaTable({ aulas, modulos, versoes, loading, onEdit, onDelete, onRepublish }: { aulas: Aula[]; modulos: Modulo[]; versoes: Record<string, number>; loading: boolean; onEdit: (aula: Aula) => void; onDelete: (id: string) => void; onRepublish: (aula: Aula) => void }) {
   return <div className="table-wrap">
     <table>
       <thead>
-        <tr><th>ID</th><th>Módulo</th><th>Título</th><th>Posição</th><th>Status</th><th>Ações</th></tr>
+        <tr><th>ID</th><th>Módulo</th><th>Título</th><th>Posição</th><th>Status</th><th>Versão</th><th>Ações</th></tr>
       </thead>
       <tbody>
         {aulas.map((aula) =>
@@ -806,9 +835,14 @@ function AulaTable({ aulas, modulos, loading, onEdit, onDelete }: { aulas: Aula[
             <td>{aula.title}</td>
             <td>{aula.position}</td>
             <td>{aula.status}</td>
-            <RowActions onEdit={() => onEdit(aula)} onDelete={() => onDelete(aula.id)} />
+            <td>{versoes[aula.id] ? `v${versoes[aula.id]}` : '—'}</td>
+            <td className="row-actions">
+              <button className="link-button" type="button" onClick={() => onEdit(aula)}>Alterar</button>
+              <button className="link-button" type="button" onClick={() => onRepublish(aula)}>Republicar versão</button>
+              <button className="link-button danger" type="button" onClick={() => onDelete(aula.id)}>Apagar</button>
+            </td>
           </tr>)}
-        {aulas.length === 0 && <EmptyRow colSpan={6} loading={loading} text="Nenhuma aula cadastrada." />}
+        {aulas.length === 0 && <EmptyRow colSpan={7} loading={loading} text="Nenhuma aula cadastrada." />}
       </tbody>
     </table>
   </div>

@@ -115,13 +115,14 @@ async function salvarCurso(input: {
           xp_value: questao.xp,
         });
       }
-
-      // Curso publicado congela uma versão avaliável inicial de cada aula com
-      // questões. Rascunho não publica versão; aula sem questões não congela nada.
-      if (input.status === "published" && aula.questoes.length > 0) {
-        await aulaRepository.publicarVersao(aulaCriada.id);
-      }
     }
+  }
+
+  // Curso publicado congela uma versão avaliável de cada aula com questões
+  // (rascunho não publica; aula sem questões não congela nada). A mesma regra
+  // é reutilizada na (re)publicação do curso pelo CrudConsole.
+  if (input.status === "published") {
+    await aulaRepository.publicarVersoesDoCurso(curso.id);
   }
 
   return curso;
