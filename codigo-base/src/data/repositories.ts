@@ -47,6 +47,7 @@ type CreateRespostaInput = Pick<TablesInsert<'answers'>, 'id' | 'attempt_id' | '
 type ResultadoCorrecao = FunctionReturn<'grade_answer'>[number];
 
 type Credito = Tables<'learning_credits'>;
+type OrigemCredito = 'base' | 'bonus' | 'opening' | 'adjustment';
 
 type Aviso = Tables<'announcements'>;
 type CreateAvisoInput = TablesInsert<'announcements'>;
@@ -801,6 +802,18 @@ export const creditoRepository = {
       .eq('room_id', idSala)
       .order('granted_at', { ascending: false });
     if (error) throw new Error(`Erro ao listar créditos da sala: ${error.message}`);
+    return data || [];
+  },
+
+  // Créditos do usuário por origem (base da aprendizagem, bônus, abertura ou ajuste).
+  async listarPorOrigem(idUsuario: string, origem: OrigemCredito): Promise<Credito[]> {
+    const { data, error } = await supabase
+      .from('learning_credits')
+      .select('*')
+      .eq('user_id', idUsuario)
+      .eq('origin', origem)
+      .order('granted_at', { ascending: false });
+    if (error) throw new Error(`Erro ao listar créditos por origem: ${error.message}`);
     return data || [];
   }
 };

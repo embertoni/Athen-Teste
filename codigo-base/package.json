@@ -23,6 +23,7 @@
     "test:db:start-attempt": "tsx scripts/run-db-tests.ts --start-attempt",
     "test:db:lesson-versions": "tsx scripts/run-db-tests.ts --lesson-versions",
     "test:db:ordinal-credits": "tsx scripts/run-db-tests.ts --ordinal-credits",
+    "test:db:typed-credits": "tsx scripts/run-db-tests.ts --typed-credits",
     "test:db:check": "tsc -p tsconfig.db.json --noEmit",
     "test:check": "tsc -p tsconfig.test.json --noEmit",
     "test:e2e": "playwright test",

@@ -293,14 +293,14 @@ isOneToOne: false
                   ]
                 },"learning_credits": {
                   Row: {
-                    "amount": number,"attempt_id": string,"base_xp": number,"course_id": string | null,"granted_at": string,"id": string,"ordinal": number,"question_id": string,"room_id": string | null,"user_id": string
+                    "amount": number,"attempt_id": string | null,"base_xp": number,"course_id": string | null,"granted_at": string,"id": string,"note": string | null,"ordinal": number,"origin": string,"question_id": string | null,"room_id": string | null,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount": number,"attempt_id": string,"base_xp": number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"ordinal": number,"question_id": string,"room_id"?: string | null,"user_id": string
+                    "amount": number,"attempt_id"?: string | null,"base_xp": number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"note"?: string | null,"ordinal": number,"origin"?: string,"question_id"?: string | null,"room_id"?: string | null,"user_id": string
                   }
                   Update: {
-                    "amount"?: number,"attempt_id"?: string,"base_xp"?: number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"ordinal"?: number,"question_id"?: string,"room_id"?: string | null,"user_id"?: string
+                    "amount"?: number,"attempt_id"?: string | null,"base_xp"?: number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"note"?: string | null,"ordinal"?: number,"origin"?: string,"question_id"?: string | null,"room_id"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -872,6 +872,27 @@ isOneToOne: false
 "notify_room_mission":
 { Args: { "p_mission_id": string }; Returns: number
                            },
+"open_legacy_credit":
+{ Args: { "p_amount": number,"p_course_id": string,"p_note"?: string,"p_room_id": string,"p_user_id": string }; Returns: {
+              "amount": number,
+"attempt_id": string | null,
+"base_xp": number,
+"course_id": string | null,
+"granted_at": string,
+"id": string,
+"note": string | null,
+"ordinal": number,
+"origin": string,
+"question_id": string | null,
+"room_id": string | null,
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "learning_credits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "pac":
 { Args: { "p_correct": number,"p_total": number }; Returns: number
                            },
