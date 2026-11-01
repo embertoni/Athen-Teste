@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0025` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0026` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -33,6 +33,7 @@ As definições de produto estão no [glossário](../../GLOSSARY.md). Esta tabel
 | Assunto | Comportamento no SQL | Fonte |
 | --- | --- | --- |
 | Questões | Tipos `match`, `multiple_choice`, `fill_blank` e `sum_alternatives` | [0001](../../codigo-base/supabase/migrations/0001_extensions_and_enums.sql) e [0010](../../codigo-base/supabase/migrations/0010_domain_functions.sql) |
+| Início de tentativa | `start_attempt` deriva o usuário de `auth.uid()`, valida conta ativa, deriva o curso da aula e verifica a coerência e o acesso ao contexto antes de criar; INSERT direto do cliente foi retirado | [0026](../../codigo-base/supabase/migrations/0026_authorized_attempt_start.sql) |
 | Finalização de tentativa | Exige conta ativa, autoria/acesso e completude; confirma uma vez e recupera o mesmo resultado no reenvio | [0023](../../codigo-base/supabase/migrations/0023_persist_attempt_confirmations.sql) encapsula 0018 em schema privado |
 | XP | Curso credita XP global; sala usa métricas internas. Questão já acertada em tentativa anterior finalizada não rende novo XP | [0018](../../codigo-base/supabase/migrations/0018_no_xp_for_already_correct.sql) |
 | Aula sem questões | `complete_empty_lesson` conclui no contexto de curso com zero XP e recalcula progresso | [0022](../../codigo-base/supabase/migrations/0022_complete_empty_lesson.sql) |
@@ -76,6 +77,14 @@ LessonModal usa salva.submitted no feedback e apresenta a resposta registrada em
 No modal, aulas de curso sem questões oferecem **Marcar como concluída**, que chama `complete_empty_lesson` por `dominioRepository.concluirAulaSemQuestoes`. A ação só é habilitada depois de carregar as questões com sucesso; falha de consulta não é interpretada como aula vazia. A conclusão só aparece após sucesso da RPC, sem tentativa ou XP fictícios. Esse fluxo exige a migração `0022` aplicada e não conclui aulas no contexto de sala, que a RPC atual não atende.
 
 O TopDown usa `friends_course_pac` com o curso ativo, `missions` publicadas e sem prazo vencido (até três, ordenadas pelo prazo), e `mission_progress` filtrado pelo usuário autenticado. As missões abrangem as salas permitidas pelas políticas RLS, independentemente do curso ativo. Falhas de autenticação ou de progresso são apresentadas como erro; não se tornam progresso zero. Sem curso, o painel encerra o carregamento sem consultar esses dados.
+
+### Início autorizado da tentativa — fatia 04.4
+
+[0026](../../codigo-base/supabase/migrations/0026_authorized_attempt_start.sql) cria `start_attempt(p_lesson_id, p_course_id, p_room_id)` como SECURITY DEFINER e retira o GRANT de INSERT direto de `attempts` do `authenticated`. O início deixa de ser um INSERT do cliente: o usuário vem de `auth.uid()`, a conta precisa estar ativa, o curso é derivado da aula e o contexto é validado antes de criar. Um `p_course_id` que não seja o curso da aula é recusado (42501), assim como curso sem acesso e sala cujo curso não corresponde à aula. A autoridade de acesso espelha termo a termo o bloco de `finalize_attempt` em 0023 (curso publicado/público com aula publicada, criador, ou matrícula ativa/concluída; sala com educador ou membro ativo). Os campos oficiais (`xp_earned`, `correct_count`, `total_count`, `finished_at`) continuam fora do INSERT e sob controle do servidor.
+
+O cliente migra em `tentativaRepository.iniciar`, que agora chama a RPC sem enviar `user_id`; o método `criar` por INSERT direto foi removido. `finalize_attempt`, `save_attempt_answer` e a recuperação de confirmação permanecem inalterados: uma tentativa iniciada pelo servidor finaliza como antes. Diferente de `finalize_attempt`, `start_attempt` não bloqueia linhas de aula/curso nem congela o conjunto de questões — snapshot/versão no início, ordinal histórico, livro decimal e segunda autoridade de pagamento continuam pendentes no ticket 04 e não foram implementados aqui.
+
+**Tipos de 04.4:** regenerados pelo Supabase CLI do schema public local 0001–0026, pelo mesmo comando local com sslmode=disable documentado acima; saída normalizada para UTF-8 sem BOM, sem edição manual. O diff acrescenta somente a função `start_attempt` (retorno da linha de `attempts`). Não há autorização de SQL remoto.
 
 ## Antes de alterar ou preparar um banco
 

@@ -38,7 +38,6 @@ type CreateMatriculaInput = TablesInsert<'enrollments'>;
 type StatusMatricula = Enums<'enrollment_status'>;
 
 type Tentativa = Tables<'attempts'>;
-type CreateTentativaInput = Pick<TablesInsert<'attempts'>, 'id' | 'user_id' | 'lesson_id' | 'course_id' | 'room_id'>;
 type ResultadoTentativa = FunctionReturn<'finalize_attempt'>[number];
 type ConfirmacaoTentativa = FunctionReturn<'get_attempt_confirmation'>[number];
 
@@ -549,8 +548,10 @@ export const matriculaRepository = {
 };
 
 // attempts. Uma tentativa pertence a uma aula e acontece no contexto de curso (course_id)
-// ou de sala (room_id). XP, acertos e totais são calculados só por finalizar().
-// Fluxo: criar() -> respostaRepository.salvar()/criarVarias() -> finalizar().
+// ou de sala (room_id). O início é autorizado no servidor por start_attempt: o usuário
+// vem de auth.uid() e o contexto é validado antes de criar a tentativa. XP, acertos e
+// totais são calculados só por finalizar().
+// Fluxo: iniciar() -> respostaRepository.salvar()/criarVarias() -> finalizar().
 export const tentativaRepository = {
   async listar(): Promise<Tentativa[]> {
     const { data, error } = await supabase.from('attempts').select('*').order('started_at', { ascending: false });
@@ -604,21 +605,18 @@ export const tentativaRepository = {
     return data;
   },
 
-  async criar(dados: CreateTentativaInput): Promise<Tentativa> {
-    const { data, error } = await supabase.from('attempts').insert(dados).select().single();
-    if (error) throw new Error(`Erro ao criar tentativa: ${error.message}`);
-    return data;
-  },
-
-  // Atalho: inicia uma tentativa do usuário logado (curso OU sala).
+  // Inicia uma tentativa do usuário logado (curso OU sala). O servidor deriva o usuário
+  // de auth.uid() e valida a coerência e a autorização do contexto antes de criar.
   async iniciar(idAula: string, contexto: { idCurso?: string; idSala?: string } = {}): Promise<Tentativa> {
-    const idUsuario = await obterIdUsuarioAtual();
-    return tentativaRepository.criar({
-      user_id: idUsuario,
-      lesson_id: idAula,
-      course_id: contexto.idCurso ?? null,
-      room_id: contexto.idSala ?? null
+    const { data, error } = await supabase.rpc('start_attempt', {
+      p_lesson_id: idAula,
+      p_course_id: contexto.idCurso ?? undefined,
+      p_room_id: contexto.idSala ?? undefined
     });
+    if (error) throw new Error(`Erro ao iniciar tentativa: ${error.message}`);
+    const tentativa = Array.isArray(data) ? data[0] : data;
+    if (!tentativa) throw new Error('Erro ao iniciar tentativa: resposta vazia.');
+    return tentativa;
   },
 
   async obterConfirmacao(idTentativa: string): Promise<ConfirmacaoTentativa | null> {

@@ -82,17 +82,25 @@ do $$ begin
  exception when insufficient_privilege then null; end;
 end $$;
 
--- The actual insert/upsert payload used by the frontend remains authorized.
-insert into public.attempts (id,user_id,lesson_id,course_id) values
- ('42100000-0000-4000-a000-000000000015',auth.uid(),'42100000-0000-4000-a000-000000000012',
-  '42100000-0000-4000-a000-000000000010');
+-- The direct client INSERT is no longer authorized; starting goes through the server.
 do $$ begin
  begin
-  perform 1 from public.finalize_attempt('42100000-0000-4000-a000-000000000015');
+  insert into public.attempts (id,user_id,lesson_id,course_id) values
+   ('42100000-0000-4000-a000-000000000015',auth.uid(),'42100000-0000-4000-a000-000000000012',
+    '42100000-0000-4000-a000-000000000010');
+  raise exception 'Cliente ainda insere tentativa diretamente';
+ exception when insufficient_privilege then null; end;
+end $$;
+-- The authorized start creates the attempt; an incomplete one still cannot finalize.
+do $$ declare a public.attempts%rowtype; begin
+ select * into a from public.start_attempt(
+   '42100000-0000-4000-a000-000000000012','42100000-0000-4000-a000-000000000010',null);
+ begin
+  perform 1 from public.finalize_attempt(a.id);
   raise exception 'Tentativa incompleta foi finalizada';
  exception when invalid_parameter_value then null; end;
- if (select finished_at from public.attempts where id='42100000-0000-4000-a000-000000000015') is not null
-   or exists (select 1 from public.get_attempt_confirmation('42100000-0000-4000-a000-000000000015')) then
+ if (select finished_at from public.attempts where id=a.id) is not null
+   or exists (select 1 from public.get_attempt_confirmation(a.id)) then
   raise exception 'Tentativa incompleta produziu confirmacao';
  end if;
 end $$;
@@ -147,10 +155,11 @@ begin raise exception 'Injected receipt failure' using errcode='23514'; end $$;
 create trigger test_reject_confirmation_42 before insert on public.learning_results
  for each row when (new.attempt_id='42100000-0000-4000-a000-000000000018')
  execute function public.test_reject_confirmation_42();
-set local role authenticated;
+-- Fixed-id attempt for the targeted injection trigger; seeded as owner before the role switch.
 insert into public.attempts (id,user_id,lesson_id,course_id) values
- ('42100000-0000-4000-a000-000000000018',auth.uid(),'42100000-0000-4000-a000-000000000012',
-  '42100000-0000-4000-a000-000000000010');
+ ('42100000-0000-4000-a000-000000000018','42100000-0000-4000-a000-000000000001',
+  '42100000-0000-4000-a000-000000000012','42100000-0000-4000-a000-000000000010');
+set local role authenticated;
 select * from public.save_attempt_answer('42100000-0000-4000-a000-000000000018',
  '42100000-0000-4000-a000-000000000013','{"selected":["b"]}');
 select * from public.save_attempt_answer('42100000-0000-4000-a000-000000000018',
