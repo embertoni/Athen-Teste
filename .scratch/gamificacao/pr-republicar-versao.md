@@ -33,6 +33,7 @@ A RLS (0019) só deixa o criador editar questões em rascunho, então a transiç
 - **Regressão de criação:** a refatoração de `CriarCurso` é comportamento-preservável — o conjunto de aulas que congela versão continua {aulas com questões} do curso publicado; os 31 E2E (inclui o fluxo de sala/aula) passam.
 - **Pipeline:** lint, typecheck, test:run (2/2), test:check, build — aprovados.
 - **E2E Chromium:** 31 passed (30 anteriores + republicação).
+- **CI do PR #12:** [run 41330418837](https://github.com/embertoni/Athen-Teste/actions/runs/41330418837) — quality, database e e2e **SUCCESS**.
 - **Revisão em dois eixos (Padrões/Spec)** por subagentes de leitura: SATISFIED. Ajustes aplicados: consulta única no lugar do N+1 em `publicarVersoesDoCurso`; `listarVersoes` passou a ser consumido (coluna "Versão", antes era código morto); ramo objeto/array no mock; recarga após republicar; `type="button"` nos botões.
 
 ## Merge Danger
