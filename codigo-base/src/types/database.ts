@@ -39,14 +39,14 @@ isOneToOne: false
                   ]
                 },"answers": {
                   Row: {
-                    "attempt_id": string,"created_at": string,"first_submitted_at": string | null,"id": string,"is_correct": boolean,"question_id": string,"submitted": NonNullable<Json>,"xp_earned": number
+                    "attempt_id": string,"created_at": string,"first_submission_ordinal": number | null,"first_submitted_at": string | null,"id": string,"is_correct": boolean,"question_id": string,"submitted": NonNullable<Json>,"xp_earned": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempt_id": string,"created_at"?: string,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id": string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
+                    "attempt_id": string,"created_at"?: string,"first_submission_ordinal"?: number | null,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id": string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
                   }
                   Update: {
-                    "attempt_id"?: string,"created_at"?: string,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id"?: string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
+                    "attempt_id"?: string,"created_at"?: string,"first_submission_ordinal"?: number | null,"first_submitted_at"?: string | null,"id"?: string,"is_correct"?: boolean,"question_id"?: string,"submitted"?: NonNullable<Json>,"xp_earned"?: number
                   }
                   Relationships: [
                     {
@@ -286,6 +286,56 @@ isOneToOne: false
     },{
       foreignKeyName: "friendships_requester_id_fkey"
       columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"learning_credits": {
+                  Row: {
+                    "amount": number,"attempt_id": string,"base_xp": number,"course_id": string | null,"granted_at": string,"id": string,"ordinal": number,"question_id": string,"room_id": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"attempt_id": string,"base_xp": number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"ordinal": number,"question_id": string,"room_id"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"attempt_id"?: string,"base_xp"?: number,"course_id"?: string | null,"granted_at"?: string,"id"?: string,"ordinal"?: number,"question_id"?: string,"room_id"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "learning_credits_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: false
+      referencedRelation: "attempts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "learning_credits_course_id_fkey"
+      columns: ["course_id"]
+isOneToOne: false
+      referencedRelation: "courses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "learning_credits_question_id_fkey"
+      columns: ["question_id"]
+isOneToOne: false
+      referencedRelation: "questions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "learning_credits_room_id_fkey"
+      columns: ["room_id"]
+isOneToOne: false
+      referencedRelation: "rooms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "learning_credits_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "global_ranking"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "learning_credits_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -571,14 +621,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "account_status": Database["public"]['Enums']["account_status"],"avatar_url": string | null,"banner_url": string | null,"bio": string | null,"created_at": string,"display_name": string,"id": string,"last_study_date": string | null,"level": number,"notification_preferences": NonNullable<Json>,"role": Database["public"]['Enums']["user_role"],"streak_count": number,"updated_at": string,"username": string,"xp_global": number
+                    "account_status": Database["public"]['Enums']["account_status"],"avatar_url": string | null,"banner_url": string | null,"bio": string | null,"created_at": string,"display_name": string,"id": string,"last_study_date": string | null,"level": number,"notification_preferences": NonNullable<Json>,"role": Database["public"]['Enums']["user_role"],"streak_count": number,"updated_at": string,"username": string,"xp_credits": number,"xp_global": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "account_status"?: Database["public"]['Enums']["account_status"],"avatar_url"?: string | null,"banner_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name": string,"id": string,"last_study_date"?: string | null,"level"?: number,"notification_preferences"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["user_role"],"streak_count"?: number,"updated_at"?: string,"username": string,"xp_global"?: number
+                    "account_status"?: Database["public"]['Enums']["account_status"],"avatar_url"?: string | null,"banner_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name": string,"id": string,"last_study_date"?: string | null,"level"?: number,"notification_preferences"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["user_role"],"streak_count"?: number,"updated_at"?: string,"username": string,"xp_credits"?: number,"xp_global"?: number
                   }
                   Update: {
-                    "account_status"?: Database["public"]['Enums']["account_status"],"avatar_url"?: string | null,"banner_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name"?: string,"id"?: string,"last_study_date"?: string | null,"level"?: number,"notification_preferences"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["user_role"],"streak_count"?: number,"updated_at"?: string,"username"?: string,"xp_global"?: number
+                    "account_status"?: Database["public"]['Enums']["account_status"],"avatar_url"?: string | null,"banner_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name"?: string,"id"?: string,"last_study_date"?: string | null,"level"?: number,"notification_preferences"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["user_role"],"streak_count"?: number,"updated_at"?: string,"username"?: string,"xp_credits"?: number,"xp_global"?: number
                   }
                   Relationships: [
 
@@ -637,14 +687,14 @@ isOneToOne: false
                   ]
                 },"room_members": {
                   Row: {
-                    "id": string,"joined_at": string,"pac_internal": number,"progress": number,"removed_at": string | null,"room_id": string,"status": Database["public"]['Enums']["room_member_status"],"user_id": string,"xp_internal": number
+                    "credits_internal": number,"id": string,"joined_at": string,"pac_internal": number,"progress": number,"removed_at": string | null,"room_id": string,"status": Database["public"]['Enums']["room_member_status"],"user_id": string,"xp_internal": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: string,"joined_at"?: string,"pac_internal"?: number,"progress"?: number,"removed_at"?: string | null,"room_id": string,"status"?: Database["public"]['Enums']["room_member_status"],"user_id": string,"xp_internal"?: number
+                    "credits_internal"?: number,"id"?: string,"joined_at"?: string,"pac_internal"?: number,"progress"?: number,"removed_at"?: string | null,"room_id": string,"status"?: Database["public"]['Enums']["room_member_status"],"user_id": string,"xp_internal"?: number
                   }
                   Update: {
-                    "id"?: string,"joined_at"?: string,"pac_internal"?: number,"progress"?: number,"removed_at"?: string | null,"room_id"?: string,"status"?: Database["public"]['Enums']["room_member_status"],"user_id"?: string,"xp_internal"?: number
+                    "credits_internal"?: number,"id"?: string,"joined_at"?: string,"pac_internal"?: number,"progress"?: number,"removed_at"?: string | null,"room_id"?: string,"status"?: Database["public"]['Enums']["room_member_status"],"user_id"?: string,"xp_internal"?: number
                   }
                   Relationships: [
                     {
@@ -801,6 +851,9 @@ isOneToOne: false
 "join_room":
 { Args: { "p_access_code": string }; Returns: string
                            },
+"level_for_credits":
+{ Args: { "p_credits": number }; Returns: number
+                           },
 "level_for_xp":
 { Args: { "p_xp": number }; Returns: number
                            },
@@ -853,6 +906,7 @@ isOneToOne: false
 { Args: { "p_attempt_id": string,"p_question_id": string,"p_submitted": Json }; Returns: {
               "attempt_id": string,
 "created_at": string,
+"first_submission_ordinal": number | null,
 "first_submitted_at": string | null,
 "id": string,
 "is_correct": boolean,

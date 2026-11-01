@@ -1,6 +1,8 @@
 # 05: Reingressar em sala sem falha do trigger de atualização
 
-Status: ready-for-agent
+Status: resolved-in-0028 (causa-raiz corrigida na fatia 04.6; regressão coberta)
+
+**Resolução (01/11/2026):** o defeito do trigger foi corrigido pela migração [0028](../../codigo-base/supabase/migrations/0028_first_submission_ordinal_and_credit_book.sql) da fatia 04.6, porque o caminho de crédito decimal de sala atualiza `room_members` e esbarrava no mesmo defeito. A correção remove o trigger órfão `set_updated_at` de `room_members` (a tabela nunca declarou `updated_at`). A regressão está coberta em `tests/db/ordinal-credits.sql` (teste 8): remover o vínculo e reingressar por `join_room` reativa o vínculo existente sem falha, sem matrícula automática e sem perda de saldo. O caminho legado de finalização em sala (`update room_members set xp_internal`) passa a funcionar em tempo de execução. Os demais itens abaixo permanecem como registro histórico da investigação.
 
 **Issue de equipe:** 42; ID 05 é local. Responsável solicitante, sprint04, Em andamento confirmado.
 

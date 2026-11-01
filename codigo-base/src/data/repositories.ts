@@ -46,6 +46,8 @@ type Resposta = Tables<'answers'>;
 type CreateRespostaInput = Pick<TablesInsert<'answers'>, 'id' | 'attempt_id' | 'question_id' | 'submitted'>;
 type ResultadoCorrecao = FunctionReturn<'grade_answer'>[number];
 
+type Credito = Tables<'learning_credits'>;
+
 type Aviso = Tables<'announcements'>;
 type CreateAvisoInput = TablesInsert<'announcements'>;
 
@@ -771,6 +773,35 @@ export const concluiRepository = {
   async concluirAulaSemQuestoes(idAula: string): Promise<void> {
     const { error } = await supabase.rpc('complete_empty_lesson', { p_lesson_id: idAula });
     if (error) throw new Error(`Erro ao concluir aula sem questões: ${error.message}`);
+  }
+};
+
+// learning_credits. Livro de créditos decimal (numeric(12,4)). O cliente só lê os
+// próprios créditos: a escrita é exclusiva do finalizador do servidor (0028). O
+// saldo decimal vive em profiles.xp_credits (vitalício) e room_members.credits_internal
+// (sala); o nível decimal usa level_for_credits, sem tocar o xp_global inteiro legado.
+export const creditoRepository = {
+  // Créditos base do usuário logado (RLS restringe a leitura ao dono).
+  async listarPorUsuario(idUsuario: string): Promise<Credito[]> {
+    const { data, error } = await supabase
+      .from('learning_credits')
+      .select('*')
+      .eq('user_id', idUsuario)
+      .order('granted_at', { ascending: false });
+    if (error) throw new Error(`Erro ao listar créditos do usuário: ${error.message}`);
+    return data || [];
+  },
+
+  // Créditos ganhos dentro de uma sala (contexto independente do curso individual).
+  async listarPorSala(idUsuario: string, idSala: string): Promise<Credito[]> {
+    const { data, error } = await supabase
+      .from('learning_credits')
+      .select('*')
+      .eq('user_id', idUsuario)
+      .eq('room_id', idSala)
+      .order('granted_at', { ascending: false });
+    if (error) throw new Error(`Erro ao listar créditos da sala: ${error.message}`);
+    return data || [];
   }
 };
 
