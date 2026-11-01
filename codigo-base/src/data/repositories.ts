@@ -28,6 +28,7 @@ type CreateModuloInput = TablesInsert<'modules'>;
 
 type Aula = Tables<'lessons'>;
 type CreateAulaInput = TablesInsert<'lessons'>;
+type VersaoAula = Tables<'lesson_versions'>;
 
 type Questao = Tables<'questions'>;
 type CreateQuestaoInput = TablesInsert<'questions'>;
@@ -426,6 +427,16 @@ export const aulaRepository = {
   async deletar(id: string): Promise<void> {
     const { error } = await supabase.from('lessons').delete().eq('id', id);
     if (error) throw new Error(`Erro ao deletar aula: ${error.message}`);
+  },
+
+  // Congela o conjunto de questões da aula numa versão publicável imutável.
+  // Só o criador do curso (ou admin) pode publicar; o servidor valida a autoria.
+  async publicarVersao(idAula: string): Promise<VersaoAula> {
+    const { data, error } = await supabase.rpc('publish_lesson_version', { p_lesson_id: idAula });
+    if (error) throw new Error(`Erro ao publicar versão da aula: ${error.message}`);
+    const versao = Array.isArray(data) ? data[0] : data;
+    if (!versao) throw new Error('Erro ao publicar versão da aula: resposta vazia.');
+    return versao;
   }
 };
 

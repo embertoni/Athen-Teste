@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"attempts": {
                   Row: {
-                    "correct_count": number,"course_id": string | null,"finished_at": string | null,"id": string,"lesson_id": string,"room_id": string | null,"started_at": string,"total_count": number,"user_id": string,"xp_earned": number
+                    "correct_count": number,"course_id": string | null,"finished_at": string | null,"id": string,"lesson_id": string,"lesson_version_id": string | null,"room_id": string | null,"started_at": string,"total_count": number,"user_id": string,"xp_earned": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "correct_count"?: number,"course_id"?: string | null,"finished_at"?: string | null,"id"?: string,"lesson_id": string,"room_id"?: string | null,"started_at"?: string,"total_count"?: number,"user_id": string,"xp_earned"?: number
+                    "correct_count"?: number,"course_id"?: string | null,"finished_at"?: string | null,"id"?: string,"lesson_id": string,"lesson_version_id"?: string | null,"room_id"?: string | null,"started_at"?: string,"total_count"?: number,"user_id": string,"xp_earned"?: number
                   }
                   Update: {
-                    "correct_count"?: number,"course_id"?: string | null,"finished_at"?: string | null,"id"?: string,"lesson_id"?: string,"room_id"?: string | null,"started_at"?: string,"total_count"?: number,"user_id"?: string,"xp_earned"?: number
+                    "correct_count"?: number,"course_id"?: string | null,"finished_at"?: string | null,"id"?: string,"lesson_id"?: string,"lesson_version_id"?: string | null,"room_id"?: string | null,"started_at"?: string,"total_count"?: number,"user_id"?: string,"xp_earned"?: number
                   }
                   Relationships: [
                     {
@@ -86,6 +86,12 @@ isOneToOne: false
       columns: ["lesson_id"]
 isOneToOne: false
       referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "attempts_lesson_version_id_fkey"
+      columns: ["lesson_version_id"]
+isOneToOne: false
+      referencedRelation: "lesson_versions"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "attempts_room_id_fkey"
@@ -287,14 +293,14 @@ isOneToOne: false
                   ]
                 },"learning_results": {
                   Row: {
-                    "attempt_id": string,"confirmed_at": string,"correct_count": number,"course_id": string | null,"legacy": boolean,"lesson_id": string,"room_id": string | null,"total_count": number,"user_id": string,"xp_earned": number
+                    "attempt_id": string,"confirmed_at": string,"correct_count": number,"course_id": string | null,"legacy": boolean,"lesson_id": string,"lesson_version_id": string | null,"room_id": string | null,"total_count": number,"user_id": string,"xp_earned": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempt_id": string,"confirmed_at": string,"correct_count": number,"course_id"?: string | null,"legacy": boolean,"lesson_id": string,"room_id"?: string | null,"total_count": number,"user_id": string,"xp_earned": number
+                    "attempt_id": string,"confirmed_at": string,"correct_count": number,"course_id"?: string | null,"legacy": boolean,"lesson_id": string,"lesson_version_id"?: string | null,"room_id"?: string | null,"total_count": number,"user_id": string,"xp_earned": number
                   }
                   Update: {
-                    "attempt_id"?: string,"confirmed_at"?: string,"correct_count"?: number,"course_id"?: string | null,"legacy"?: boolean,"lesson_id"?: string,"room_id"?: string | null,"total_count"?: number,"user_id"?: string,"xp_earned"?: number
+                    "attempt_id"?: string,"confirmed_at"?: string,"correct_count"?: number,"course_id"?: string | null,"legacy"?: boolean,"lesson_id"?: string,"lesson_version_id"?: string | null,"room_id"?: string | null,"total_count"?: number,"user_id"?: string,"xp_earned"?: number
                   }
                   Relationships: [
                     {
@@ -316,6 +322,12 @@ isOneToOne: false
       referencedRelation: "lessons"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "learning_results_lesson_version_id_fkey"
+      columns: ["lesson_version_id"]
+isOneToOne: false
+      referencedRelation: "lesson_versions"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "learning_results_room_id_fkey"
       columns: ["room_id"]
 isOneToOne: false
@@ -330,6 +342,38 @@ isOneToOne: false
     },{
       foreignKeyName: "learning_results_user_id_fkey"
       columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lesson_versions": {
+                  Row: {
+                    "id": string,"lesson_id": string,"published_at": string,"published_by": string,"snapshot": NonNullable<Json>,"version_number": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: string,"lesson_id": string,"published_at"?: string,"published_by": string,"snapshot": NonNullable<Json>,"version_number": number
+                  }
+                  Update: {
+                    "id"?: string,"lesson_id"?: string,"published_at"?: string,"published_by"?: string,"snapshot"?: NonNullable<Json>,"version_number"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lesson_versions_lesson_id_fkey"
+      columns: ["lesson_id"]
+isOneToOne: false
+      referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lesson_versions_published_by_fkey"
+      columns: ["published_by"]
+isOneToOne: false
+      referencedRelation: "global_ranking"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "lesson_versions_published_by_fkey"
+      columns: ["published_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -707,6 +751,9 @@ isOneToOne: false
 "create_notification":
 { Args: { "p_message"?: string,"p_recipient_id": string,"p_reference_id"?: string,"p_title": string,"p_type": Database["public"]['Enums']["notification_type"] }; Returns: string
                            },
+"current_lesson_version":
+{ Args: { "p_lesson_id": string }; Returns: string
+                           },
 "deactivate_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -775,6 +822,21 @@ isOneToOne: false
 "pac":
 { Args: { "p_correct": number,"p_total": number }; Returns: number
                            },
+"publish_lesson_version":
+{ Args: { "p_lesson_id": string }; Returns: {
+              "id": string,
+"lesson_id": string,
+"published_at": string,
+"published_by": string,
+"snapshot": NonNullable<Json>,
+"version_number": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lesson_versions"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "recompute_course_duration":
 { Args: { "p_course_id": string }; Returns: undefined
                            },
@@ -819,6 +881,7 @@ isOneToOne: false
 "finished_at": string | null,
 "id": string,
 "lesson_id": string,
+"lesson_version_id": string | null,
 "room_id": string | null,
 "started_at": string,
 "total_count": number,
