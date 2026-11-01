@@ -4,7 +4,7 @@ Referência do modelo usado pelo cliente, conferida em 2026-10-23 contra o SQL v
 
 ## Fontes e ordem de leitura
 
-1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0027` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
+1. [Migrações numeradas](../../codigo-base/supabase/migrations/), de `0001` a `0029` neste checkout: modelo, políticas, funções e suas alterações sucessivas. Leia a redefinição mais recente da função ou política que estiver alterando.
 2. [Tipos gerados](../../codigo-base/src/types/database.ts): estrutura tipada consumida pelo frontend. São uma fotografia de geração, não prova de que o SQL foi aplicado no ambiente de destino.
 3. [Consultas do cliente](../../codigo-base/src/data/repositories.ts): tabelas, views e RPCs efetivamente utilizadas.
 
@@ -112,6 +112,18 @@ Correção de pré-requisito dobrada nesta fatia: o **defeito do trigger `room_m
 O cliente ganha `creditoRepository` (somente leitura: `listarPorUsuario`/`listarPorSala`); a escrita do livro é exclusiva do servidor. Bônus (concessão/afinidade), PAC/eficiência (Sessão 03), temporadas e missões continuam fora desta fatia.
 
 **Tipos de 04.6:** regenerados pelo Supabase CLI do schema public local 0001–0028, mesmo comando com sslmode=disable; UTF-8 sem BOM, sem edição manual. O diff acrescenta `learning_credits`, as colunas `answers.first_submission_ordinal`, `profiles.xp_credits`, `room_members.credits_internal` e a função `level_for_credits`. Sem SQL remoto.
+
+### Origem tipada, trava de escrita decimal e abertura de legado — fatia 04.7 (F3 da Sessão 02)
+
+[0029](../../codigo-base/supabase/migrations/0029_typed_credit_origin_and_legacy_opening.sql) dá **origem tipada** ao livro, **trava a escrita** dos saldos decimais e cria uma **abertura de legado conservadora**.
+
+`learning_credits` ganha `origin text not null default 'base'` com check `('base','bonus','opening','adjustment')` e `note text` (justificativa auditada das aberturas/ajustes). `question_id`/`attempt_id` passam a nullable, com um check de forma: base/bônus exigem questão e tentativa; abertura/ajuste são de contexto (sem questão). A unicidade de **base** é reescopada para `origin='base'` (uma base por usuário/questão/contexto); abertura é única por (usuário, contexto) via índices parciais próprios. Assim base e abertura coexistem no mesmo contexto sem colidir.
+
+Trava de escrita: `room_members` passa por `revoke all` + `grant select, insert, delete` + `grant update (status, removed_at)` ao `authenticated`. Isso remove `credits_internal`/`xp_internal`/`progress`/`pac_internal` do conjunto que o cliente pode atualizar, sem estreitar a gestão de membros do educador (o `room_members_educator_write` é `for all`, então insert/delete continuam no nível de tabela). `profiles.xp_credits` já era inescrevível pelo cliente (o grant de coluna da 0024 não a inclui).
+
+`public.open_legacy_credit(p_user_id, p_course_id, p_room_id, p_amount, p_note)` `SECURITY DEFINER` é **admin-only** (não-admin → 42501): grava uma linha `origin='opening'` (ou `'adjustment'` quando o valor é negativo) auditada por (usuário, contexto), com a nota, e move o saldo decimal correspondente. É única por contexto, exige exatamente um contexto (curso XOR sala), rejeita valor zero, beneficiário inexistente e sala sem vínculo, e nunca torna o saldo negativo (CHECK `>= 0` da 0028). Variante **conservadora**: não varre resultados legados, não fabrica ordinal (Q081–Q084) nem crédito base retroativo; apenas estabelece a autoridade de abertura/ajuste. O cliente ganha `creditoRepository.listarPorOrigem`.
+
+**Tipos de 04.7:** regenerados pelo Supabase CLI do schema public local 0001–0029, mesmo comando com sslmode=disable; UTF-8 sem BOM, sem edição manual. O diff acrescenta `learning_credits.origin`/`note`, torna `question_id`/`attempt_id` nullable e inclui a função `open_legacy_credit`. Sem SQL remoto.
 
 ## Antes de alterar ou preparar um banco
 

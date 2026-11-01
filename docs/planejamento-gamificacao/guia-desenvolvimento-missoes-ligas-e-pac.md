@@ -1203,6 +1203,26 @@ Validações executadas: TDD real em Postgres local `athen-gamificacao-test` (00
 
 Evidências e limitações: o cálculo inteiro legado em `athen_private` permanece byte a byte; o livro decimal é escrito só pelo finalizador público, em paralelo aos inteiros. Bônus (concessão/afinidade), PAC/eficiência (Sessão 03), temporadas (04A), missões (05 — restante) e abertura auditada de legado em massa continuam fora. Concorrência real do ordinal fica para ticket posterior (a serialização é provada por construção, pelo `for update`). Estado: validado localmente e **publicado no PR [#9](https://github.com/embertoni/Athen-Teste/pull/9) contra sprint04, CI verde** ([run 41313860815](https://github.com/embertoni/Athen-Teste/actions/runs/41313860815): quality/database/e2e SUCCESS). Próxima ação: **integração exige autorização própria do usuário**; não há merge/deploy/SQL remoto nesta entrega.
 
+### Sessão 02 — fatia 04.7: origem tipada, trava de escrita decimal e abertura de legado
+
+Data/responsável: 01/11/2026, Kiro CLI; solicitante responsável pela issue 42, sprint04, Em andamento.
+
+PR #9 (fatia 04.6) foi **integrado** pelo usuário (merge `acfb9ea`), encerrando a pendência anterior. Ticket local [04.7](../../.scratch/gamificacao/issues/04-7-origem-tipada-e-abertura.md) (F3 do ticket 04.5). Recorte ajustado após investigação: F3 propriamente dita — **sem** a graduação-contra-snapshot, que exigiria reescrever o finalizador legado por um ganho só na borda admin (a RLS `questions_update` já congela questões publicadas). Skills: `implement`, `tdd`, `code-review` (dois eixos por subagentes de leitura), `pr`. Base: sprint04 `acfb9ea`; branch `issue/42-origem-tipada-abertura`.
+
+| Arquivo final | Operação | O que mudou de fato |
+| --- | --- | --- |
+| `codigo-base/supabase/migrations/0029_typed_credit_origin_and_legacy_opening.sql` | criado | `learning_credits.origin` tipada + `note`; `question_id`/`attempt_id` nullable com check de forma; índices únicos de base reescopados por `origin='base'` + índices de abertura por contexto; trava de escrita de `room_members` (grant de coluna); `open_legacy_credit` admin-only, auditada, única por contexto, conservadora |
+| `codigo-base/tests/db/typed-credits.sql`, `scripts/run-db-tests.ts`, `package.json` | criado/alterado | teste SQL focal e flag/comando `test:db:typed-credits` |
+| `codigo-base/src/types/database.ts` | gerado | schema local 0001–0029; diff acrescenta `origin`/`note`, torna `question_id`/`attempt_id` nullable e inclui `open_legacy_credit` |
+| `codigo-base/src/data/repositories.ts` | alterado | `creditoRepository.listarPorOrigem`; tipo `OrigemCredito` |
+| `docs/banco-de-dados/documentacao-bd.md`, `docs/testes.md` | alterado | seção 04.7, faixa 0001–0029 e comando de teste |
+
+Validações executadas: TDD real em Postgres local `athen-gamificacao-test` (0001–0029). Vermelho: `column "origin" does not exist`; verde após 0029. `test:db:typed-credits` cobre base tagueada pelo finalizador, segunda base recusada, abertura coexistindo, recusa de escrita de coluna decimal/legada pelo cliente, gestão de membro preservada pelo educador (status/removed_at/delete), admin-only, abertura auditada com nota, unicidade por contexto, recusa de saldo negativo e ausência de ordinal/base fabricados. Sem regressão: ordinal-credits, run, learning, first-submissions, start-attempt, lesson-versions, permissions, seed, concurrency, learning:concurrency — todos aprovados; `--prove-failure` encerra com código 1. Pipeline da aplicação: lint, typecheck, test:run (2/2), test:check, test:db:check, build — aprovados. E2E Chromium: **28 passed**. Revisão em dois eixos por subagentes de leitura: sem achado de alta severidade de correção; aplicadas as correções apontadas (grant de `room_members` preservando insert/delete do educador; comentários de dois escritores; nota de auditoria persistida; guarda de vínculo inexistente na abertura de sala; teste do caminho positivo do educador e catch estrito do check).
+
+Evidências e limitações: o cálculo inteiro legado em `athen_private` permanece byte a byte; a base continua escrita só pelo finalizador, e agora `open_legacy_credit` é a segunda autoridade (admin) da conta decimal, sem varrer legado. Graduação-contra-snapshot, bônus de concessão/afinidade, PAC/eficiência (Sessão 03), temporadas (04A) e missões (05) continuam fora. Estado: validado localmente e **publicado no PR [#10](https://github.com/embertoni/Athen-Teste/pull/10) contra sprint04, CI verde** ([run 41319302262](https://github.com/embertoni/Athen-Teste/actions/runs/41319302262): quality/database/e2e SUCCESS). Próxima ação: **integração exige autorização própria do usuário**; não há merge/deploy/SQL remoto nesta entrega.
+
+
+
 Usar o modelo abaixo por sessão e repetir a subseção para cada página/área, incluindo banco, acesso compartilhado, testes e operação. Em renomeação/exclusão, registrar destino e consumidores. Integração no fork usa mudanças cumulativas e sequência de migrações, sem tratar cópia de componente como instalação da funcionalidade.
 
 ```markdown
